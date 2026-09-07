@@ -379,30 +379,27 @@ export class Ctx {
     const selfDef = defOf(this.state, card);
     const selfActive = effectsActive(this.state, card) || typeOf(this.state, card) === 'baby_unicorn';
 
-    // 1. immunities
-    if (selfActive && selfDef.replaceRemoval?.(this, ev) === 'immune') {
+    // 1. immunities (pure)
+    if (selfActive && selfDef.immuneTo?.(this.state, ev)) {
       this.log(`${this.name(card)} cannot be ${verbOf(kind)}.`);
       return false;
     }
     for (const c of this.stable(owner)) {
       if (c === card) continue;
       const d = defOf(this.state, c);
-      if (d.protectOther && effectsActive(this.state, c) && d.protectOther(this, ev) === 'immune') {
+      if (d.protectsOthers && effectsActive(this.state, c) && d.protectsOthers(this.state, ev)) {
         this.log(`${this.name(card)} is protected by ${this.name(c)}.`);
         return false;
       }
     }
-    // 2. saves by other cards (Black Knight)
+    // 2. saves by other cards (Black Knight), each asked once
     for (const c of [...this.stable(owner)]) {
-      if (c === card) continue;
+      if (c === card || !this.stable(owner).includes(c)) continue;
       const d = defOf(this.state, c);
-      if (d.protectOther && effectsActive(this.state, c) && this.stable(owner).includes(c)
-        && d.protectOther(this, ev) === 'replaced') {
-        return false;
-      }
+      if (d.protectOther && effectsActive(this.state, c) && d.protectOther(this, ev, c)) return false;
     }
     // 3. self replacement (Phoenix, Flyers, Baby Unicorn)
-    if (selfActive && selfDef.replaceRemoval?.(this, ev) === 'replaced') return false;
+    if (selfActive && selfDef.replaceRemoval?.(this, ev)) return false;
 
     // 4. the removal itself
     this.fireLeaveTriggers(card, owner, kind !== 'returnToHand');
@@ -443,9 +440,8 @@ export class Ctx {
       kind: 'returnToHand', card, owner, source: this.source(), byMagic: !!opts.byMagic, actor: this.controller,
     };
     const def = defOf(this.state, card);
-    const r = def.replaceRemoval?.(this, ev);
-    if (r === 'immune') { this.log(`${this.name(card)} cannot be returned.`); return false; }
-    if (r === 'replaced') return false;
+    if (def.immuneTo?.(this.state, ev)) { this.log(`${this.name(card)} cannot be returned.`); return false; }
+    if (def.replaceRemoval?.(this, ev)) return false;
     this.leaveStableTo(card, 'hand', owner);
     return true;
   }

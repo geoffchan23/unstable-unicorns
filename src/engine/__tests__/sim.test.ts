@@ -48,3 +48,34 @@ describe('random simulations', () => {
     expect(play()).toBe(play());
   });
 });
+
+describe('two-player variant', () => {
+  it('removes the official card list and hands each player a Neigh', () => {
+    const s = createGame({ players: ['a', 'b'], seed: 3 });
+    const defs = Object.values(s.cards).map((c) => c.def);
+    for (const gone of ['basic-unicorn-red', 'narwhal', 'queen-bee-unicorn', 'seductive-unicorn', 'rainbow-unicorn',
+      'nanny-cam', 'sadistic-ritual', 'slowdown', 'yay', 'mother-goose-unicorn', 'necromancer-unicorn']) {
+      expect(defs).not.toContain(gone);
+    }
+    expect(defs.length).toBe(95);
+    expect(s.unicornsToWin).toBe(7);
+    for (const p of s.players) expect(p.hand.filter((c) => s.cards[c]!.def === 'neigh').length).toBeGreaterThanOrEqual(1);
+    expect(s.players[1]!.hand.length).toBe(6);
+  });
+});
+
+describe('engine isolation', () => {
+  it('imports nothing from the UI and touches no browser globals', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const dir = path.resolve(__dirname, '..');
+    const walk = (d: string): string[] => fs.readdirSync(d).flatMap((f) => {
+      const p = path.join(d, f);
+      return fs.statSync(p).isDirectory() ? (f === '__tests__' ? [] : walk(p)) : p.endsWith('.ts') ? [p] : [];
+    });
+    for (const file of walk(dir)) {
+      const src = fs.readFileSync(file, 'utf8');
+      expect(src, file).not.toMatch(/from ['"]\.\.\/ui|from ['"]react|\bwindow\.|\bdocument\./);
+    }
+  });
+});

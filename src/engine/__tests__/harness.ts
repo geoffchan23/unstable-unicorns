@@ -18,6 +18,8 @@ export interface SetupOptions {
   twoPlayerVariant?: boolean;
   /** which player's action phase to start in (default 0) */
   turnPlayer?: PlayerId;
+  /** actions available this turn (default 1). Card tests use a large number so the turn does not advance. */
+  plays?: number;
 }
 
 export class Harness {
@@ -55,7 +57,7 @@ export class Harness {
     const top = (opts.deckTop ?? []).map((d) => take(d));
     s.deck.push(...top.reverse()); // last element of deck is the top
     s.turn = {
-      player: opts.turnPlayer ?? 0, phase: 'action', beginTurnQueued: true, playsRemaining: 1,
+      player: opts.turnPlayer ?? 0, phase: 'action', beginTurnQueued: true, playsRemaining: opts.plays ?? 1,
       extraTurns: 0, endDiscardQueued: false, number: 1,
     };
     s.pending = null;

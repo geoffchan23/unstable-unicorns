@@ -14,7 +14,7 @@ for (const id of BABIES) {
     replaceRemoval(ctx: Ctx, ev: RemovalEvent) {
       // sacrificed, destroyed, or returned to hand -> Nursery instead
       ctx.leaveStableTo(ev.card, 'nursery', ev.owner);
-      return 'replaced';
+      return true;
     },
   });
 }

@@ -5,10 +5,10 @@ import type { RemovalEvent } from '../types';
 // ---------- helpers ----------
 
 /** Flyers: "If this card is sacrificed or destroyed, return it to your hand." */
-function flyer(ctx: Ctx, ev: RemovalEvent): 'replaced' | null {
-  if (ev.kind !== 'destroy' && ev.kind !== 'sacrifice') return null;
+function flyer(ctx: Ctx, ev: RemovalEvent): boolean {
+  if (ev.kind !== 'destroy' && ev.kind !== 'sacrifice') return false;
   ctx.leaveStableTo(ev.card, 'hand', ev.owner);
-  return 'replaced';
+  return true;
 }
 
 function destroyUnicorn(ctx: Ctx, me: number, message: string, optional: boolean): boolean {
@@ -32,9 +32,7 @@ defineCard('rhinocorn', {
 });
 
 defineCard('magical-kittencorn', {
-  replaceRemoval(_ctx, ev) {
-    return ev.kind === 'destroy' && ev.byMagic ? 'immune' : null;
-  },
+  immuneTo: (_state, ev) => ev.kind === 'destroy' && ev.byMagic,
 });
 
 defineCard('stabby-the-unicorn', {
@@ -167,11 +165,11 @@ defineCard('majestic-flying-unicorn', {
 
 defineCard('unicorn-phoenix', {
   replaceRemoval(ctx, ev) {
-    if (ev.kind !== 'destroy' && ev.kind !== 'sacrifice') return null;
-    if (ctx.hand(ev.owner).length === 0) return null;
-    if (!ctx.confirm(ev.owner, `Unicorn Phoenix would be ${ev.kind === 'destroy' ? 'destroyed' : 'sacrificed'}. DISCARD a card instead?`)) return null;
+    if (ev.kind !== 'destroy' && ev.kind !== 'sacrifice') return false;
+    if (ctx.hand(ev.owner).length === 0) return false;
+    if (!ctx.confirm(ev.owner, `Unicorn Phoenix would be ${ev.kind === 'destroy' ? 'destroyed' : 'sacrificed'}. DISCARD a card instead?`)) return false;
     ctx.discardChoose(ev.owner, 1);
-    return 'replaced';
+    return true;
   },
 });
 
@@ -183,11 +181,11 @@ defineCard('unicorn-on-the-cob', {
 });
 
 defineCard('black-knight-unicorn', {
-  protectOther(ctx, ev) {
-    if (ev.kind !== 'destroy' || !ctx.isUnicorn(ev.card)) return null;
-    if (!ctx.confirm(ev.owner, `${ctx.name(ev.card)} would be destroyed. SACRIFICE Black Knight Unicorn instead?`)) return null;
-    ctx.sacrifice(ctx.self);
-    return 'replaced';
+  protectOther(ctx, ev, me) {
+    if (ev.kind !== 'destroy' || !ctx.isUnicorn(ev.card)) return false;
+    if (!ctx.confirm(ev.owner, `${ctx.name(ev.card)} would be destroyed. SACRIFICE Black Knight Unicorn instead?`)) return false;
+    ctx.sacrifice(me);
+    return true;
   },
 });
 

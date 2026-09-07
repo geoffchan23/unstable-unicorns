@@ -20,11 +20,17 @@ export interface CardDef {
   /** any change to the stable this card sits in. */
   onStableChanged?(ctx: Ctx): void;
 
-  // --- synchronous replacement / immunity hooks (may call ctx.choose inline) ---
-  /** this card itself would be removed. */
-  replaceRemoval?(ctx: Ctx, ev: RemovalEvent): 'immune' | 'replaced' | null;
-  /** another card in the same stable would be removed. */
-  protectOther?(ctx: Ctx, ev: RemovalEvent): 'immune' | 'replaced' | null;
+  // --- pure immunity checks (no side effects, no prompts) ---
+  /** this card itself cannot be removed this way (Magical Kittencorn). */
+  immuneTo?(state: GameState, ev: RemovalEvent): boolean;
+  /** another card in the same stable cannot be removed this way (Rainbow Aura). */
+  protectsOthers?(state: GameState, ev: RemovalEvent): boolean;
+
+  // --- effectful replacement hooks, each called at most once per removal (may prompt) ---
+  /** this card itself would be removed; return true if the removal was replaced. */
+  replaceRemoval?(ctx: Ctx, ev: RemovalEvent): boolean;
+  /** another card in the same stable would be removed; return true if replaced (Black Knight). `me` is this card. */
+  protectOther?(ctx: Ctx, ev: RemovalEvent, me: InstanceId): boolean;
 
   // --- static queries ---
   /** how many Unicorns this card counts as (default 1 for unicorns). */

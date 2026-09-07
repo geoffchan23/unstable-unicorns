@@ -8,7 +8,18 @@ An unofficial, in-progress web implementation of the card game **Unstable Unicor
 
 ## Status
 
-**Step 1 of the build: rules and card data.** No game code yet.
+**Milestone 1 done: the engine.** `src/engine/` is a pure TypeScript game engine (no UI,
+no network) with all 84 base-set cards implemented and tested. Next up is the web UI.
+
+```
+npm install
+npm test          # 90+ tests: per-card scripts, Neigh chains, random-bot simulations
+npm run sim 200 4 # play 200 random 4-player games and report timing
+```
+
+See [`docs/ENGINE.md`](docs/ENGINE.md) for the design. The short version: `createGame`,
+`applyAction`, `legalActions`, and `viewFor` are the whole API; card effects are plain
+imperative code that pause for player input through a replay-based prompt system.
 
 - [`docs/RULES.md`](docs/RULES.md) — rules digest written for implementation: zones, setup,
   turn phases, keyword semantics, Neigh chain resolution, win conditions, and the edges that
@@ -62,6 +73,7 @@ in hand on top of the usual 5 cards. Details in `docs/RULES.md` §10.
 
 ## Next steps
 
-1. Turn `triggers` into an executable effect DSL (each card gets a resolver).
-2. Game engine: zones, turn loop, the Neigh interrupt stack, win check.
-3. Web UI, then local hot-seat play, then bots, then networked multiplayer.
+1. ~~Rules and card data~~
+2. ~~Engine with all 84 cards~~
+3. Hot-seat web UI (React), play-vs-bot.
+4. Networked multiplayer: a server running the same engine, clients receive `viewFor` views.

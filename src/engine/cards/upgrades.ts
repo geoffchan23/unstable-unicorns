@@ -1,4 +1,5 @@
 import { defineCard } from '../registry';
+import { isUnicornType, typeOf } from '../queries';
 
 defineCard('glitter-bomb', {
   onBeginTurn(ctx) {
@@ -14,9 +15,7 @@ defineCard('glitter-bomb', {
 defineCard('yay', { neighImmunity: true });
 
 defineCard('rainbow-aura', {
-  protectOther(ctx, ev) {
-    return ev.kind === 'destroy' && ctx.isUnicorn(ev.card) ? 'immune' : null;
-  },
+  protectsOthers: (state, ev) => ev.kind === 'destroy' && isUnicornType(typeOf(state, ev.card)),
 });
 
 defineCard('double-dutch', {
