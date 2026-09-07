@@ -318,7 +318,8 @@
       "triggers": [
         "beginning_of_turn"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "'Immediately end your turn' skips the Draw and Action phases. Treat the End of Turn hand-limit discard as still applying. [interpretation]"
     },
     {
       "id": "magical-kittencorn",
@@ -331,7 +332,7 @@
       "triggers": [
         "passive"
       ],
-      "notes": "2nd Edition only protects against being destroyed by Magic cards; other Magic effects (return to hand, steal, move) still work.",
+      "notes": "2nd Edition text only prevents being destroyed by Magic cards. Return-to-hand, steal, and sacrifice from Magic cards still work.",
       "removedInTwoPlayer": false
     },
     {
@@ -371,7 +372,8 @@
       "triggers": [
         "on_enter"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "Resolve starting with the active player, then clockwise. A player with no Unicorns (or only Pandas) sacrifices nothing."
     },
     {
       "id": "chainsaw-unicorn",
@@ -437,7 +439,7 @@
       "triggers": [
         "on_enter"
       ],
-      "notes": "2nd Edition requires a DISCARD as a cost, and the steal is permanent (1st Edition returned the Unicorn if Seductive Unicorn left).",
+      "notes": "2nd Edition requires a DISCARD as a cost; if you cannot discard you cannot steal. The steal is permanent. Removed in 2-player.",
       "removedInTwoPlayer": true
     },
     {
@@ -460,12 +462,14 @@
       "type": "magical_unicorn",
       "isUnicorn": true,
       "count": 1,
-      "text": "When this card enters your Stable, DRAW a card.",
+      "text": "When this card enters your Stable, DRAW a card. If this card is sacrificed or destroyed, return it to your hand.",
       "cardNumber": "UU-Base-036",
       "triggers": [
-        "on_enter"
+        "on_enter",
+        "on_leave_self"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "Cockatrice export dropped the return-to-hand clause; restored from the wiki's Flyer definition and the 2nd Edition text of the other Flyers."
     },
     {
       "id": "annoying-flying-unicorn",
@@ -487,12 +491,14 @@
       "type": "magical_unicorn",
       "isUnicorn": true,
       "count": 1,
-      "text": "When this card enters your Stable, you may add a Magic card from the discard pile to your hand.",
+      "text": "When this card enters your Stable, you may add a Magic card from the discard pile to your hand. If this card is sacrificed or destroyed, return it to your hand.",
       "cardNumber": "UU-Base-038",
       "triggers": [
-        "on_enter"
+        "on_enter",
+        "on_leave_self"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "Cockatrice export dropped the return-to-hand clause; restored from the wiki's Flyer definition and the 2nd Edition text of the other Flyers."
     },
     {
       "id": "swift-flying-unicorn",
@@ -560,7 +566,7 @@
       "triggers": [
         "passive"
       ],
-      "notes": "A replacement effect - it can save a Unicorn from DESTROY, but not from SACRIFICE.",
+      "notes": "A replacement effect - it can save a Unicorn from DESTROY, but not from SACRIFICE. Sacrificing it does trigger Stabby-style 'if sacrificed' effects on itself.",
       "removedInTwoPlayer": false
     },
     {
@@ -621,12 +627,13 @@
       "type": "magical_unicorn",
       "isUnicorn": true,
       "count": 1,
-      "text": "When this card enters your Stable, return a card in another player's Stable to their hand.",
+      "text": "When this card enters your Stable, you may choose any player. Return a card in that player's Stable to their hand.",
       "cardNumber": "UU-Base-048",
       "triggers": [
         "on_enter"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "2nd Edition wording is optional and may target any player, including yourself."
     },
     {
       "id": "classy-narwhal",
@@ -691,7 +698,7 @@
       "triggers": [
         "on_play"
       ],
-      "notes": "The extra turn begins after this turn's End of Turn phase completes.",
+      "notes": "Discard as many as you can if you hold fewer than 3. The extra turn is a full turn with its own Beginning of Turn phase.",
       "removedInTwoPlayer": false
     },
     {
@@ -705,7 +712,8 @@
       "triggers": [
         "on_play"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "The player who plays it chooses which card leaves each Stable (wiki ruling). Baby Unicorns go to the Nursery instead of a hand."
     },
     {
       "id": "unicorn-swap",
@@ -718,7 +726,8 @@
       "triggers": [
         "on_play"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "Both moves count as leaving/entering a Stable, so Barbed Wire, Tiny Stable, and Queen Bee all apply."
     },
     {
       "id": "re-target",
@@ -757,7 +766,8 @@
       "triggers": [
         "on_play"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "'Card' means any Unicorn, Upgrade, or Downgrade in a Stable; the 2 destroyed cards may belong to different players."
     },
     {
       "id": "targeted-destruction",
@@ -783,7 +793,8 @@
       "triggers": [
         "on_play"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "Mystical Vortex itself is still resolving when the discard pile is shuffled, so it is not shuffled in (contrast Shake Up, which says so explicitly). [interpretation]"
     },
     {
       "id": "good-deal",
@@ -809,7 +820,8 @@
       "triggers": [
         "on_play"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "Your hand, the discard pile, and Shake Up itself all go into the deck before you draw 5."
     },
     {
       "id": "blatant-thievery",
@@ -887,7 +899,7 @@
       "triggers": [
         "beginning_of_turn"
       ],
-      "notes": "Must already be in your Stable at the start of the turn to grant the extra play.",
+      "notes": "Grants the option to play 1 or 2 cards in the Action phase; drawing instead of playing is still allowed (wiki ruling).",
       "removedInTwoPlayer": false
     },
     {
@@ -914,7 +926,7 @@
       "triggers": [
         "passive"
       ],
-      "notes": "Its controller's Unicorns stop being Unicorns for card-targeting purposes. They still count toward the win condition.",
+      "notes": "Controller's Unicorns are Pandas: anything that targets 'a Unicorn card' cannot see them, including your own Unicorn-only effects. Community ruling on RPGGeek says Pandas do NOT count toward the win condition, so Pandamonium effectively locks its controller out of winning until removed. [ruling from a community thread, not the printed FAQ]",
       "removedInTwoPlayer": false
     },
     {
@@ -980,7 +992,7 @@
       "triggers": [
         "passive"
       ],
-      "notes": "Turns the controller's Unicorns into effect-less Basic Unicorns; it does not stop them counting toward the win condition.",
+      "notes": "Ignores all effect text on the controller's Unicorns, including on-enter triggers of Unicorns that arrive later. Baby Unicorns are immune (their Nursery-return still works). Ginormous Unicorn counts as 1 while blinded. Wiki flags this as the most-disputed card in the game.",
       "removedInTwoPlayer": false
     },
     {
@@ -994,7 +1006,7 @@
       "triggers": [
         "continuous_triggered"
       ],
-      "notes": "Checks continuously, not just at the beginning of a turn - the moment its controller exceeds 5 Unicorns they must sacrifice one.",
+      "notes": "Continuous, mandatory, and resolves before any other pending effect. Ginormous Unicorn counts as 2 toward the 5.",
       "removedInTwoPlayer": false
     },
     {
@@ -1062,7 +1074,8 @@
       "triggers": [
         "on_enter"
       ],
-      "removedInTwoPlayer": true
+      "removedInTwoPlayer": true,
+      "notes": "Discard 2 Unicorn cards from hand as a cost. The Unicorn brought back may be one you just discarded."
     },
     {
       "id": "dark-angel-unicorn",
@@ -1075,7 +1088,8 @@
       "triggers": [
         "on_enter"
       ],
-      "removedInTwoPlayer": false
+      "removedInTwoPlayer": false,
+      "notes": "The Unicorn brought back may be the one just sacrificed (it is in the discard pile by then). A sacrificed Baby Unicorn goes to the Nursery, not the discard pile."
     },
     {
       "id": "kiss-of-life",

@@ -162,7 +162,11 @@ Notes that matter for implementation:
 - **Targeting yourself:** unless a card says "another player", "any player" includes you.
   Cards that say "each player (including you)" are explicit about it.
 - **Simultaneous triggers:** the active player chooses the order of their own; otherwise
-  resolve in turn order starting from the active player. **[unverified]**
+  resolve in turn order starting from the active player. Tiny Stable is the one documented
+  exception: it resolves before anything else. **[ordering is an inference]**
+- **Who chooses:** when a card says "a card in each player's Stable" (Glitter Tornado), the
+  player who played the card chooses for everyone. When a card says "each player must
+  SACRIFICE / DISCARD", each player chooses their own.
 
 ## 10. Two-player game
 
@@ -227,8 +231,14 @@ fetched directly. What was used instead:
   cross-checked against the card definitions in
   [geniegeist/unstable-unicorns](https://github.com/geniegeist/unstable-unicorns) and the
   1st Edition data in [kedarv/unstable](https://github.com/kedarv/unstable). The two
-  independent 2nd Edition sources agree on names, counts, and effects; the count reconciles
-  exactly to the published 135-card box (127 playable + 8 rule cards).
+  independent 2nd Edition sources agree on names and counts; the count reconciles exactly to
+  the published 135-card box (127 playable + 8 rule cards). Where the two disagreed on text
+  (Greedy Flying Unicorn, Magical Flying Unicorn, Mermaid Unicorn) the wording was settled
+  against the per-card pages on the Unstable Games Wiki, and a further dozen cards with
+  tricky wording were spot-checked there too (Rhinocorn, Unicorn Phoenix, Magical
+  Kittencorn, Majestic/Swift Flying Unicorn, Glitter Tornado, Double Dutch, Blinding Light,
+  Tiny Stable, Pandamonium). Per-card rulings and interpretations are recorded in the
+  `notes` field of the JSON.
 - **Rules** — search-result extracts from the
   [Unstable Games Wiki 2nd Edition rules](https://www.unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_Second_Edition_Rules),
   [Unstable Games Wiki general player rules](https://www.unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_General_Player_Rules),
