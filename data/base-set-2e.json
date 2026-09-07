@@ -4,6 +4,34 @@
   "totalCardsInBox": 135,
   "totalPlayableCards": 127,
   "ruleCardsInBox": 8,
+  "cardNumberNote": "cardNumber is the Unstable Games Wiki catalogue reference for the 2nd Edition base set, useful for matching card art later. A few Instant cards ship with multiple art variants under different numbers; only one is listed here.",
+  "twoPlayerRules": {
+    "unicornsToWin": 7,
+    "removeCards": [
+      "basic-unicorn-blue",
+      "basic-unicorn-green",
+      "basic-unicorn-indigo",
+      "basic-unicorn-orange",
+      "basic-unicorn-purple",
+      "basic-unicorn-red",
+      "basic-unicorn-yellow",
+      "mother-goose-unicorn",
+      "nanny-cam",
+      "narwhal",
+      "necromancer-unicorn",
+      "queen-bee-unicorn",
+      "rainbow-unicorn",
+      "sadistic-ritual",
+      "seductive-unicorn",
+      "slowdown",
+      "yay"
+    ],
+    "removedCopies": 32,
+    "startingNeighsPerPlayer": 1,
+    "startingHandFromDeck": 5,
+    "startingHandTotal": 6,
+    "summary": "Remove every card flagged removedInTwoPlayer. Before shuffling, take 2 Neigh cards out of the deck and give 1 to each player. Then deal 5 cards each (6 in hand total). Everything else, including the 7-Unicorn win condition, is unchanged."
+  },
   "cards": [
     {
       "id": "baby-unicorn-red",
@@ -16,7 +44,8 @@
       "triggers": [
         "on_leave_self"
       ],
-      "notes": "All 13 Baby Unicorns share identical text and behaviour; they differ only in art. They live in the Nursery, never in a hand, the deck, or the discard pile."
+      "notes": "All 13 Baby Unicorns share identical text and behaviour; they differ only in art. They live in the Nursery, never in a hand, the deck, or the discard pile.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-pink",
@@ -28,7 +57,8 @@
       "cardNumber": "UU-Base-002",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-orange",
@@ -40,7 +70,8 @@
       "cardNumber": "UU-Base-003",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-yellow",
@@ -52,7 +83,8 @@
       "cardNumber": "UU-Base-004",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-green",
@@ -64,7 +96,8 @@
       "cardNumber": "UU-Base-005",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-blue",
@@ -76,7 +109,8 @@
       "cardNumber": "UU-Base-006",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-purple",
@@ -88,7 +122,8 @@
       "cardNumber": "UU-Base-007",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-black",
@@ -100,7 +135,8 @@
       "cardNumber": "UU-Base-008",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-white",
@@ -112,7 +148,8 @@
       "cardNumber": "UU-Base-009",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-brown",
@@ -124,7 +161,8 @@
       "cardNumber": "UU-Base-010",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-rainbow",
@@ -136,7 +174,8 @@
       "cardNumber": "UU-Base-011",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-unicorn-death",
@@ -148,7 +187,8 @@
       "cardNumber": "UU-Base-012",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "baby-narwhal",
@@ -160,7 +200,8 @@
       "cardNumber": "UU-Base-013",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "basic-unicorn-red",
@@ -172,7 +213,8 @@
       "cardNumber": "UU-Base-014",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "basic-unicorn-orange",
@@ -184,7 +226,8 @@
       "cardNumber": "UU-Base-015",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "basic-unicorn-yellow",
@@ -196,7 +239,8 @@
       "cardNumber": "UU-Base-016",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "basic-unicorn-green",
@@ -208,7 +252,8 @@
       "cardNumber": "UU-Base-017",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "basic-unicorn-blue",
@@ -220,7 +265,8 @@
       "cardNumber": "UU-Base-018",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "basic-unicorn-indigo",
@@ -232,7 +278,8 @@
       "cardNumber": "UU-Base-019",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "basic-unicorn-purple",
@@ -244,7 +291,8 @@
       "cardNumber": "UU-Base-020",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "narwhal",
@@ -256,7 +304,8 @@
       "cardNumber": "UU-Base-021",
       "triggers": [
         "none"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "rhinocorn",
@@ -268,7 +317,8 @@
       "cardNumber": "UU-Base-022",
       "triggers": [
         "beginning_of_turn"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "magical-kittencorn",
@@ -281,7 +331,8 @@
       "triggers": [
         "passive"
       ],
-      "notes": "2nd Edition only protects against being destroyed by Magic cards; other Magic effects (return to hand, steal, move) still work."
+      "notes": "2nd Edition only protects against being destroyed by Magic cards; other Magic effects (return to hand, steal, move) still work.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "stabby-the-unicorn",
@@ -293,7 +344,8 @@
       "cardNumber": "UU-Base-024",
       "triggers": [
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "rainbow-unicorn",
@@ -305,7 +357,8 @@
       "cardNumber": "UU-Base-026",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "extremely-destructive-unicorn",
@@ -317,7 +370,8 @@
       "cardNumber": "UU-Base-028",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "chainsaw-unicorn",
@@ -329,7 +383,8 @@
       "cardNumber": "UU-Base-029",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "llamacorn",
@@ -341,7 +396,8 @@
       "cardNumber": "UU-Base-030",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "americorn",
@@ -353,7 +409,8 @@
       "cardNumber": "UU-Base-031",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "ginormous-unicorn",
@@ -366,7 +423,8 @@
       "triggers": [
         "passive"
       ],
-      "notes": "Counts as 2 toward the win condition. The Neigh restriction applies to its controller for as long as it is in their Stable."
+      "notes": "Counts as 2 toward the win condition. The Neigh restriction applies to its controller for as long as it is in their Stable.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "seductive-unicorn",
@@ -379,7 +437,8 @@
       "triggers": [
         "on_enter"
       ],
-      "notes": "2nd Edition requires a DISCARD as a cost, and the steal is permanent (1st Edition returned the Unicorn if Seductive Unicorn left)."
+      "notes": "2nd Edition requires a DISCARD as a cost, and the steal is permanent (1st Edition returned the Unicorn if Seductive Unicorn left).",
+      "removedInTwoPlayer": true
     },
     {
       "id": "queen-bee-unicorn",
@@ -392,7 +451,8 @@
       "triggers": [
         "passive"
       ],
-      "notes": "A global lock: while it is in play, no other player may bring a Basic Unicorn into their Stable."
+      "notes": "A global lock: while it is in play, no other player may bring a Basic Unicorn into their Stable.",
+      "removedInTwoPlayer": true
     },
     {
       "id": "greedy-flying-unicorn",
@@ -404,7 +464,8 @@
       "cardNumber": "UU-Base-036",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "annoying-flying-unicorn",
@@ -417,7 +478,8 @@
       "triggers": [
         "on_enter",
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "magical-flying-unicorn",
@@ -429,7 +491,8 @@
       "cardNumber": "UU-Base-038",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "swift-flying-unicorn",
@@ -442,7 +505,8 @@
       "triggers": [
         "on_enter",
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "majestic-flying-unicorn",
@@ -455,7 +519,8 @@
       "triggers": [
         "on_enter",
         "on_leave_self"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "unicorn-phoenix",
@@ -468,7 +533,8 @@
       "triggers": [
         "on_leave_self"
       ],
-      "notes": "2nd Edition wording is a replacement effect: discard a card instead of losing the Phoenix. 1st Edition instead returned it to the Stable."
+      "notes": "2nd Edition wording is a replacement effect: discard a card instead of losing the Phoenix. 1st Edition instead returned it to the Stable.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "unicorn-on-the-cob",
@@ -480,7 +546,8 @@
       "cardNumber": "UU-Base-042",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "black-knight-unicorn",
@@ -493,7 +560,8 @@
       "triggers": [
         "passive"
       ],
-      "notes": "A replacement effect - it can save a Unicorn from DESTROY, but not from SACRIFICE."
+      "notes": "A replacement effect - it can save a Unicorn from DESTROY, but not from SACRIFICE.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "shark-with-a-horn",
@@ -505,7 +573,8 @@
       "cardNumber": "UU-Base-044",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "shabby-the-narwhal",
@@ -517,7 +586,8 @@
       "cardNumber": "UU-Base-045",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "narwhal-torpedo",
@@ -529,7 +599,8 @@
       "cardNumber": "UU-Base-046",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "alluring-narwhal",
@@ -541,7 +612,8 @@
       "cardNumber": "UU-Base-047",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "mermaid-unicorn",
@@ -553,7 +625,8 @@
       "cardNumber": "UU-Base-048",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "classy-narwhal",
@@ -565,7 +638,8 @@
       "cardNumber": "UU-Base-049",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "the-great-narwhal",
@@ -577,7 +651,8 @@
       "cardNumber": "UU-Base-050",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "unicorn-poison",
@@ -589,7 +664,8 @@
       "cardNumber": "UU-Base-051",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "back-kick",
@@ -601,7 +677,8 @@
       "cardNumber": "UU-Base-052",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "change-of-luck",
@@ -614,7 +691,8 @@
       "triggers": [
         "on_play"
       ],
-      "notes": "The extra turn begins after this turn's End of Turn phase completes."
+      "notes": "The extra turn begins after this turn's End of Turn phase completes.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "glitter-tornado",
@@ -626,7 +704,8 @@
       "cardNumber": "UU-Base-054",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "unicorn-swap",
@@ -638,7 +717,8 @@
       "cardNumber": "UU-Base-055",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "re-target",
@@ -650,7 +730,8 @@
       "cardNumber": "UU-Base-056",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "unfair-bargain",
@@ -662,7 +743,8 @@
       "cardNumber": "UU-Base-057",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "two-for-one",
@@ -674,7 +756,8 @@
       "cardNumber": "UU-Base-058",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "targeted-destruction",
@@ -686,7 +769,8 @@
       "cardNumber": "UU-Base-060",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "mystical-vortex",
@@ -698,7 +782,8 @@
       "cardNumber": "UU-Base-061",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "good-deal",
@@ -710,7 +795,8 @@
       "cardNumber": "UU-Base-062",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "shake-up",
@@ -722,7 +808,8 @@
       "cardNumber": "UU-Base-063",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "blatant-thievery",
@@ -734,7 +821,8 @@
       "cardNumber": "UU-Base-064",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "reset-button",
@@ -746,7 +834,8 @@
       "cardNumber": "UU-Base-065",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "glitter-bomb",
@@ -758,7 +847,8 @@
       "cardNumber": "UU-Base-068",
       "triggers": [
         "beginning_of_turn"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "yay",
@@ -770,7 +860,8 @@
       "cardNumber": "UU-Base-069",
       "triggers": [
         "passive"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "rainbow-aura",
@@ -782,7 +873,8 @@
       "cardNumber": "UU-Base-071",
       "triggers": [
         "passive"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "double-dutch",
@@ -795,7 +887,8 @@
       "triggers": [
         "beginning_of_turn"
       ],
-      "notes": "Must already be in your Stable at the start of the turn to grant the extra play."
+      "notes": "Must already be in your Stable at the start of the turn to grant the extra play.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "barbed-wire",
@@ -807,7 +900,8 @@
       "cardNumber": "UU-Base-074",
       "triggers": [
         "continuous_triggered"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "pandamonium",
@@ -820,7 +914,8 @@
       "triggers": [
         "passive"
       ],
-      "notes": "Its controller's Unicorns stop being Unicorns for card-targeting purposes. They still count toward the win condition."
+      "notes": "Its controller's Unicorns stop being Unicorns for card-targeting purposes. They still count toward the win condition.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "sadistic-ritual",
@@ -832,7 +927,8 @@
       "cardNumber": "UU-Base-076",
       "triggers": [
         "beginning_of_turn"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "slowdown",
@@ -844,7 +940,8 @@
       "cardNumber": "UU-Base-077",
       "triggers": [
         "passive"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "nanny-cam",
@@ -856,7 +953,8 @@
       "cardNumber": "UU-Base-078",
       "triggers": [
         "passive"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "broken-stable",
@@ -868,7 +966,8 @@
       "cardNumber": "UU-Base-079",
       "triggers": [
         "passive"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "blinding-light",
@@ -881,7 +980,8 @@
       "triggers": [
         "passive"
       ],
-      "notes": "Turns the controller's Unicorns into effect-less Basic Unicorns; it does not stop them counting toward the win condition."
+      "notes": "Turns the controller's Unicorns into effect-less Basic Unicorns; it does not stop them counting toward the win condition.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "tiny-stable",
@@ -894,7 +994,8 @@
       "triggers": [
         "continuous_triggered"
       ],
-      "notes": "Checks continuously, not just at the beginning of a turn - the moment its controller exceeds 5 Unicorns they must sacrifice one."
+      "notes": "Checks continuously, not just at the beginning of a turn - the moment its controller exceeds 5 Unicorns they must sacrifice one.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "neigh",
@@ -907,7 +1008,8 @@
       "triggers": [
         "instant"
       ],
-      "notes": "Playing a Neigh does not consume your Action. A card that is Neigh'd still used up the turn player's Action for that turn."
+      "notes": "Playing a Neigh does not consume your Action. A card that is Neigh'd still used up the turn player's Action for that turn.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "super-neigh",
@@ -920,7 +1022,8 @@
       "triggers": [
         "instant"
       ],
-      "notes": "Cannot be Neigh'd, including by another Super Neigh."
+      "notes": "Cannot be Neigh'd, including by another Super Neigh.",
+      "removedInTwoPlayer": false
     },
     {
       "id": "mother-goose-unicorn",
@@ -932,7 +1035,8 @@
       "cardNumber": "UU-Base-085",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "unicorn-oracle",
@@ -944,7 +1048,8 @@
       "cardNumber": "UU-Base-086",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "necromancer-unicorn",
@@ -956,7 +1061,8 @@
       "cardNumber": "UU-Base-087",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": true
     },
     {
       "id": "dark-angel-unicorn",
@@ -968,7 +1074,8 @@
       "cardNumber": "UU-Base-088",
       "triggers": [
         "on_enter"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "kiss-of-life",
@@ -980,7 +1087,8 @@
       "cardNumber": "UU-Base-089",
       "triggers": [
         "on_play"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "claw-machine",
@@ -992,7 +1100,8 @@
       "cardNumber": "UU-Base-090",
       "triggers": [
         "beginning_of_turn"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "stable-artillery",
@@ -1004,7 +1113,8 @@
       "cardNumber": "UU-Base-091",
       "triggers": [
         "beginning_of_turn"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "rainbow-lasso",
@@ -1016,7 +1126,8 @@
       "cardNumber": "UU-Base-092",
       "triggers": [
         "beginning_of_turn"
-      ]
+      ],
+      "removedInTwoPlayer": false
     },
     {
       "id": "caffeine-overload",
@@ -1028,8 +1139,8 @@
       "cardNumber": "UU-Base-093",
       "triggers": [
         "beginning_of_turn"
-      ]
+      ],
+      "removedInTwoPlayer": false
     }
-  ],
-  "cardNumberNote": "cardNumber is the Unstable Games Wiki catalogue reference for the 2nd Edition base set, useful for matching card art later. A few Instant cards ship with multiple art variants under different numbers; only one is listed here."
+  ]
 }

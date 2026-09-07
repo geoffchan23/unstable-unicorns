@@ -14,8 +14,8 @@ An unofficial, in-progress web implementation of the card game **Unstable Unicor
   turn phases, keyword semantics, Neigh chain resolution, win conditions, and the edges that
   the printed rulebook leaves implicit. Uncertain points are flagged `[unverified]`.
 - [`data/base-set-2e.json`](data/base-set-2e.json) — all 127 playable base-set cards
-  (84 unique faces), with type, copy count, full card text, wiki catalogue number, and a
-  machine-readable `triggers` classification.
+  (84 unique faces), with type, copy count, full card text, wiki catalogue number, a
+  machine-readable `triggers` classification, and a `removedInTwoPlayer` flag.
 
 ## The deck at a glance
 
@@ -32,6 +32,11 @@ An unofficial, in-progress web implementation of the card game **Unstable Unicor
 
 Plus 8 rule reference cards in the retail box, for the advertised 135.
 
+**2-player games** follow the official variant: 32 cards are removed (all Basic Unicorns,
+Rainbow Unicorn, Queen Bee Unicorn, Mother Goose Unicorn, Necromancer Unicorn, Seductive
+Unicorn, Nanny Cam, Sadistic Ritual, Slowdown, both Yay), and each player starts with a Neigh
+in hand on top of the usual 5 cards. Details in `docs/RULES.md` §10.
+
 ## Card data shape
 
 ```json
@@ -43,7 +48,8 @@ Plus 8 rule reference cards in the retail box, for the advertised 135.
   "count": 1,
   "text": "When this card enters your Stable, you may SACRIFICE this card, then DESTROY a Unicorn card.",
   "cardNumber": "UU-Base-044",
-  "triggers": ["on_enter"]
+  "triggers": ["on_enter"],
+  "removedInTwoPlayer": false
 }
 ```
 

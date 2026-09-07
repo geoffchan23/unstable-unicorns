@@ -166,10 +166,38 @@ Notes that matter for implementation:
 
 ## 10. Two-player game
 
-The win condition is 7 Unicorns, same as 3–5 players. The rulebook has a short 2-player
-section whose exact contents could not be confirmed from this environment — sources disagree
-on whether it changes the win total or adds starting Neighs. **[unverified — check the
-printed rulebook before implementing a 2-player variant.]**
+The official 2-player rules keep the normal game and adjust the deck. This project follows
+them exactly.
+
+**Win condition:** 7 Unicorns, unchanged.
+
+**1. Remove these cards from the deck before shuffling** (32 cards):
+
+| Removed | Copies | Why |
+|---|---|---|
+| Every Basic Unicorn (7 colours ×3, plus Narwhal) | 22 | Basic Unicorns and cards that key off them are pulled from 2-player. |
+| Rainbow Unicorn | 1 | References Basic Unicorns. |
+| Queen Bee Unicorn | 1 | References Basic Unicorns. |
+| Mother Goose Unicorn | 1 | Too strong against a single opponent. |
+| Necromancer Unicorn | 1 | Too strong against a single opponent. |
+| Seductive Unicorn | 1 | Too strong against a single opponent. |
+| Nanny Cam | 1 | Too strong against a single opponent. |
+| Sadistic Ritual | 1 | Too strong against a single opponent. |
+| Slowdown | 1 | Too strong against a single opponent. |
+| Yay | 2 | Too strong against a single opponent. |
+
+That leaves 95 playable cards: 13 Baby Unicorns in the Nursery and an 82-card deck.
+
+**2. Starting Neighs.** Before shuffling, take 2 Neigh cards out of the deck and give 1 to
+each player.
+
+**3. Deal** 5 cards to each player as normal. Each player therefore starts with 6 cards in
+hand (5 dealt + 1 Neigh) and 1 Baby Unicorn in their Stable, and the draw pile is 70 cards.
+
+Everything else (turn phases, hand limit, Neigh chains) is the standard game.
+
+In `data/base-set-2e.json` every card carries a `removedInTwoPlayer` flag and the
+`twoPlayerRules` block repeats the setup numbers, so a deck builder can just filter.
 
 ## 11. Edition note
 
@@ -208,5 +236,11 @@ fetched directly. What was used instead:
   [UltraBoardGames](https://www.ultraboardgames.com/unstable-unicorns/game-rules.php),
   plus the hand-limit and starting-hand constants used by the geniegeist implementation.
 
-Confidence is high on components, setup, turn structure, keywords, and Neigh handling;
-low on the 2-player variant and on simultaneous-trigger ordering.
+- **2-player rules** — three independent search extracts of the
+  [Unstable Games Wiki two-player rules page](https://www.unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_Two_Player_Rules),
+  the [official 2-player rules PDF mirrored there](https://www.unstablegameswiki.com/images/0/0b/2-Player-rules.pdf),
+  and a [BoardGameGeek thread quoting the rules](https://boardgamegeek.com/thread/1970928/remove-these-cards-for-a-2-player-game)
+  all returned the same removal list and starting-Neigh rule.
+
+Confidence is high on components, setup, turn structure, keywords, Neigh handling, and the
+2-player variant; simultaneous-trigger ordering is still an inference.
