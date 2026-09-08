@@ -63,9 +63,15 @@ lobby ──start──> playing ──winner──> finished ──playAgain─
   any state ──idle 2h or empty 10min──> deleted
 ```
 
-- **Seats**: `{ name, kind: 'human' | 'bot', token, connected }`. 2–8 seats. The creator holds
-  seat 0 and is the host. Host powers: add/remove bot, remove a human seat, start, play
-  again, replace an absent human with a bot mid-game.
+- **Seats**: `{ name, kind: 'human' | 'bot', token, connected }`. 2–8 seats. The room has a
+  `host` seat, initially the creator (seat 0). Host powers: add/remove bot, remove a human
+  seat, start, play again, replace an absent human with a bot mid-game, hand host to another
+  human seat.
+- **Host transfer**: explicit via `makeHost { seat }`. Automatic when the host has been
+  disconnected for 20 s (or leaves the lobby): host passes to the lowest-numbered connected
+  human seat. If no human is connected the role waits for the first one to reconnect. The
+  previous host does not get the role back on rejoin. Every `lobby`/`state` message carries
+  `host` so clients render the controls for whoever holds it.
 - **Tokens**: each human seat gets a random 128-bit token on join. The client stores
   `{ code, token }` in `localStorage` and sends `rejoin` on every fresh connection, so a
   locked screen, a wifi drop, or a page reload resumes the same seat.
@@ -103,15 +109,16 @@ Client → server:
 | `action` | `action: Action` | playing only |
 | `replaceWithBot` | `seat` | host, playing only, seat must be disconnected |
 | `playAgain` | | host, finished only |
-| `leave` | | lobby only; host leaving deletes the room |
+| `makeHost` | `seat` | host; target must be a human seat |
+| `leave` | | lobby only; last human leaving deletes the room, a leaving host transfers first |
 
 Server → client:
 
 | type | fields | notes |
 |---|---|---|
 | `joined` | `code, seat, token` | reply to `create` / `join` / `rejoin` |
-| `lobby` | `code, seats, you, status` | sent on any lobby/seat change, in every state |
-| `state` | `view, legal, seats` | per-seat, after every game change and on rejoin |
+| `lobby` | `code, seats, you, host, status` | sent on any lobby/seat change, in every state |
+| `state` | `view, legal, seats, host` | per-seat, after every game change and on rejoin |
 | `error` | `message` | |
 | `closed` | `reason` | room deleted or seat removed |
 
@@ -216,7 +223,8 @@ server from a phone.
   `$SITE_REPO/unicorns/` (default `../../geoffchan23.github.io`), then in the site repo
   `git add unicorns && git commit -m "unicorns: deploy <short sha>" && git push`. The site's
   `.gitignore` needs `!unicorns/**/*.png` for the icons.
-- The single-file `dist/unstable-unicorns.html` build and `scripts/shot.mjs` are retired.
+- The single-file `dist/unstable-unicorns.html` build and `scripts/shot.mjs` are retired
+  (`playwright-core` is replaced by `@playwright/test`).
 - GitHub Actions (`.github/workflows/ci.yml`): `npm ci`, `npm run typecheck`, `npm test` on
   push and PR. No deploy from CI (art is not in the repo).
 
@@ -227,7 +235,7 @@ server from a phone.
 | Illegal action from a client | server replies `error`; client shows the existing toast; state unchanged |
 | Socket drops mid-game | client reconnects with backoff and `rejoin`; server keeps the seat; banner shown |
 | Player never comes back | host uses "Replace with bot" on that seat |
-| Host disconnects | room continues; host powers resume on rejoin; no host transfer (YAGNI) |
+| Host disconnects | room continues; after 20 s host passes to the next connected human; the old host rejoins as a regular player |
 | Server restart | rooms gone; clients get connection refused, then `error: no such room` on rejoin, clear session, return home |
 | Wrong passphrase / wrong code / full room | `error`, shown inline on the lobby form |
 | Malformed message | socket closed |
@@ -244,12 +252,25 @@ server from a phone.
   list; asserts both clients see the same winner.
 - `src/ui/net/__tests__/client.test.ts`: `GameClient` reconnect and auto-rejoin with a fake
   WebSocket.
-- Manual: `npm run dev`, open on the Mac and on a phone via `?server=ws://<mac-ip>:8787`;
-  install on an iPad and a Pixel from the live URL and play one game.
+- `e2e/` with `@playwright/test` (`npm run e2e`): Playwright's `webServer` starts the dev
+  server (client + game server in development mode). Chromium only, with a Pixel 7 device
+  profile for one project and an iPad profile for another.
+  - `local.spec.ts`: home → local setup → a vs-bot game reaches a prompt and a win overlay
+    (fixed seed), plus a hot-seat handoff.
+  - `online.spec.ts`: two browser contexts create and join a room, host starts, both play
+    until the win overlay using the on-screen legal moves; a third context rejoins with the
+    stored token after a reload and sees the same state; host transfer after the host's
+    context closes.
+  - `pwa.spec.ts`: manifest is reachable, the service worker registers, and the app shell
+    loads with the network offline.
+  - Screenshots from these runs are how UI changes are checked visually; `scripts/shot.mjs`
+    is retired in favour of them.
+- Manual: open on a phone via `?server=ws://<mac-ip>:8787`; install on an iPad and a Pixel
+  from the live URL and play one game.
 
 ## 7. Out of scope
 
-Spectators, host transfer, game persistence across restarts, chat, animations, accounts,
+Spectators, game persistence across restarts, chat, animations, accounts,
 matchmaking, more than one game per room, expansions.
 
 ## 8. Milestones
@@ -257,5 +278,6 @@ matchmaking, more than one game per room, expansions.
 1. Client refactor (`GameScreen` + `LocalGame`) with no behaviour change; new build output.
 2. Server: room logic with tests, then the `ws` transport.
 3. Client online mode: `GameClient`, Lobby, `OnlineGame`; play end-to-end with `npm run dev`.
-4. PWA shell: manifest, service worker, icons, safe areas, wake lock.
+   Playwright `local` and `online` specs pass.
+4. PWA shell: manifest, service worker, icons, safe areas, wake lock. `pwa` spec passes.
 5. Deploy: VM setup session, `deploy-server.sh`, `deploy-web.sh`, first live game.
