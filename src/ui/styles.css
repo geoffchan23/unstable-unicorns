@@ -102,7 +102,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
 .opponents { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
 .opp {
-  flex: 1 0 150px; display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; text-align: left;
+  flex: 1 0 150px; display: grid; grid-template-columns: 1fr auto; align-content: start; gap: 2px 8px; text-align: left;
   background: var(--ground-2); border: 1.5px solid var(--line); border-radius: 12px; padding: 8px 10px; cursor: pointer;
 }
 .opp.active { border-color: var(--accent); }
