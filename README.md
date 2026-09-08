@@ -8,18 +8,20 @@ An unofficial, in-progress web implementation of the card game **Unstable Unicor
 
 ## Status
 
-**Playable prototype.** `src/engine/` is a pure TypeScript game engine (no UI, no network) with
-all 84 base-set cards implemented and tested; `src/ui/` is a React app for pass-and-play or
-play-vs-bot that builds to a single HTML file.
+**Playable online.** `src/engine/` is a pure TypeScript game engine (no UI, no network) with
+all 84 base-set cards implemented and tested; `src/ui/` is a React app, installable as a PWA,
+for pass-and-play, play-vs-bot, or online multiplayer through a small game server in
+`src/server/`.
 
 ```
 npm install
-npm test                 # 90+ tests: per-card scripts, Neigh chains, random-bot simulations
+npm test                 # 128+ tests: per-card scripts, Neigh chains, random-bot simulations, server, client
 .cache/venv/bin/python scripts/art.py   # card art (needs pillow: python3 -m venv .cache/venv && .cache/venv/bin/pip install pillow)
-npm run build            # dist/unicorns/ static PWA
-npm run dev              # http://localhost:5173/unicorns/ + game server on :8787
-npm run e2e              # Playwright end-to-end tests
-npm run sim 200 4        # play 200 random 4-player games and report timing
+npm run build             # dist/unicorns/ static PWA
+npm run build:server      # dist/server/unicorns-server.mjs single-file game server bundle
+npm run dev               # http://localhost:5173/unicorns/ + game server on :8787
+npm run e2e               # Playwright end-to-end tests
+npm run sim 200 4         # play 200 random 4-player games and report timing
 ```
 
 See [`docs/ENGINE.md`](docs/ENGINE.md) for the design. The short version: `createGame`,
@@ -81,5 +83,6 @@ in hand on top of the usual 5 cards. Details in `docs/RULES.md` §10.
 1. ~~Rules and card data~~
 2. ~~Engine with all 84 cards~~
 3. ~~Hot-seat web UI (React), play-vs-bot, card art~~
-4. Online multiplayer PWA at geoffreychan.com/unicorns with a small game server. Design in
-   `docs/superpowers/specs/2026-09-08-online-pwa-design.md`.
+4. ~~Online multiplayer PWA at geoffreychan.com/unicorns with a small game server~~. Design
+   in `docs/superpowers/specs/2026-09-08-online-pwa-design.md`; deploy runbook in
+   [`docs/DEPLOY.md`](docs/DEPLOY.md).

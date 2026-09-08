@@ -172,5 +172,8 @@ a unit test that reproduces the ruling.
    draw/discard Magic).
 2. **All 84 cards** with tests, including the replacement-effect group.
 3. **Hot-seat web UI**: one browser, pass-and-play, plus play-vs-bots.
-4. **Multiplayer**: Node server runs the same engine, clients receive `viewFor` projections
-   and send actions. Nothing in the engine changes for this step.
+4. ~~**Multiplayer**: Node server runs the same engine, clients receive `viewFor` projections
+   and send actions. Nothing in the engine changes for this step.~~ Done — the server lives
+   in `src/server/` (`Room`/`RoomRegistry` over the engine, a `ws` protocol layer, an
+   esbuild bundle). Design in `docs/superpowers/specs/2026-09-08-online-pwa-design.md`;
+   deploy runbook in `docs/DEPLOY.md`.

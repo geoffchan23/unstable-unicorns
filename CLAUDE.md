@@ -16,10 +16,18 @@ src/engine/             pure TS game engine, no UI/network deps (a test enforces
   bot.ts                playersToAct, randomBotAction, greedyBotAction
   sim.ts                random-game simulator with invariants (npm run sim [games] [players])
   __tests__/            harness.ts + per-card tests; every card has at least one
-src/ui/                 React app (App.tsx, Card.tsx, styles.css, template.html)
-scripts/build.mjs       esbuild -> dist/unstable-unicorns.html (single file, art inlined) + dist/index.html
+src/server/             ws game server: Room/RoomRegistry, protocol, startServer (bundled by scripts/build-server.mjs)
+src/ui/                 React app: Home/Setup/Lobby, GameScreen (presentational) + LocalGame/OnlineGame drivers
+src/ui/net/             GameClient: reconnecting websocket, typed send/subscribe (src/ui/net/client.ts)
+src/ui/pwa/             manifest, service worker, icons, wake lock (copied into dist/unicorns by scripts/build.mjs)
+e2e/                    Playwright specs (local, online, pwa) against the dev and production builds
+scripts/build.mjs       esbuild -> dist/unicorns/ (static PWA: index.html, hashed app.js/css, manifest, sw.js, icons/, art/)
+scripts/build-server.mjs esbuild -> dist/server/unicorns-server.mjs (single-file server bundle, ws included)
+scripts/dev.mjs         client watch+serve on :5173 plus the game server on :8787, NODE_ENV=development
+scripts/deploy-server.sh builds and ships the server bundle to the VM, restarts it under pm2
+scripts/deploy-web.sh   builds the client and rsyncs it into the geoffchan23.github.io site repo
 scripts/art.py          regenerates assets/art/*.webp from two GitHub fan repos (needs pillow)
-scripts/shot.mjs        playwright screenshot of dist/index.html for a quick visual check
+deploy/                 ecosystem.config.cjs (pm2), Caddyfile, ingress.json (OCI firewall rules) — copied to the VM
 ```
 
 ## Commands
@@ -29,7 +37,12 @@ npm install
 npm test                 # vitest, ~10s
 npm run typecheck
 python3 scripts/art.py   # once per clone: card art (gitignored, copyright Unstable Games)
-npm run build            # dist/unstable-unicorns.html
+npm run build             # dist/unicorns/ static PWA
+npm run build:server      # dist/server/unicorns-server.mjs
+npm run dev               # client :5173 + game server :8787
+npm run e2e               # Playwright e2e tests
+scripts/deploy-server.sh  # ship the game server to the VM (see docs/DEPLOY.md)
+scripts/deploy-web.sh     # publish the client to geoffreychan.com/unicorns/
 ```
 
 ## Decisions already made (don't relitigate)
@@ -46,6 +59,11 @@ npm run build            # dist/unstable-unicorns.html
   Never store closures in state. Effects that need to run "instead of" a removal use the
   immuneTo / protectsOthers (pure) and replaceRemoval / protectOther (effectful, called once) hooks.
 - Engine must stay free of DOM/React imports.
+- A family passphrase gates room creation only; joining an existing room needs only its 4-letter code.
+- Rooms live in server memory only — a server restart drops all games; clients get NO_ROOM and clear
+  their session back to Home.
+- Card art is published on purpose (into the public `geoffchan23.github.io` site repo), unlike the
+  gitignored local `assets/art/`.
 
 ## Conventions
 
@@ -58,15 +76,7 @@ npm run build            # dist/unstable-unicorns.html
 
 ## Status and next steps
 
-Done: rules/data, engine with all cards and 91 tests, hot-seat + vs-bot web UI, card art, published
-as a private Claude artifact (single HTML) for phone testing.
-
-Agreed plan (2026-09-08), full design in `docs/superpowers/specs/2026-09-08-online-pwa-design.md`:
-- Web only, installed as a PWA. No Capacitor, no native code.
-- Static app on GitHub Pages at https://geoffreychan.com/unicorns/ (committed into the
-  `geoffchan23.github.io` site repo like the other games there). Card art is published on purpose.
-- Game server (`src/server/`) on the existing Oracle Always Free VM behind Caddy at
-  wss://play.geoffreychan.com, pm2-managed, single esbuild bundle. Rooms are in memory only.
-- A family passphrase gates room creation; joining needs only the 4-letter code.
+Done: online multiplayer PWA (spec: `docs/superpowers/specs/2026-09-08-online-pwa-design.md`). Deploy
+runbook: `docs/DEPLOY.md`.
 
 Known gaps: Unicorn Oracle has no art (placeholder); the bot sees hidden hands; log shows last 40 lines.

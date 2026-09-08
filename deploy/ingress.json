@@ -1,0 +1,26 @@
+[
+  {
+    "protocol": "6",
+    "source": "0.0.0.0/0",
+    "isStateless": false,
+    "tcpOptions": {
+      "destinationPortRange": { "min": 22, "max": 22 }
+    }
+  },
+  {
+    "protocol": "6",
+    "source": "0.0.0.0/0",
+    "isStateless": false,
+    "tcpOptions": {
+      "destinationPortRange": { "min": 80, "max": 80 }
+    }
+  },
+  {
+    "protocol": "6",
+    "source": "0.0.0.0/0",
+    "isStateless": false,
+    "tcpOptions": {
+      "destinationPortRange": { "min": 443, "max": 443 }
+    }
+  }
+]

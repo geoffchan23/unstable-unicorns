@@ -1,0 +1,3 @@
+play.geoffreychan.com {
+	reverse_proxy localhost:8787
+}
