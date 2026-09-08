@@ -38,14 +38,17 @@ export class Room {
   private addHuman(conn: string, name: string) {
     const token = this.deps.token();
     this.seats.push({ name: cleanName(name), kind: 'human', token, conn });
+    const seatIdx = this.seats.length - 1;
+    // a human joining a host-less/bot-hosted room (e.g. after the last human left) becomes host.
+    if (!this.seats[this.host] || this.seats[this.host]!.kind !== 'human') this.assignHost(seatIdx);
     this.touch(); this.pushLobby();
-    return { seat: this.seats.length - 1, token };
+    return { seat: seatIdx, token };
   }
   rejoin(conn: string, token: string) {
     const seat = this.seats.findIndex((s) => s.kind === 'human' && s.token === token);
     if (seat < 0) throw new RoomError('That seat is gone', 'BAD_TOKEN');
     this.seats[seat]!.conn = conn;
-    if (seat === this.host && this.hostTimer) { clearTimeout(this.hostTimer); this.hostTimer = null; }
+    if (seat === this.host) this.clearHostTimer();
     this.touch(); this.pushLobby();
     if (this.status !== 'lobby') this.pushState(seat);
     return { seat, token };
@@ -111,20 +114,44 @@ export class Room {
   // ---- internals
   private removeSeat(seat: number) {
     const s = this.seats[seat]!;
-    if (seat === this.host) { const next = this.nextHost(seat); if (next >= 0) this.host = next; }
+    const hostLeft = seat === this.host;
     this.seats.splice(seat, 1);
     if (this.host > seat) this.host -= 1;
+    if (hostLeft) {
+      // the seat that now sits at `this.host` is a different occupant than before (or none at
+      // all) - fall back to a human seat if it isn't one, and (re)arm the transfer timer if that
+      // occupant is a disconnected human, so the room is never left with a bot (or an unmonitored
+      // disconnected human) as host.
+      if (!this.seats[this.host] || this.seats[this.host]!.kind !== 'human') {
+        const fallback = this.humanHostCandidate();
+        this.host = fallback >= 0 ? fallback : 0;
+      }
+      this.assignHost(this.host);
+    }
     if (s.conn) this.deps.send(s.conn, { type: 'closed', reason: 'left' });
     this.pushLobby();
   }
   private nextHost(except: number) {
     return this.seats.findIndex((s, i) => i !== except && s.kind === 'human' && s.conn !== null);
   }
+  /** lowest human seat, preferring a connected one, else any human, else -1. */
+  private humanHostCandidate() {
+    const connected = this.seats.findIndex((s) => s.kind === 'human' && s.conn !== null);
+    if (connected >= 0) return connected;
+    return this.seats.findIndex((s) => s.kind === 'human');
+  }
   private setHost(seat: number) {
-    this.host = seat;
-    if (this.hostTimer) { clearTimeout(this.hostTimer); this.hostTimer = null; }
+    this.assignHost(seat);
     this.pushLobby(); if (this.status === 'playing') this.pushStateAll();
   }
+  /** Point `host` at `seat` and make sure a disconnected human host has a transfer timer armed. */
+  private assignHost(seat: number) {
+    this.host = seat;
+    this.clearHostTimer();
+    const s = this.seats[seat];
+    if (s && s.kind === 'human' && s.conn === null) this.armHostTransfer();
+  }
+  private clearHostTimer() { if (this.hostTimer) { clearTimeout(this.hostTimer); this.hostTimer = null; } }
   private armHostTransfer() {
     if (this.hostTimer) return;
     this.hostTimer = setTimeout(() => {
@@ -147,8 +174,23 @@ export class Room {
     this.botTimer = setTimeout(() => {
       this.botTimer = null;
       if (this.status !== 'playing' || !this.state) return;
-      const a = greedyBotAction(this.state, bot, this.deps.random);
-      if (a) { this.state = applyAction(this.state, a); this.afterChange(); }
+      let a: Action | null = null;
+      try {
+        a = greedyBotAction(this.state, bot, this.deps.random);
+        if (a) { this.state = applyAction(this.state, a); this.afterChange(); return; }
+      } catch (e) {
+        console.error(`[room ${this.code}] bot action failed for seat ${bot}`, e);
+      }
+      // greedyBotAction threw, or legitimately returned null: fall back to the first legal action
+      // so a broken bot can never crash the process or stall the room.
+      const legal = legalActions(this.state, bot);
+      if (legal.length === 0) { console.error(`[room ${this.code}] bot seat ${bot} has no legal action`); return; }
+      try {
+        this.state = applyAction(this.state, legal[0]!);
+        this.afterChange();
+      } catch (e) {
+        console.error(`[room ${this.code}] bot fallback action failed for seat ${bot}`, e);
+      }
     }, this.deps.botDelay ?? BOT_DELAY_MS);
   }
   private clearBot() { if (this.botTimer) { clearTimeout(this.botTimer); this.botTimer = null; } }
@@ -164,7 +206,7 @@ export class Room {
     this.deps.send(s.conn, { type: 'state', view: viewFor(st, seat), legal: legalActions(st, seat), seats: this.seatInfos(), host: this.host });
   }
   destroy(reason: string) {
-    this.clearBot(); if (this.hostTimer) clearTimeout(this.hostTimer);
+    this.clearBot(); this.clearHostTimer();
     for (const s of this.seats) if (s.conn) this.deps.send(s.conn, { type: 'closed', reason });
     this.seats = []; this.state = null;
   }

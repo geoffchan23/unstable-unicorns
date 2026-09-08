@@ -1,5 +1,6 @@
 import { Room, RoomError, type RoomDeps } from '../room';
 import type { ServerMessage } from '../protocol';
+import * as botModule from '../../engine/bot';
 import '../../engine/cards';
 
 function deps(): RoomDeps & { out: [string, ServerMessage][] } {
@@ -96,10 +97,29 @@ describe('Room play', () => {
     r.handle('h', { type: 'start', seed: 3 });
     // make it the bot's turn: human draws
     r.handle('h', { type: 'action', action: { type: 'draw', player: 0 } });
-    const turn = r.state!.turn.number;
     expect(r.state!.turn.player).toBe(1);
+    const before = r.state;
+    const statesToHostBefore = d.out.filter(([c, m]) => c === 'h' && m.type === 'state').length;
     vi.advanceTimersByTime(10);
-    expect(r.state!.turn.number + r.state!.players[1]!.hand.length).not.toBe(turn + 0); // something happened
+    const statesToHostAfter = d.out.filter(([c, m]) => c === 'h' && m.type === 'state').length;
+    expect(statesToHostAfter).toBeGreaterThan(statesToHostBefore); // the bot's move pushed a new state
+    expect(r.state).not.toBe(before); // and it is genuinely a different state object
+    vi.useRealTimers();
+  });
+  it('a bot action error is caught and falls back to a legal action', () => {
+    vi.useFakeTimers();
+    const d = deps(); const r = new Room('ABCD', d); r.create('h', 'h'); r.handle('h', { type: 'addBot' }); r.handle('h', { type: 'addBot' });
+    r.handle('h', { type: 'start', seed: 3 });
+    r.handle('h', { type: 'action', action: { type: 'draw', player: 0 } });
+    expect(r.state!.turn.player).toBe(1);
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const botSpy = vi.spyOn(botModule, 'greedyBotAction').mockImplementation(() => { throw new Error('boom'); });
+    const before = r.state;
+    vi.advanceTimersByTime(10);
+    expect(errSpy).toHaveBeenCalled();          // the failure was logged, not thrown into the process
+    expect(r.state).not.toBe(before);            // it recovered via the fallback legal action
+    expect(r.status).toBe('playing');
+    botSpy.mockRestore(); errSpy.mockRestore();
     vi.useRealTimers();
   });
   it('replaceWithBot only for a disconnected human, then the bot plays', () => {
@@ -159,5 +179,30 @@ describe('Room host transfer', () => {
     r.destroy('expired');
     expect(last(d, 'h', 'closed')).toMatchObject({ reason: 'expired' });
     expect(last(d, 'g', 'closed')).toMatchObject({ reason: 'expired' });
+  });
+  it('leaving a room with only bots left does not brick it; the next joiner becomes host', () => {
+    const d = deps(); const r = new Room('ABCD', d);
+    r.create('h', 'h');
+    r.handle('h', { type: 'addBot' });
+    r.handle('h', { type: 'addBot' });
+    r.handle('h', { type: 'leave' });
+    expect(r.seats.every((s) => s.kind === 'bot')).toBe(true);
+    expect(r.host).toBe(0); // no human left; parked at seat 0 rather than crashing or going stale
+    const { seat } = r.join('p', 'p');
+    expect(seat).toBe(2);
+    expect(r.host).toBe(2); // the joiner reclaims the host seat instead of the room staying bricked
+    expect(() => r.handle('p', { type: 'addBot' })).not.toThrow();
+    r.handle('p', { type: 'start', seed: 7 });
+    expect(r.status).toBe('playing');
+  });
+  it('makeHost to a disconnected human arms the transfer timer', () => {
+    vi.useFakeTimers();
+    const d = deps(); const r = new Room('ABCD', d); r.create('h', 'h'); r.join('g', 'g'); r.join('k', 'k');
+    r.disconnect('g'); // g is a disconnected human but not host yet, so no timer was armed for it
+    r.handle('h', { type: 'makeHost', seat: 1 }); // hand host to the disconnected g
+    expect(r.host).toBe(1);
+    vi.advanceTimersByTime(100);
+    expect(r.host).toBe(0); // h (still connected) takes over once g's grace period (hostGrace: 100) elapses
+    vi.useRealTimers();
   });
 });
