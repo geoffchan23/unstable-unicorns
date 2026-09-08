@@ -21,7 +21,11 @@ class Client {
 
 describe('ws server', () => {
   let srv: Awaited<ReturnType<typeof startServer>>;
-  beforeAll(async () => { srv = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true }); });
+  // Generous message-throttle limits here: this server backs most of the suite below, including
+  // a whole-game correctness test that legitimately fires many `action` messages back-to-back
+  // (each awaited round trip on localhost easily beats the production default of 20/s burst 40).
+  // The throttle itself is exercised against its own dedicated, tightly-limited server instance.
+  beforeAll(async () => { srv = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true, limits: { msgPerSec: 10_000, burst: 10_000 } }); });
   afterAll(() => srv.close());
 
   it('rejects bad origins', async () => {
@@ -97,6 +101,32 @@ describe('ws server', () => {
     expect((await a.next('joined')).seat).toBe(0);
     expect(srv.registry.get(joinedA.code)!.connectedHumans()).toBe(0); // no phantom seat left behind in A
     a.ws.close(); b.ws.close();
+  });
+  it('replies with an error (not a close) for an unrecognized message type', async () => {
+    const c = new Client(srv.port); await c.open();
+    c.send({ type: 'bogus' } as unknown as ClientMessage);
+    expect((await c.next('error')).message).toMatch(/unknown/i);
+    expect(c.ws.readyState).toBe(c.ws.OPEN);
+    c.ws.close();
+  });
+  it('throttles a connection sending too many messages, closing the socket with 1008', async () => {
+    const s5 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true, limits: { msgPerSec: 5, burst: 5 } });
+    const c = new Client(s5.port); await c.open();
+    const closed = new Promise<number>((res) => c.ws.once('close', (code) => res(code)));
+    for (let i = 0; i < 100; i++) c.send({ type: 'leave' });
+    expect(await closed).toBe(1008);
+    await s5.close();
+  });
+  it('rate-limits repeated failed join/rejoin attempts per IP', async () => {
+    const s4 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: false, limits: { joinFailures: 3 } });
+    const c = new Client(s4.port); await c.open();
+    for (let i = 0; i < 3; i++) {
+      c.send({ type: 'join', code: 'ZZZZ', name: 'X' });
+      expect((await c.next('error')).code).toBe('NO_ROOM');
+    }
+    c.send({ type: 'join', code: 'ZZZZ', name: 'X' });
+    expect((await c.next('error')).code).toBe('RATE');
+    c.ws.close(); await s4.close();
   });
   it('close() destroys every room, not just the sockets', async () => {
     const s3 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true });

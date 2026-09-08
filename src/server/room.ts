@@ -16,6 +16,13 @@ export interface Seat { name: string; kind: SeatKind; token: string | null; conn
 
 const BOT_NAMES = ['Sprinkles', 'Glitterhoof', 'Stabbington', 'Nimbus', 'Marshmallow', 'Twinkle', 'Rhubarb'];
 const cleanName = (n: string) => (n ?? '').toString().trim().slice(0, 20) || 'Player';
+/** True only for a genuine in-range array index - guards against e.g. `'__proto__'` (which reads
+ *  as truthy off `Array.prototype` through `arr[seat]`), negative indices, and non-integers, all
+ *  of which are untrusted input straight off the wire. */
+const isValidSeat = (seat: unknown, len: number): seat is number =>
+  typeof seat === 'number' && Number.isInteger(seat) && seat >= 0 && seat < len;
+const isValidAction = (action: unknown): action is { type: string } =>
+  !!action && typeof action === 'object' && typeof (action as { type?: unknown }).type === 'string';
 
 export class Room {
   status: RoomStatus = 'lobby';
@@ -85,6 +92,7 @@ export class Room {
         this.seats.push({ name: BOT_NAMES[this.seats.filter((s) => s.kind === 'bot').length % BOT_NAMES.length]!, kind: 'bot', token: null, conn: null });
         this.pushLobby(); return;
       case 'removeSeat': host(); lobby();
+        if (!isValidSeat(msg.seat, this.seats.length)) throw new RoomError('Invalid seat');
         if (msg.seat === this.host || !this.seats[msg.seat]) throw new RoomError('Cannot remove that seat');
         this.removeSeat(msg.seat); return;
       case 'leave': lobby(); this.removeSeat(seat); return;
@@ -94,12 +102,14 @@ export class Room {
         this.status = 'playing'; this.pushLobby(); this.afterChange(); return;
       case 'action': {
         if (this.status !== 'playing' || !this.state) throw new RoomError('No game in progress');
+        if (!isValidAction(msg.action)) throw new RoomError('Invalid action');
         const action = { ...msg.action, player: seat } as Action;
         try { this.state = applyAction(this.state, action); }
         catch (e) { if (e instanceof IllegalAction) throw new RoomError(e.message); throw e; }
         this.afterChange(); return;
       }
       case 'replaceWithBot': { host();
+        if (!isValidSeat(msg.seat, this.seats.length)) throw new RoomError('Invalid seat');
         const s = this.seats[msg.seat];
         if (this.status !== 'playing' || !s || s.kind !== 'human' || s.conn !== null) throw new RoomError('Only a disconnected player can be replaced');
         if (msg.seat === this.host) throw new RoomError('The host cannot be replaced');
@@ -108,6 +118,7 @@ export class Room {
         this.pushLobby(); this.afterChange(); return;
       }
       case 'makeHost': { host();
+        if (!isValidSeat(msg.seat, this.seats.length)) throw new RoomError('Invalid seat');
         const s = this.seats[msg.seat];
         if (!s || s.kind !== 'human') throw new RoomError('The host must be a human player');
         this.setHost(msg.seat); return;

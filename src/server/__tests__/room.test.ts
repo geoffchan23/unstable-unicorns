@@ -45,6 +45,16 @@ describe('Room lobby', () => {
     expect(r.seats).toHaveLength(2);
     expect(() => r.handle('h', { type: 'removeSeat', seat: 0 })).toThrow();
   });
+  it('removeSeat rejects malformed seat indices (prototype-pollution guard, negative, non-integer, out-of-range)', () => {
+    const d = deps(); const r = new Room('ABCD', d); r.create('h', 'h'); r.join('g', 'g');
+    const seatsBefore = r.seats.map((s) => ({ ...s }));
+    const hostBefore = r.host;
+    for (const bad of ['__proto__', -1, 1.5, 99] as unknown as number[]) {
+      expect(() => r.handle('h', { type: 'removeSeat', seat: bad })).toThrow(RoomError);
+    }
+    expect(r.seats).toEqual(seatsBefore);
+    expect(r.host).toBe(hostBefore);
+  });
   it('leave renumbers seats and transfers host', () => {
     const d = deps(); const r = new Room('ABCD', d); r.create('h', 'h'); r.join('g', 'g'); r.join('k', 'k');
     r.handle('h', { type: 'leave' });
@@ -81,6 +91,12 @@ describe('Room play', () => {
     r.handle('h', { type: 'action', action: { type: 'draw', player: 2 } });
     expect(r.state!.players[0]!.hand).toHaveLength(before.players[0]!.hand.length + 1);
     expect(d.out.filter(([, m]) => m.type === 'state').map(([c]) => c).sort()).toEqual(['g', 'h', 'k']);
+  });
+  it('rejects a malformed action payload', () => {
+    const { r } = playing();
+    const before = r.state;
+    expect(() => r.handle('h', { type: 'action', action: null as never })).toThrow(RoomError);
+    expect(r.state).toBe(before);
   });
   it('each seat gets its own view and other hands are hidden', () => {
     const { d, r } = playing();

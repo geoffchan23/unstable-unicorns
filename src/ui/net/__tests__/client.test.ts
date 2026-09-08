@@ -166,6 +166,33 @@ describe('GameClient', () => {
     expect(c.snapshot().error).toMatch(/No room/);
   });
 
+  it('forget() clears storage, resets the snapshot, stops reconnecting, and lets a later connect() start fresh', () => {
+    const storage = mem();
+    const c = make(storage);
+    c.connect();
+    const ws = FakeWS.instances[0]!;
+    ws.open();
+    ws.receive({ type: 'joined', code: 'ABCD', seat: 0, token: 't1' });
+    ws.receive({ type: 'lobby', code: 'ABCD', seats: [], you: 0, host: 0, status: 'playing' });
+    expect(storage.getItem(SESSION_KEY)).not.toBeNull();
+
+    c.forget();
+    expect(storage.getItem(SESSION_KEY)).toBeNull();
+    expect(c.snapshot()).toMatchObject({ status: 'closed', joined: null, lobby: null, state: null, error: null, closedReason: null });
+    expect(ws.readyState).toBe(FakeWS.CLOSED);
+
+    // no reconnect timer fires
+    vi.advanceTimersByTime(1000);
+    expect(FakeWS.instances).toHaveLength(1);
+
+    // a later connect() opens a fresh socket without sending rejoin
+    c.connect();
+    expect(FakeWS.instances).toHaveLength(2);
+    const ws2 = FakeWS.instances[1]!;
+    ws2.open();
+    expect(ws2.sent).toHaveLength(0);
+  });
+
   it('ignores malformed frames without throwing and leaves the snapshot unchanged', () => {
     const c = make();
     c.connect();

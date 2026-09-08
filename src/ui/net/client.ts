@@ -183,6 +183,25 @@ export class GameClient {
     this.set({ joined: null, lobby: null, state: null });
   }
 
+  /** A way out of a room the server-side `leave` message can't reach (any status but `lobby` -
+   *  see ruling F). Clears the stored session and closes the socket so the server's `disconnect`
+   *  fires (letting host transfer proceed for anyone left behind), resets the snapshot, and
+   *  leaves the client ready for a fresh `connect()` with no rejoin. */
+  forget() {
+    this.stopped = true;
+    if (this.timer) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    this.rejoining = false;
+    this.queue = [];
+    this.saveSession(null);
+    this.ws?.close();
+    this.ws = null;
+    this.delay = this.minDelay;
+    this.set({ status: 'closed', joined: null, lobby: null, state: null, error: null, closedReason: null });
+  }
+
   clearError() {
     this.set({ error: null });
   }

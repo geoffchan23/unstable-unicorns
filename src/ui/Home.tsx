@@ -1,4 +1,4 @@
-export function Home({ onLocal, onOnline, hasSession }: { onLocal(): void; onOnline(): void; hasSession: boolean }) {
+export function Home({ onLocal, onOnline, onForget, hasSession }: { onLocal(): void; onOnline(): void; onForget(): void; hasSession: boolean }) {
   return (
     <main className="setup home">
       <header className="setup-head">
@@ -7,6 +7,7 @@ export function Home({ onLocal, onOnline, hasSession }: { onLocal(): void; onOnl
       </header>
       <div className="choices big-choices">
         <button type="button" className="choice primary" onClick={onOnline}>{hasSession ? 'Back to my game' : 'Play online'}</button>
+        {hasSession && <button type="button" className="ghost" onClick={onForget} data-testid="forget">Leave this game</button>}
         <button type="button" className="choice" onClick={onLocal}>Play on this device</button>
       </div>
     </main>

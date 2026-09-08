@@ -27,7 +27,8 @@ scripts/dev.mjs         client watch+serve on :5173 plus the game server on :878
 scripts/deploy-server.sh builds and ships the server bundle to the VM, restarts it under pm2
 scripts/deploy-web.sh   builds the client and rsyncs it into the geoffchan23.github.io site repo
 scripts/art.py          regenerates assets/art/*.webp from two GitHub fan repos (needs pillow)
-deploy/                 ecosystem.config.cjs (pm2), Caddyfile, ingress.json (OCI firewall rules) — copied to the VM
+deploy/                 ecosystem.config.cjs (pm2) and Caddyfile, both copied to the VM; ingress.json is a
+                        local input to the OCI CLI (`oci network security-list update`), never copied there
 ```
 
 ## Commands
@@ -80,3 +81,5 @@ Done: online multiplayer PWA (spec: `docs/superpowers/specs/2026-09-08-online-pw
 runbook: `docs/DEPLOY.md`.
 
 Known gaps: Unicorn Oracle has no art (placeholder); the bot sees hidden hands; log shows last 40 lines.
+`viewFor` includes `pending` prompt options and the full `cards` map, so a curious online player can read
+some card ids they should not see.

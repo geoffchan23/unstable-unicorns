@@ -159,5 +159,19 @@ test('two players create, join, play to a winner, rejoin after reload, host tran
   await expect(b.page.getByTestId('playagain')).toBeVisible({ timeout: 30_000 });
   await b.page.getByTestId('playagain').click();
   await expect(b.page.getByTestId('start')).toBeVisible();
+
+  // Ben (now sole connected player, host of the fresh lobby - Ann's seat is still there but
+  // offline) starts a second round so there's a game in progress again: the win overlay is
+  // modal and has no quit affordance, so "outside lobby status" (ruling F) is only reachable
+  // from the topbar's "Quit", which only changes screens - it doesn't touch the stored
+  // session. Home then offers both "Back to my game" and the new "Leave this game"
+  // (forget()); clicking it clears the session and Home falls back to plain "Play online" -
+  // no session remains.
+  await b.page.getByTestId('start').click();
+  await expect(b.page.getByTestId('topbar')).toBeVisible();
+  await b.page.getByRole('button', { name: 'Quit' }).click();
+  await expect(b.page.getByRole('button', { name: 'Back to my game' })).toBeVisible();
+  await b.page.getByTestId('forget').click();
+  await expect(b.page.getByRole('button', { name: 'Play online' })).toBeVisible();
   await b.ctx.close();
 });

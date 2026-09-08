@@ -100,6 +100,7 @@ export function Lobby({ client, snap, onBack }: { client: GameClient; snap: Snap
         {isHost && lobby.status === 'lobby' && <button type="button" className="primary big" onClick={() => client.send({ type: 'start' })} disabled={lobby.seats.length < 2} data-testid="start">Start game</button>}
         {isHost && lobby.status === 'finished' && <button type="button" className="primary big" onClick={() => client.send({ type: 'playAgain' })} data-testid="playagain">Play again</button>}
         {lobby.status === 'lobby' && <button type="button" className="ghost" onClick={() => { client.leave(); onBack(); }}>Leave room</button>}
+        {lobby.status !== 'lobby' && <button type="button" className="ghost" onClick={() => { client.forget(); onBack(); }} data-testid="forget">Leave this game</button>}
         {snap.error && <p className="error" role="alert" onClick={() => client.clearError()}>{snap.error}</p>}
       </section>
     </main>

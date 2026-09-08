@@ -40,7 +40,7 @@ export function Setup({ onStart, onBack }: { onStart: (seats: Seat[], seed: numb
       <section className="setup-foot">
         <label className="seed">Seed <input value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="random" inputMode="numeric" /></label>
         <p className="hint">{seats.length === 2 ? 'Two players: the official 2-player deck is used (32 cards removed, one Neigh each to start).' : `${seats.length} players, ${humans} human.`}</p>
-        <button type="button" className="primary big" onClick={() => onStart(seats, seed ? Number(seed) : Math.floor(Math.random() * 1e9))} disabled={humans === 0 && false}>
+        <button type="button" className="primary big" onClick={() => onStart(seats, seed ? Number(seed) : Math.floor(Math.random() * 1e9))}>
           Deal me in
         </button>
       </section>

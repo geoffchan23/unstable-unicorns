@@ -96,9 +96,20 @@ PORT=8787
 ALLOWED_ORIGINS=https://geoffreychan.com
 ```
 
+Optional: `HOST` overrides the bind address (defaults to `127.0.0.1` in production, since
+Caddy proxies to localhost — the default is right for this deployment; leave it unset). The
+dev server (`scripts/dev.mjs`) always binds `0.0.0.0` regardless of `HOST` so phones on the
+LAN can reach it during development.
+
 `scripts/deploy-server.sh` refuses to proceed if this file is missing. `pm2 startup` is
 already configured on this VM (from the Wordle bot), so pm2-managed processes survive a
 reboot; `pm2 save` (run automatically by the deploy script) persists the process list.
+
+pm2's environment for the `unicorns` process comes from `deploy-server.sh` sourcing
+`~/unicorns/.env` before calling `pm2 startOrRestart ... --update-env`. Always restart via
+that script — a bare `pm2 restart unicorns --update-env` run directly on the VM does not
+re-source `.env` and will drop `UNICORNS_PASSPHRASE` (and any other env var) from the running
+process.
 
 ## 5. Deploy
 
@@ -116,6 +127,11 @@ scripts/deploy-web.sh
 
 Both use `UU_HOST` / `UU_KEY` / `SITE_REPO` env vars to override their defaults
 (`ubuntu@140.238.145.208`, `~/.ssh/oci_wordle_key`, `../../geoffchan23.github.io`).
+
+`scripts/deploy-web.sh` must be run on a machine with `assets/art/` populated
+(`python3 scripts/art.py` — see the main `README`/`CLAUDE.md`); it warns but does not refuse
+to proceed otherwise, so running it from a fresh clone without that step ships placeholder
+card art to production.
 
 Logs:
 

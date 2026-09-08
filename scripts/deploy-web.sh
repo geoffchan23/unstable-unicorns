@@ -8,5 +8,5 @@ npm run build
 SHA=$(git rev-parse --short HEAD)
 rsync -a --delete dist/unicorns/ "$SITE/unicorns/"
 grep -q '!unicorns/\*\*/\*.png' "$SITE/.gitignore" || printf '!unicorns/**/*.png\n' >> "$SITE/.gitignore"
-( cd "$SITE" && git add unicorns .gitignore && git commit -m "unicorns: deploy $SHA" && git push )
+( cd "$SITE" && git add unicorns .gitignore && (git diff --cached --quiet && echo "nothing to deploy" || (git commit -m "unicorns: deploy $SHA" && git push)) )
 echo "deployed https://geoffreychan.com/unicorns/ (GitHub Pages takes a minute)"

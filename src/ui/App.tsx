@@ -39,7 +39,7 @@ export function App() {
   function renderMode() {
     switch (mode) {
       case 'home':
-        return <Home hasSession={!!client.session()} onLocal={() => setMode('local-setup')} onOnline={() => setMode('online')} />;
+        return <Home hasSession={!!client.session()} onLocal={() => setMode('local-setup')} onOnline={() => setMode('online')} onForget={() => client.forget()} />;
       case 'local-setup':
         return <Setup onBack={() => setMode('home')} onStart={(seats, seed) => { setGame({ seats, seed }); setMode('local-game'); }} />;
       case 'local-game':
