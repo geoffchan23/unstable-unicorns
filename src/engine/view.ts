@@ -1,10 +1,11 @@
 import type { GameState, InstanceId, PlayerId } from './types';
-import { stableHas } from './queries';
+import { stableHas, unicornCount } from './queries';
 import { previewState } from './game';
 
 export interface PlayerView extends Omit<GameState, 'deck' | 'players' | 'rng' | 'seed'> {
   me: PlayerId;
   deckCount: number;
+  unicornCounts: number[];
   players: { id: PlayerId; name: string; stable: InstanceId[]; handCount: number; hand: InstanceId[] | null }[];
 }
 
@@ -24,5 +25,6 @@ export function viewFor(input: GameState, me: PlayerId): PlayerView {
       handCount: p.hand.length,
       hand: p.id === me || stableHas(state, p.id, 'nanny-cam') ? [...p.hand] : null,
     })),
+    unicornCounts: players.map((p) => unicornCount(state, p.id)),
   };
 }
