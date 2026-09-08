@@ -22,7 +22,9 @@ const sameSecret = (a: string, b: string) => {
   return timingSafeEqual(ha, hb);
 };
 
-const LAN_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|10\.|192\.168\.)/;
+const LAN_ORIGIN =
+  /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/;
+const CREATE_RATE_MS = 60_000;
 
 export async function startServer(opts: ServerOptions = {}) {
   const dev = opts.dev ?? false;
@@ -47,13 +49,19 @@ export async function startServer(opts: ServerOptions = {}) {
   const lastCreate = new Map<string, number>();
 
   const http = createServer((req, res) => {
-    if (req.url === '/healthz') { res.writeHead(200, { 'content-type': 'text/plain' }); res.end('ok'); return; }
-    res.writeHead(404); res.end();
+    const pathname = new URL(req.url ?? '/', 'http://localhost').pathname;
+    if (req.method === 'GET' && pathname === '/healthz') {
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.end('ok');
+      return;
+    }
+    res.writeHead(404);
+    res.end();
   });
   const wss = new WebSocketServer({
     server: http,
     maxPayload: 16 * 1024,
-    verifyClient: ({ origin }: { origin: string }) => {
+    verifyClient: ({ origin }: { origin: string | undefined }) => {
       if (!origin) return dev;
       if (origins.has(origin)) return true;
       return dev && LAN_ORIGIN.test(origin);
@@ -66,7 +74,9 @@ export async function startServer(opts: ServerOptions = {}) {
       ws,
       room: null,
       alive: true,
-      ip: (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() || req.socket.remoteAddress || '?',
+      // Caddy (our reverse proxy) appends the real peer to any existing x-forwarded-for chain,
+      // so the trustworthy entry is the last one, not the first (which a client can forge).
+      ip: (req.headers['x-forwarded-for'] as string | undefined)?.split(',').pop()?.trim() || req.socket.remoteAddress || '?',
     };
     conns.set(c.id, c);
     const reply = (msg: ServerMessage) => ws.send(JSON.stringify(msg));
@@ -84,10 +94,10 @@ export async function startServer(opts: ServerOptions = {}) {
           }
           if (!dev) {
             const t = lastCreate.get(c.ip) ?? 0;
-            if (Date.now() - t < 60_000) throw new RoomError('Slow down: one new room per minute', 'RATE');
-            lastCreate.set(c.ip, Date.now());
+            if (Date.now() - t < CREATE_RATE_MS) throw new RoomError('Slow down: one new room per minute', 'RATE');
           }
           const room = registry.create();
+          if (!dev) lastCreate.set(c.ip, Date.now());
           const { seat, token } = room.create(c.id, msg.name);
           c.room = room;
           reply({ type: 'joined', code: room.code, seat, token });
@@ -100,9 +110,12 @@ export async function startServer(opts: ServerOptions = {}) {
           reply({ type: 'joined', code: room.code, seat: r.seat, token: r.token });
         } else if (msg.type === 'rejoin') {
           // Rejoin re-anchors this connection by token, regardless of whatever room (if any) it
-          // currently thinks it's in - that's the whole point of reconnecting after a drop.
+          // currently thinks it's in - that's the whole point of reconnecting after a drop. If
+          // it's hopping in from a *different* room, disconnect it there first so that room
+          // isn't left thinking this connection is still seated (and connected) in it.
           const room = registry.get(msg.code);
           if (!room) throw new RoomError('No room with that code', 'NO_ROOM');
+          if (c.room && c.room !== room) c.room.disconnect(c.id);
           const r = room.rejoin(c.id, msg.token);
           c.room = room;
           reply({ type: 'joined', code: room.code, seat: r.seat, token: r.token });
@@ -125,7 +138,9 @@ export async function startServer(opts: ServerOptions = {}) {
       c.alive = false;
       c.ws.ping();
     }
-    for (const code of registry.sweep(Date.now())) console.log(`room ${code} expired`);
+    const now = Date.now();
+    for (const [ip, t] of lastCreate) if (now - t > CREATE_RATE_MS) lastCreate.delete(ip);
+    for (const code of registry.sweep(now)) console.log(`room ${code} expired`);
   }, 30_000);
 
   await new Promise<void>((res) => http.listen(opts.port ?? 8787, res));
@@ -136,6 +151,9 @@ export async function startServer(opts: ServerOptions = {}) {
     close: () =>
       new Promise<void>((res) => {
         clearInterval(heartbeat);
+        // Destroy every room so their host-transfer/bot timers don't keep re-arming after
+        // shutdown (Room.destroy clears both, and notifies any still-connected seats).
+        for (const code of [...registry.rooms.keys()]) registry.remove(code);
         for (const c of conns.values()) c.ws.terminate();
         wss.close();
         http.closeAllConnections?.();

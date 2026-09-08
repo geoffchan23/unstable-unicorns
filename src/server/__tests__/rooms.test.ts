@@ -17,9 +17,12 @@ describe('RoomRegistry', () => {
     let t = 0; const d = { ...deps(), now: () => t };
     const reg = new RoomRegistry(d, { idleMs: 1000, emptyMs: 100 });
     const busy = reg.create(); busy.create('c', 'x');
-    const empty = reg.create();
-    t = 150; expect(reg.sweep(t)).toEqual([empty.code]);
-    busy.disconnect('c'); t = 300; expect(reg.sweep(t)).toEqual([busy.code]);   // nobody connected for > emptyMs
-    const idle = reg.create(); idle.create('c', 'x'); t = 2000; expect(reg.sweep(t)).toEqual([idle.code]);
+    const empty = reg.create(); // no seats at all: reaped on sight, regardless of timing
+    t = 50; expect(reg.sweep(t)).toEqual([empty.code]);
+    t = 60; busy.disconnect('c'); // starts busy's empty-room clock (`emptySince`) at t=60
+    t = 150; expect(reg.sweep(t)).toEqual([]); // only 90ms empty, under emptyMs (100)
+    t = 200; expect(reg.sweep(t)).toEqual([busy.code]); // 140ms empty, over emptyMs (100)
+    const idle = reg.create(); idle.create('c', 'x'); // stays connected for the rest of this test
+    t = 1300; expect(reg.sweep(t)).toEqual([idle.code]); // connected, but idle (no activity) > idleMs (1000)
   });
 });

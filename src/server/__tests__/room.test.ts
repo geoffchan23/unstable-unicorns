@@ -206,3 +206,25 @@ describe('Room host transfer', () => {
     vi.useRealTimers();
   });
 });
+
+describe('Room emptySince', () => {
+  it('starts the empty-room clock only once nobody is connected, and clears it on (re)join', () => {
+    let t = 0; let n = 0;
+    const d: RoomDeps = { send: () => {}, now: () => t, random: () => 0.5, token: () => `tok${++n}` };
+    const r = new Room('ABCD', d);
+    expect(r.emptySince).toBeNull(); // brand new, nobody seated yet
+    const { token: tok1 } = r.create('c1', 'a');
+    expect(r.emptySince).toBeNull(); // the creator is connected
+    r.join('c2', 'b');
+    t = 10; r.disconnect('c1');
+    expect(r.emptySince).toBeNull(); // c2 is still connected
+    t = 20; r.disconnect('c2');
+    expect(r.emptySince).toBe(20); // last connected human just left
+    t = 30; r.disconnect('c2'); // already disconnected: not a new transition
+    expect(r.emptySince).toBe(20);
+    t = 40; r.rejoin('c1', tok1);
+    expect(r.emptySince).toBeNull(); // someone reconnected
+    t = 50; r.handle('c1', { type: 'leave' });
+    expect(r.emptySince).toBe(50); // the sole remaining human left the room entirely
+  });
+});

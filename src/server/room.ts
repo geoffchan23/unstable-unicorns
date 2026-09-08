@@ -23,6 +23,10 @@ export class Room {
   host = 0;
   state: GameState | null = null;
   lastActivity: number;
+  /** Set to `deps.now()` the moment `connectedHumans()` drops to zero; cleared whenever someone
+   *  (re)connects. `RoomRegistry.sweep` reaps a room once this has stood for longer than its
+   *  empty-room grace period, rather than measuring from `lastActivity`. */
+  emptySince: number | null = null;
   private botTimer: ReturnType<typeof setTimeout> | null = null;
   private hostTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -41,6 +45,7 @@ export class Room {
     const seatIdx = this.seats.length - 1;
     // a human joining a host-less/bot-hosted room (e.g. after the last human left) becomes host.
     if (!this.seats[this.host] || this.seats[this.host]!.kind !== 'human') this.assignHost(seatIdx);
+    this.emptySince = null;
     this.touch(); this.pushLobby();
     return { seat: seatIdx, token };
   }
@@ -49,6 +54,7 @@ export class Room {
     if (seat < 0) throw new RoomError('That seat is gone', 'BAD_TOKEN');
     this.seats[seat]!.conn = conn;
     if (seat === this.host) this.clearHostTimer();
+    this.emptySince = null;
     this.touch(); this.pushLobby();
     if (this.status !== 'lobby') this.pushState(seat);
     return { seat, token };
@@ -58,6 +64,7 @@ export class Room {
     if (seat < 0) return;
     this.seats[seat]!.conn = null;
     if (seat === this.host) this.armHostTransfer();
+    this.markEmptyIfNeeded();
     this.pushLobby();
   }
   seatOf(conn: string) { return this.seats.findIndex((s) => s.conn === conn); }
@@ -97,6 +104,7 @@ export class Room {
         if (this.status !== 'playing' || !s || s.kind !== 'human' || s.conn !== null) throw new RoomError('Only a disconnected player can be replaced');
         if (msg.seat === this.host) throw new RoomError('The host cannot be replaced');
         s.kind = 'bot'; s.token = null; s.conn = null;
+        this.markEmptyIfNeeded();
         this.pushLobby(); this.afterChange(); return;
       }
       case 'makeHost': { host();
@@ -128,6 +136,7 @@ export class Room {
       }
       this.assignHost(this.host);
     }
+    this.markEmptyIfNeeded();
     if (s.conn) this.deps.send(s.conn, { type: 'closed', reason: 'left' });
     this.pushLobby();
   }
@@ -195,6 +204,11 @@ export class Room {
   }
   private clearBot() { if (this.botTimer) { clearTimeout(this.botTimer); this.botTimer = null; } }
   private touch() { this.lastActivity = this.deps.now(); }
+  /** Start the empty-room clock the moment `connectedHumans()` drops to zero; a no-op if it's
+   *  already running or somebody is still connected. */
+  private markEmptyIfNeeded() {
+    if (this.connectedHumans() === 0 && this.emptySince === null) this.emptySince = this.deps.now();
+  }
   private pushLobby() {
     const seats = this.seatInfos();
     this.seats.forEach((s, i) => { if (s.conn) this.deps.send(s.conn, { type: 'lobby', code: this.code, seats, you: i, host: this.host, status: this.status }); });

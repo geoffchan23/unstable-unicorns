@@ -86,4 +86,26 @@ describe('ws server', () => {
     expect((await c.next('error')).code).toBe('RATE');
     c.ws.close(); await s2.close();
   });
+  it('rejoining a different room disconnects the socket from its old room first', async () => {
+    const a = new Client(srv.port); const b = new Client(srv.port);
+    await a.open(); await b.open();
+    a.send({ type: 'create', name: 'A', passphrase: 'moo' });
+    const joinedA = await a.next('joined');
+    b.send({ type: 'create', name: 'B', passphrase: 'moo' });
+    const joinedB = await b.next('joined');
+    a.send({ type: 'rejoin', code: joinedB.code, token: joinedB.token });
+    expect((await a.next('joined')).seat).toBe(0);
+    expect(srv.registry.get(joinedA.code)!.connectedHumans()).toBe(0); // no phantom seat left behind in A
+    a.ws.close(); b.ws.close();
+  });
+  it('close() destroys every room, not just the sockets', async () => {
+    const s3 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true });
+    const c = new Client(s3.port); await c.open();
+    c.send({ type: 'create', name: 'A', passphrase: 'moo' });
+    await c.next('joined');
+    expect(s3.registry.rooms.size).toBe(1);
+    c.ws.close();
+    await s3.close();
+    expect(s3.registry.rooms.size).toBe(0);
+  });
 });

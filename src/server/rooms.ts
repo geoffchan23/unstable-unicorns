@@ -38,16 +38,16 @@ export class RoomRegistry {
 
   /**
    * Removes rooms that are idle for more than `idleMs` since their last activity, that have had
-   * zero connected humans for more than `emptyMs` (measured from that same last-activity mark,
-   * since disconnects don't themselves touch it), or that have zero human seats at all.
+   * zero connected humans for more than `emptyMs` (measured from `room.emptySince`, which the
+   * room itself starts the instant its last connected human disconnects), or that have zero
+   * human seats at all.
    */
   sweep(now: number): string[] {
     const gone: string[] = [];
     for (const [code, r] of this.rooms) {
-      const inactiveFor = now - r.lastActivity;
       const remove = r.humanSeats() === 0
-        || (r.connectedHumans() === 0 && inactiveFor > this.emptyMs)
-        || inactiveFor > this.idleMs;
+        || (r.emptySince !== null && now - r.emptySince > this.emptyMs)
+        || now - r.lastActivity > this.idleMs;
       if (remove) {
         r.destroy('expired');
         this.rooms.delete(code);
