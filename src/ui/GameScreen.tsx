@@ -1,0 +1,262 @@
+import { useEffect, useRef, useState } from 'react';
+import { cardData } from '../engine/registry';
+import type { Action, Answer, InstanceId, PlayerId, Prompt } from '../engine/types';
+import type { PlayerView } from '../engine/view';
+import { CardView } from './Card';
+import type { SeatInfo } from './seats';
+
+export interface GameScreenProps {
+  view: PlayerView;
+  legal: Action[];
+  seats: SeatInfo[];
+  onAction: (a: Action) => void;
+  onQuit: () => void;
+  error: string | null;
+  onDismissError: () => void;
+  youLabel?: string;             // default ' (you)'
+  banner?: React.ReactNode;      // rendered under the top bar (reconnecting, offline player)
+  renderWin?: (winner: PlayerId) => React.ReactNode;  // default: "New game" button -> onQuit
+  children?: React.ReactNode;    // extra overlays (hot-seat handoff)
+}
+
+export function GameScreen({
+  view, legal, seats, onAction, onQuit, error, onDismissError, youLabel, banner, renderWin, children,
+}: GameScreenProps) {
+  const me = view.players[view.me]!;
+  const myTurn = view.turn.player === view.me && view.turn.phase === 'action' && !view.pending && view.winner === null;
+  const playable = new Set(legal.filter((a) => a.type === 'play').map((a) => (a as { card: InstanceId }).card));
+  const canDraw = legal.some((a) => a.type === 'draw');
+
+  const [targeting, setTargeting] = useState<InstanceId | null>(null);
+  const [expanded, setExpanded] = useState<PlayerId | null>(null);
+
+  const data = (id: InstanceId) => cardData.get(view.cards[id]!.def)!;
+
+  const onHandCard = (id: InstanceId) => {
+    if (!myTurn || !playable.has(id)) return;
+    const t = data(id).type;
+    if (t === 'upgrade' || t === 'downgrade') setTargeting(id);
+    else onAction({ type: 'play', player: view.me, card: id });
+  };
+
+  const prompt = view.pending?.kind === 'prompt' && view.pending.prompt.player === view.me ? view.pending.prompt : null;
+  const neighWindow = view.pending?.kind === 'neighWindow' && view.pending.awaiting.includes(view.me) ? view.pending : null;
+  const stackTop = view.stack.length ? view.stack[0]! : null;
+
+  const recent = view.log.slice(-40);
+  const logRef = useRef<HTMLOListElement>(null);
+  useEffect(() => { logRef.current?.scrollTo({ top: 1e9 }); }, [view.log.length]);
+
+  return (
+    <div className="game">
+      <header className="topbar" data-testid="topbar">
+        <div className="turn">
+          <span className="who">{view.winner !== null ? `${view.players[view.winner]!.name} wins!` : `${view.players[view.turn.player]!.name}'s turn`}</span>
+          <span className="meta">Turn {view.turn.number} · deck {view.deckCount} · nursery {view.nursery.length} · first to {view.unicornsToWin}</span>
+        </div>
+        <button type="button" className="ghost small" onClick={onQuit}>Quit</button>
+      </header>
+
+      {banner}
+
+      <section className="opponents" aria-label="Other players">
+        {view.players.filter((p) => p.id !== view.me).map((p) => {
+          const n = view.unicornCounts[p.id]!;
+          const active = view.turn.player === p.id;
+          const botTag = seats[p.id]?.kind === 'bot' ? ' ·bot' : '';
+          const offlineTag = seats[p.id]?.connected === false ? ' ·offline' : '';
+          return (
+            <button type="button" key={p.id} className={`opp ${active ? 'active' : ''} ${expanded === p.id ? 'open' : ''}`} onClick={() => setExpanded(expanded === p.id ? null : p.id)}>
+              <span className="opp-name">{p.name}{botTag}{offlineTag}</span>
+              <span className="opp-count"><b>{n}</b><small>/{view.unicornsToWin}</small></span>
+              <span className="opp-hand">{p.handCount} in hand</span>
+              <span className="chips">
+                {p.stable.map((c) => <CardView key={c} data={data(c)} compact />)}
+              </span>
+            </button>
+          );
+        })}
+      </section>
+
+      {expanded !== null && (
+        <section className="expanded">
+          <h3>{view.players[expanded]!.name}'s stable</h3>
+          <div className="row">{view.players[expanded]!.stable.map((c) => <CardView key={c} data={data(c)} />)}</div>
+          {view.players[expanded]!.hand && (
+            <><h3>{view.players[expanded]!.name}'s hand (Nanny Cam)</h3><div className="row">{view.players[expanded]!.hand!.map((c) => <CardView key={c} data={data(c)} />)}</div></>
+          )}
+        </section>
+      )}
+
+      <section className="table">
+        {stackTop && view.pending?.kind === 'neighWindow' && (
+          <div className="playing">
+            <span>{view.players[stackTop.player]!.name} plays</span>
+            <CardView data={data(stackTop.card)} compact />
+            {view.stack.length > 1 && <span className="chain">{view.stack.length - 1} Neigh{view.stack.length > 2 ? 's' : ''} on it</span>}
+            <span className="waiting">waiting on {view.pending.awaiting.map((p) => view.players[p]!.name).join(', ')}</span>
+          </div>
+        )}
+        <ol className="log" ref={logRef}>
+          {recent.map((l, i) => <li key={view.log.length - recent.length + i} className={l.text.startsWith('---') ? 'turnmark' : ''}>{l.text.replace(/^--- | ---$/g, '')}</li>)}
+        </ol>
+      </section>
+
+      <section className="mine">
+        <div className="mine-head">
+          <span className="you">{me.name}{youLabel ?? ' (you)'}</span>
+          <span className="count"><b>{view.unicornCounts[view.me]}</b> / {view.unicornsToWin} unicorns</span>
+        </div>
+        <div className="stable row">
+          {me.stable.length === 0 && <span className="empty">Your stable is empty.</span>}
+          {me.stable.map((c) => <CardView key={c} data={data(c)} compact />)}
+        </div>
+        <div className="hand-head">
+          <span>Hand · {me.hand?.length ?? 0}</span>
+          {myTurn && <span className="cue">{view.turn.playsRemaining > 1 ? `Play a card (${view.turn.playsRemaining} left)` : 'Play a card, or draw instead'}</span>}
+          {myTurn && canDraw && <button type="button" className="primary small" data-testid="draw" onClick={() => onAction({ type: 'draw', player: view.me })}>Draw instead</button>}
+        </div>
+        <div className="hand row" data-testid="hand">
+          {(me.hand ?? []).map((c) => (
+            <CardView key={c} data={data(c)} onClick={() => onHandCard(c)} disabled={!myTurn || !playable.has(c)} />
+          ))}
+        </div>
+      </section>
+
+      {/* ---------- sheets ---------- */}
+      {targeting !== null && (
+        <Sheet title={`Play ${data(targeting).name} into whose stable?`} onClose={() => setTargeting(null)} testId="target">
+          <div className="choices">
+            {view.players.map((p) => (
+              <button type="button" key={p.id} className="choice" onClick={() => { onAction({ type: 'play', player: view.me, card: targeting, targetPlayer: p.id }); setTargeting(null); }}>
+                {p.id === view.me ? `${p.name} (me)` : p.name}
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      )}
+
+      {neighWindow && stackTop && (
+        <Sheet title={`${view.players[view.stack[view.stack.length - 1]!.player]!.name} ${view.stack.length > 1 ? 'Neighs' : 'plays'} ${data(view.stack[view.stack.length - 1]!.card).name}`} testId="neigh">
+          <p className="sheet-sub">{view.stack.length > 1 ? `Neigh the Neigh and ${data(stackTop.card).name} ${view.stack.length % 2 === 0 ? 'resolves' : 'is cancelled'}.` : `Neigh it and it goes straight to the discard pile.`}</p>
+          <div className="row center"><CardView data={data(view.stack[view.stack.length - 1]!.card)} /></div>
+          <div className="choices">
+            {legal.filter((a) => a.type === 'neigh').map((a) => (
+              <button type="button" key={(a as { card: number }).card} className="choice neigh" onClick={() => onAction(a)}>
+                {data((a as { card: number }).card).name}!
+              </button>
+            ))}
+            <button type="button" className="choice" onClick={() => onAction({ type: 'pass', player: view.me })}>Let it happen</button>
+          </div>
+        </Sheet>
+      )}
+
+      {prompt && <PromptSheet prompt={prompt} view={view} onAnswer={(answer) => onAction({ type: 'respond', player: view.me, promptId: prompt.id, answer })} />}
+
+      {children}
+
+      {view.winner !== null && (
+        <div className="overlay">
+          <div className="overlay-box" data-testid="win">
+            <h2>{view.players[view.winner]!.name} wins!</h2>
+            <p>{view.unicornCounts[view.winner]} unicorns in the stable after {view.turn.number} turns.</p>
+            {renderWin ? renderWin(view.winner) : <button type="button" className="primary big" onClick={onQuit}>New game</button>}
+          </div>
+        </div>
+      )}
+
+      {error && <div className="toast" role="alert" onClick={onDismissError}>{error}</div>}
+    </div>
+  );
+}
+
+function Sheet({ title, children, onClose, testId }: { title: string; children: React.ReactNode; onClose?: () => void; testId?: string }) {
+  return (
+    <div className="sheet-wrap" role="dialog" aria-modal="true" aria-label={title} data-testid={testId}>
+      <div className="sheet">
+        <div className="sheet-head">
+          <h2>{title}</h2>
+          {onClose && <button type="button" className="ghost small" onClick={onClose}>Cancel</button>}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function PromptSheet({ prompt, view, onAnswer }: { prompt: Prompt; view: PlayerView; onAnswer: (a: Answer) => void }) {
+  const [picked, setPicked] = useState<number[]>([]);
+  useEffect(() => setPicked([]), [prompt.id]);
+  const source = prompt.source !== undefined ? cardData.get(view.cards[prompt.source]!.def)?.name : undefined;
+  const title = prompt.message;
+  const data = (id: number) => cardData.get(view.cards[id]!.def)!;
+  const ownerOf = (id: number) => view.players.find((p) => p.stable.includes(id) || (p.hand ?? []).includes(id));
+
+  let body: React.ReactNode;
+  switch (prompt.kind) {
+    case 'confirm':
+      body = (
+        <div className="choices">
+          <button type="button" className="choice primary" onClick={() => onAnswer(true)}>Yes</button>
+          <button type="button" className="choice" onClick={() => onAnswer(false)}>No</button>
+        </div>
+      );
+      break;
+    case 'choosePlayer':
+      body = (
+        <div className="choices">
+          {(prompt.options as number[]).map((p) => (
+            <button type="button" key={p} className="choice" onClick={() => onAnswer(p)}>
+              {view.players[p]!.name}{p === view.me ? ' (me)' : ''} · {view.unicornCounts[p]} unicorns
+            </button>
+          ))}
+          {prompt.optional && <button type="button" className="choice ghost" onClick={() => onAnswer(null)}>Skip</button>}
+        </div>
+      );
+      break;
+    case 'chooseOption':
+      body = (
+        <div className="choices">
+          {(prompt.options as string[]).map((o) => <button type="button" key={o} className="choice" onClick={() => onAnswer(o)}>{o}</button>)}
+        </div>
+      );
+      break;
+    case 'chooseCard': {
+      const multi = (prompt.count ?? 1) > 1;
+      body = (
+        <>
+          <div className="row wrap">
+            {(prompt.options as number[]).map((id) => {
+              const owner = ownerOf(id);
+              const where = owner
+                ? (owner.stable.includes(id) ? `${owner.id === view.me ? 'my' : owner.name + "'s"} stable` : `${owner.id === view.me ? 'my' : owner.name + "'s"} hand`)
+                : view.discard.includes(id) ? 'discard' : view.nursery.includes(id) ? 'nursery' : 'deck';
+              return (
+                <CardView
+                  key={id} data={data(id)} badge={where || undefined} selected={picked.includes(id)}
+                  onClick={() => {
+                    if (!multi) onAnswer(id);
+                    else setPicked((ps) => (ps.includes(id) ? ps.filter((x) => x !== id) : [...ps, id]));
+                  }}
+                />
+              );
+            })}
+          </div>
+          <div className="choices">
+            {multi && <button type="button" className="choice primary" disabled={picked.length !== prompt.count} onClick={() => onAnswer(picked)}>Confirm {picked.length}/{prompt.count}</button>}
+            {prompt.optional && <button type="button" className="choice ghost" onClick={() => onAnswer(null)}>Skip</button>}
+          </div>
+        </>
+      );
+      break;
+    }
+    default:
+      body = <button type="button" className="choice" onClick={() => onAnswer(prompt.options as number[])}>Continue</button>;
+  }
+  return (
+    <Sheet title={title} testId="prompt">
+      {source && <p className="sheet-sub">{source}</p>}
+      {body}
+    </Sheet>
+  );
+}
