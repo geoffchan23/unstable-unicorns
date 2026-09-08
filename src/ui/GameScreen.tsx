@@ -3,6 +3,7 @@ import { cardData } from '../engine/registry';
 import type { Action, Answer, InstanceId, PlayerId, Prompt } from '../engine/types';
 import type { PlayerView } from '../engine/view';
 import { CardView } from './Card';
+import { useWakeLock } from './pwa/wakeLock';
 import type { SeatInfo } from './seats';
 
 export interface GameScreenProps {
@@ -22,6 +23,7 @@ export interface GameScreenProps {
 export function GameScreen({
   view, legal, seats, onAction, onQuit, error, onDismissError, youLabel, banner, renderWin, children,
 }: GameScreenProps) {
+  useWakeLock(true);
   const me = view.players[view.me]!;
   const myTurn = view.turn.player === view.me && view.turn.phase === 'action' && !view.pending && view.winner === null;
   const playable = new Set(legal.filter((a) => a.type === 'play').map((a) => (a as { card: InstanceId }).card));

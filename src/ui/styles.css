@@ -32,6 +32,7 @@ body {
   background: var(--ground); color: var(--ink);
   font-family: Nunito, "Segoe UI", system-ui, sans-serif; font-size: 15px; line-height: 1.4;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none; -webkit-tap-highlight-color: transparent;
 }
 h1, h2, h3, .name, .opp-count, .count b { font-family: Fredoka, "Nunito", system-ui, sans-serif; font-weight: 600; text-wrap: balance; }
 button { font: inherit; color: inherit; }
@@ -52,6 +53,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
   position: relative; display: flex; flex-direction: column; gap: 4px; text-align: left;
   background: var(--paper); color: #2a1f38; border: 0; border-radius: 10px; padding: 10px 10px 10px 12px;
   width: 140px; min-height: 0; flex: 0 0 auto; overflow: hidden; box-shadow: var(--lift);
+  -webkit-user-select: none; user-select: none; touch-action: manipulation;
 }
 .card .corner {
   position: absolute; top: 0; right: 0; width: 34px; height: 34px; background: var(--type);
@@ -95,7 +97,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
 /* ---------- game layout ---------- */
 .game { display: grid; gap: 10px; padding: 10px 10px 24px; max-width: 900px; margin: 0 auto; }
-.topbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.topbar {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding-top: calc(0.5rem + env(safe-area-inset-top));
+  padding-left: calc(0.75rem + env(safe-area-inset-left));
+  padding-right: calc(0.75rem + env(safe-area-inset-right));
+}
 .turn { display: grid; }
 .who { font-family: Fredoka, sans-serif; font-weight: 600; font-size: 18px; }
 .meta { color: var(--ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
@@ -125,7 +132,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .log li:last-child { color: var(--ink); font-weight: 700; }
 .log .turnmark { margin-top: 4px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
 
-.mine { display: grid; gap: 8px; }
+.mine { display: grid; gap: 8px; padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
 .mine-head, .hand-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .you { font-weight: 800; }
 .count b { font-size: 22px; }
@@ -153,6 +160,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .overlay-box h2 { margin: 0; font-size: 26px; }
 .overlay-box p { margin: 0; color: var(--ink-2); }
 .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--warn); color: #1a1226; padding: 10px 16px; border-radius: 999px; font-weight: 700; z-index: 30; }
+.toast.update { display: flex; align-items: center; gap: 10px; bottom: calc(1rem + env(safe-area-inset-bottom)); }
 
 @media (min-width: 720px) {
   .game { grid-template-columns: 1fr 1fr; grid-template-areas: "top top" "ban ban" "opp opp" "exp exp" "table mine"; }
