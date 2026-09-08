@@ -15,8 +15,10 @@ play-vs-bot that builds to a single HTML file.
 ```
 npm install
 npm test                 # 90+ tests: per-card scripts, Neigh chains, random-bot simulations
-python3 scripts/art.py   # fetch and prepare card art (needs pillow; art is gitignored)
-npm run build            # dist/unstable-unicorns.html - open it, or dist/index.html
+.cache/venv/bin/python scripts/art.py   # card art (needs pillow: python3 -m venv .cache/venv && .cache/venv/bin/pip install pillow)
+npm run build            # dist/unicorns/ static PWA
+npm run dev              # http://localhost:5173/unicorns/ + game server on :8787
+npm run e2e              # Playwright end-to-end tests
 npm run sim 200 4        # play 200 random 4-player games and report timing
 ```
 

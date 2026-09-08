@@ -1,8 +1,6 @@
-// Card art is inlined at build time (scripts/build.mjs) as data URIs under the __ART__ global.
-declare const __ART__: Record<string, string> | undefined;
-
-export const ART: Record<string, string> = typeof __ART__ !== 'undefined' ? __ART__ : {};
-
+// Card art is copied to art/<id>.webp by scripts/build.mjs. Missing art -> placeholder.
+declare const __ART_IDS__: string[];
+const IDS = new Set<string>(typeof __ART_IDS__ !== 'undefined' ? __ART_IDS__ : []);
 export function artFor(id: string): string | undefined {
-  return ART[id];
+  return IDS.has(id) ? `art/${id}.webp` : undefined;
 }
