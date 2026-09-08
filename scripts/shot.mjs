@@ -1,0 +1,11 @@
+import { chromium } from 'playwright-core';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' }).catch(async () => chromium.launch());
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+const errors = [];
+page.on('pageerror', (e) => errors.push(e.message));
+await page.goto('file:///home/user/unstable-unicorns/dist/index.html');
+await page.getByRole('button', { name: 'Deal me in' }).click();
+await page.waitForTimeout(2500);
+await page.screenshot({ path: process.argv[2] ?? 'shot.png', fullPage: true });
+console.log('errors:', errors);
+await browser.close();

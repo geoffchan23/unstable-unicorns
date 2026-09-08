@@ -1,7 +1,14 @@
 import { build } from 'esbuild';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 
 mkdirSync('dist', { recursive: true });
+
+// card art -> data URIs, inlined as the __ART__ global
+const art = {};
+for (const f of readdirSync('assets/art')) {
+  if (!f.endsWith('.webp')) continue;
+  art[f.slice(0, -5)] = `data:image/webp;base64,${readFileSync(`assets/art/${f}`).toString('base64')}`;
+}
 const result = await build({
   entryPoints: ['src/ui/main.tsx'],
   bundle: true,
@@ -9,7 +16,7 @@ const result = await build({
   format: 'iife',
   target: 'es2020',
   write: false,
-  define: { 'process.env.NODE_ENV': '"production"' },
+  define: { 'process.env.NODE_ENV': '"production"', __ART__: JSON.stringify(art) },
   jsx: 'automatic',
 });
 const js = result.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');

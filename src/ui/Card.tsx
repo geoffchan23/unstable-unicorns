@@ -1,4 +1,5 @@
 import type { CardData, CardType } from '../engine/types';
+import { artFor } from './art';
 
 export const TYPE_LABEL: Record<CardType, string> = {
   baby_unicorn: 'Baby Unicorn',
@@ -15,12 +16,15 @@ export function CardView({
 }: {
   data: CardData; compact?: boolean; selected?: boolean; disabled?: boolean; onClick?: () => void; badge?: string;
 }) {
+  const art = artFor(data.id);
   const cls = ['card', `t-${data.type}`, compact ? 'compact' : '', selected ? 'selected' : '', disabled ? 'disabled' : '', onClick ? 'tappable' : ''].join(' ');
   const inner = (
     <>
       <span className="corner" aria-hidden="true" />
+      {compact && art && <img className="thumb" src={art} alt="" />}
       <span className="name">{data.name}</span>
       {!compact && <span className="ctype">{TYPE_LABEL[data.type]}</span>}
+      {!compact && (art ? <img className="art" src={art} alt="" /> : <span className="art placeholder" aria-hidden="true">{data.name.split(' ').map((w) => w[0]).join('').slice(0, 3)}</span>)}
       {!compact && data.type !== 'basic_unicorn' && <span className="text">{data.text}</span>}
       {badge && <span className="badge">{badge}</span>}
     </>
