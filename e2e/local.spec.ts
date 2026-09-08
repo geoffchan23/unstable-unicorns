@@ -3,8 +3,7 @@ import { playUntil } from './helpers';
 
 test('vs-bot game reaches a prompt and a winner', async ({ page }) => {
   await page.goto('./');
-  // TODO(task 9): Home screen
-  // await page.getByRole('button', { name: 'Play on this device' }).click();
+  await page.getByRole('button', { name: 'Play on this device' }).click();
   // Seed 42 doesn't reach a winner within the 400-step budget (bots keep
   // Neigh-ing each other into a long game); seed 4 reliably finishes around
   // step ~320.
@@ -23,8 +22,7 @@ test('vs-bot game reaches a prompt and a winner', async ({ page }) => {
 
 test('hot-seat handoff appears with two humans', async ({ page }) => {
   await page.goto('./');
-  // TODO(task 9): Home screen
-  // await page.getByRole('button', { name: 'Play on this device' }).click();
+  await page.getByRole('button', { name: 'Play on this device' }).click();
   await page.getByRole('group', { name: 'Human or bot' }).nth(1).getByRole('button', { name: 'Human' }).click();
   await page.getByLabel('Seed').fill('7');
   await page.getByRole('button', { name: 'Deal me in' }).click();
