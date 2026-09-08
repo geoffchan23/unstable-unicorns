@@ -155,8 +155,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--warn); color: #1a1226; padding: 10px 16px; border-radius: 999px; font-weight: 700; z-index: 30; }
 
 @media (min-width: 720px) {
-  .game { grid-template-columns: 1fr 1fr; grid-template-areas: "top top" "opp opp" "exp exp" "table mine"; }
+  .game { grid-template-columns: 1fr 1fr; grid-template-areas: "top top" "ban ban" "opp opp" "exp exp" "table mine"; }
   .topbar { grid-area: top; } .opponents { grid-area: opp; } .expanded { grid-area: exp; } .table { grid-area: table; align-content: start; } .mine { grid-area: mine; }
+  .banner { grid-area: ban; }
   .log { max-height: 320px; }
   .hand { flex-wrap: wrap; }
 }
@@ -167,6 +168,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 .code { font-family: monospace; letter-spacing: .2em; }
 .seat.offline { opacity: .6; }
 .banner { padding: .4rem .8rem; background: var(--ground-2); font-size: .9rem; }
-.banner.warn { background: var(--warn); color: #fff; }
+.banner.warn { background: var(--warn); color: #1a1226; }
 .error { color: var(--accent); }
 button.link { background: none; border: 0; color: var(--accent); text-decoration: underline; padding: 0; font: inherit; }

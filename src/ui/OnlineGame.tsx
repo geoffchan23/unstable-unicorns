@@ -2,7 +2,8 @@ import type { GameClient, Snapshot } from './net/client';
 import { GameScreen } from './GameScreen';
 
 export function OnlineGame({ client, snap, onQuit }: { client: GameClient; snap: Snapshot; onQuit(): void }) {
-  const st = snap.state!;
+  if (!snap.state) return null;
+  const st = snap.state;
   const lobby = snap.lobby;
   const isHost = lobby ? lobby.host === lobby.you : false;
   const waitingOn = st.view.pending
