@@ -137,4 +137,42 @@ describe('GameClient', () => {
     expect(c.snapshot().lobby?.status).toBe('lobby');
     expect(c.snapshot().state).toBeNull();
   });
+
+  it('resets the rejoining flag on any error so a later unrelated NO_ROOM does not wipe existing lobby/state', () => {
+    const storage = mem();
+    storage.setItem(SESSION_KEY, JSON.stringify({ code: 'ABCD', token: 't1' }));
+    const c = make(storage);
+    c.connect();
+    const ws = FakeWS.instances[0]!;
+    ws.open();
+    expect(JSON.parse(ws.sent[0]!)).toEqual({ type: 'rejoin', code: 'ABCD', token: 't1' });
+
+    // The rejoin attempt fails with an unrelated error (no code). The rejoin
+    // attempt is over either way, so `rejoining` must be cleared even though
+    // this error doesn't match NO_ROOM/BAD_TOKEN.
+    ws.receive({ type: 'error', message: 'Server error' });
+
+    // A lobby snapshot arrives from the (now successfully reconnected) room.
+    ws.receive({ type: 'lobby', code: 'ABCD', seats: [], you: 0, host: 0, status: 'lobby' });
+    expect(c.snapshot().lobby).not.toBeNull();
+
+    // A later, unrelated manual join attempt fails with NO_ROOM. Because the
+    // earlier rejoin's `rejoining` flag was properly cleared, this must not
+    // wipe the existing lobby snapshot.
+    c.join('ZZZZ', 'x');
+    ws.receive({ type: 'error', message: 'No room with that code', code: 'NO_ROOM' });
+
+    expect(c.snapshot().lobby).not.toBeNull();
+    expect(c.snapshot().error).toMatch(/No room/);
+  });
+
+  it('ignores malformed frames without throwing and leaves the snapshot unchanged', () => {
+    const c = make();
+    c.connect();
+    const ws = FakeWS.instances[0]!;
+    ws.open();
+    const snap = c.snapshot();
+    expect(() => ws.onmessage?.({ data: 'not json' })).not.toThrow();
+    expect(c.snapshot()).toBe(snap);
+  });
 });

@@ -93,7 +93,16 @@ export class GameClient {
       }
       for (const m of this.queue.splice(0)) ws.send(JSON.stringify(m));
     };
-    ws.onmessage = (e: { data: unknown }) => this.onMessage(JSON.parse(String(e.data)) as ServerMessage);
+    ws.onmessage = (e: { data: unknown }) => {
+      let m: ServerMessage;
+      try {
+        m = JSON.parse(String(e.data)) as ServerMessage;
+      } catch {
+        console.warn('GameClient: ignoring malformed message', e.data);
+        return;
+      }
+      this.onMessage(m);
+    };
     ws.onerror = () => {
       /* onclose follows */
     };
@@ -133,15 +142,17 @@ export class GameClient {
       case 'state':
         this.set({ state: m });
         break;
-      case 'error':
-        if (this.rejoining && (m.code === 'NO_ROOM' || m.code === 'BAD_TOKEN')) {
-          this.rejoining = false;
+      case 'error': {
+        const wasRejoining = this.rejoining;
+        this.rejoining = false;
+        if (wasRejoining && (m.code === 'NO_ROOM' || m.code === 'BAD_TOKEN')) {
           this.saveSession(null);
           this.set({ joined: null, lobby: null, state: null, error: m.message });
         } else {
           this.set({ error: m.message });
         }
         break;
+      }
       case 'closed':
         this.saveSession(null);
         this.set({ joined: null, lobby: null, state: null, closedReason: m.reason });
@@ -155,11 +166,13 @@ export class GameClient {
   }
 
   create(name: string, passphrase: string) {
+    this.rejoining = false;
     this.saveSession(null);
     this.send({ type: 'create', name, passphrase });
   }
 
   join(code: string, name: string) {
+    this.rejoining = false;
     this.saveSession(null);
     this.send({ type: 'join', code: code.trim().toUpperCase(), name });
   }
