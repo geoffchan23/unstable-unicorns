@@ -1,13 +1,29 @@
-"""Build assets/art/<card-id>.webp from the two fan-scan sources in the scratchpad.
-Sources (cloned from GitHub): kedarv/unstable (full card scans) and geniegeist/unstable-unicorns (square art).
+"""Build assets/art/<card-id>.webp (200px square WebP) from two fan projects on GitHub.
+
+Sources are shallow-cloned into .cache/ on first run:
+  kedarv/unstable                 full card scans (cropped to the art box)
+  geniegeist/unstable-unicorns    square illustrations and the card back
+
+Usage:  pip install pillow && python3 scripts/art.py
+The artwork is copyright Unstable Games; assets/art is gitignored and for private testing only.
 """
-import json, os, sys
+import json, os, subprocess
 from PIL import Image
 
-SCRATCH = '/tmp/claude-0/-home-user-unstable-unicorns/ff932045-9b41-5b25-8571-e1c35bf5fd35/scratchpad'
-SCANS = f'{SCRATCH}/kedarv_unstable/public/card_images'
-SQUARE = f'{SCRATCH}/geniegeist_unstable-unicorns/src/assets/card/square'
-BACK = f'{SCRATCH}/geniegeist_unstable-unicorns/src/assets/card/UU-Back-Main.png'
+CACHE = '.cache'
+REPOS = {
+    'kedarv_unstable': 'https://github.com/kedarv/unstable.git',
+    'geniegeist_unstable-unicorns': 'https://github.com/geniegeist/unstable-unicorns.git',
+}
+for name, url in REPOS.items():
+    if not os.path.isdir(f'{CACHE}/{name}'):
+        os.makedirs(CACHE, exist_ok=True)
+        print(f'cloning {url} ...')
+        subprocess.run(['git', 'clone', '--depth', '1', '-q', url, f'{CACHE}/{name}'], check=True)
+
+SCANS = f'{CACHE}/kedarv_unstable/public/card_images'
+SQUARE = f'{CACHE}/geniegeist_unstable-unicorns/src/assets/card/square'
+BACK = f'{CACHE}/geniegeist_unstable-unicorns/src/assets/card/UU-Back-Main.png'
 OUT = 'assets/art'
 SIZE = 200
 

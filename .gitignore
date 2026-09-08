@@ -2,3 +2,4 @@ node_modules
 dist
 # card artwork is copyright Unstable Games; regenerate locally with scripts/art.py
 assets/art/
+.cache/

@@ -8,13 +8,16 @@ An unofficial, in-progress web implementation of the card game **Unstable Unicor
 
 ## Status
 
-**Milestone 1 done: the engine.** `src/engine/` is a pure TypeScript game engine (no UI,
-no network) with all 84 base-set cards implemented and tested. Next up is the web UI.
+**Playable prototype.** `src/engine/` is a pure TypeScript game engine (no UI, no network) with
+all 84 base-set cards implemented and tested; `src/ui/` is a React app for pass-and-play or
+play-vs-bot that builds to a single HTML file.
 
 ```
 npm install
-npm test          # 90+ tests: per-card scripts, Neigh chains, random-bot simulations
-npm run sim 200 4 # play 200 random 4-player games and report timing
+npm test                 # 90+ tests: per-card scripts, Neigh chains, random-bot simulations
+python3 scripts/art.py   # fetch and prepare card art (needs pillow; art is gitignored)
+npm run build            # dist/unstable-unicorns.html - open it, or dist/index.html
+npm run sim 200 4        # play 200 random 4-player games and report timing
 ```
 
 See [`docs/ENGINE.md`](docs/ENGINE.md) for the design. The short version: `createGame`,
@@ -75,5 +78,6 @@ in hand on top of the usual 5 cards. Details in `docs/RULES.md` §10.
 
 1. ~~Rules and card data~~
 2. ~~Engine with all 84 cards~~
-3. Hot-seat web UI (React), play-vs-bot.
-4. Networked multiplayer: a server running the same engine, clients receive `viewFor` views.
+3. ~~Hot-seat web UI (React), play-vs-bot, card art~~
+4. Mobile: Capacitor Android APK built by GitHub Actions; PWA for iPads. See `CLAUDE.md`.
+5. Networked multiplayer: a server running the same engine, clients receive `viewFor` views.
