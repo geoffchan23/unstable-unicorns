@@ -8,20 +8,26 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "sim": "tsx src/engine/sim.ts",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "build:server": "node scripts/build-server.mjs",
+    "dev": "node scripts/dev.mjs",
+    "e2e": "playwright test",
+    "icons": "node scripts/icons.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^26.5.0",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
+    "@types/ws": "^8.18.1",
     "esbuild": "^0.24.2",
-    "playwright-core": "^1.63.0",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
     "vitest": "^2.1.9"
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "ws": "^8.21.3"
   }
 }
