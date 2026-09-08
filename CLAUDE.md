@@ -61,14 +61,12 @@ npm run build            # dist/unstable-unicorns.html
 Done: rules/data, engine with all cards and 91 tests, hot-seat + vs-bot web UI, card art, published
 as a private Claude artifact (single HTML) for phone testing.
 
-Agreed plan for mobile (family devices only, no store):
-1. Capacitor wrapping the existing web build: `npx cap add android`, safe-area + keep-awake, app icon.
-   Debug APK via Gradle, `adb install`. Sideload for phones without adb.
-2. GitHub Actions workflow that builds the debug APK on every push and publishes it as a run artifact
-   (runners have the Android SDK; this sandbox did not).
-3. iPads: install as a PWA (manifest + service worker, GitHub Pages deploy from this repo) instead of
-   Apple signing. Capacitor's iOS project stays available if a Mac + developer account appear later.
-4. Networked multiplayer: server-authoritative Node process running the same engine, clients receive
-   `viewFor` views and send actions. Design in docs/ENGINE.md §9.
+Agreed plan (2026-09-08), full design in `docs/superpowers/specs/2026-09-08-online-pwa-design.md`:
+- Web only, installed as a PWA. No Capacitor, no native code.
+- Static app on GitHub Pages at https://geoffreychan.com/unicorns/ (committed into the
+  `geoffchan23.github.io` site repo like the other games there). Card art is published on purpose.
+- Game server (`src/server/`) on the existing Oracle Always Free VM behind Caddy at
+  wss://play.geoffreychan.com, pm2-managed, single esbuild bundle. Rooms are in memory only.
+- A family passphrase gates room creation; joining needs only the 4-letter code.
 
 Known gaps: Unicorn Oracle has no art (placeholder); the bot sees hidden hands; log shows last 40 lines.

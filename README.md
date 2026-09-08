@@ -79,5 +79,5 @@ in hand on top of the usual 5 cards. Details in `docs/RULES.md` §10.
 1. ~~Rules and card data~~
 2. ~~Engine with all 84 cards~~
 3. ~~Hot-seat web UI (React), play-vs-bot, card art~~
-4. Mobile: Capacitor Android APK built by GitHub Actions; PWA for iPads. See `CLAUDE.md`.
-5. Networked multiplayer: a server running the same engine, clients receive `viewFor` views.
+4. Online multiplayer PWA at geoffreychan.com/unicorns with a small game server. Design in
+   `docs/superpowers/specs/2026-09-08-online-pwa-design.md`.
