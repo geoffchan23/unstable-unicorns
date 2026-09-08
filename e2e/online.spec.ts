@@ -46,15 +46,22 @@ async function play(page: Page, force: boolean): Promise<boolean> {
     await target.locator('.choice').first().click(opts);
     return true;
   }
+  const detail = page.getByTestId('detail');
+  if (await detail.isVisible().catch(() => false)) {
+    const playBtn = detail.getByTestId('play');
+    if (await playBtn.isVisible().catch(() => false)) await playBtn.click(opts);
+    else await detail.getByRole('button', { name: 'Cancel' }).click(opts);
+    return true;
+  }
   const hand = page.getByTestId('hand');
   const unicorn = hand.locator(
-    'button.card:enabled.t-baby_unicorn, button.card:enabled.t-basic_unicorn, button.card:enabled.t-magical_unicorn',
+    'button.card.playable.t-baby_unicorn, button.card.playable.t-basic_unicorn, button.card.playable.t-magical_unicorn',
   ).first();
   if (await unicorn.count()) {
     await unicorn.click(opts);
     return true;
   }
-  const card = hand.locator('button.card:enabled').first();
+  const card = hand.locator('button.card.playable').first();
   if (await card.count()) {
     await card.click(opts);
     return true;

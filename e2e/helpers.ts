@@ -13,9 +13,15 @@ export async function step(page: Page): Promise<boolean> {
   if (await neigh.isVisible()) { await neigh.getByRole('button', { name: 'Let it happen' }).click(); return true; }
   const target = page.getByTestId('target');
   if (await target.isVisible()) { await target.locator('.choice').first().click(); return true; }
+  const detail = page.getByTestId('detail');
+  if (await detail.isVisible()) {
+    const play = detail.getByTestId('play');
+    if (await play.isVisible()) { await play.click(); return true; }
+    await detail.getByRole('button', { name: 'Cancel' }).click(); return true;
+  }
   const draw = page.getByTestId('draw');
   if (await draw.isVisible()) { await draw.click(); return true; }
-  const card = page.getByTestId('hand').locator('button.card:enabled').first();
+  const card = page.getByTestId('hand').locator('button.card.playable').first();
   if (await card.count()) { await card.click(); return true; }
   return false;
 }

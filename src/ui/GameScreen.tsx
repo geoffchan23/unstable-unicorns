@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { cardData } from '../engine/registry';
 import type { Action, Answer, InstanceId, PlayerId, Prompt } from '../engine/types';
 import type { PlayerView } from '../engine/view';
-import { CardView } from './Card';
+import { CardView, TYPE_LABEL, TypeGlyph } from './Card';
+import { artFor } from './art';
+import type { CardData } from '../engine/types';
 import { useWakeLock } from './pwa/wakeLock';
 import type { SeatInfo } from './seats';
 
@@ -29,16 +31,16 @@ export function GameScreen({
   const playable = new Set(legal.filter((a) => a.type === 'play').map((a) => (a as { card: InstanceId }).card));
   const canDraw = legal.some((a) => a.type === 'draw');
 
-  const [targeting, setTargeting] = useState<InstanceId | null>(null);
+  const [detail, setDetail] = useState<InstanceId | null>(null);
   const [expanded, setExpanded] = useState<PlayerId | null>(null);
 
   const data = (id: InstanceId) => cardData.get(view.cards[id]!.def)!;
 
-  const onHandCard = (id: InstanceId) => {
-    if (!myTurn || !playable.has(id)) return;
-    const t = data(id).type;
-    if (t === 'upgrade' || t === 'downgrade') setTargeting(id);
-    else onAction({ type: 'play', player: view.me, card: id });
+  const inHand = (id: InstanceId) => (me.hand ?? []).includes(id);
+  const playDetail = (target?: PlayerId) => {
+    if (detail === null) return;
+    onAction({ type: 'play', player: view.me, card: detail, ...(target !== undefined ? { targetPlayer: target } : {}) });
+    setDetail(null);
   };
 
   const prompt = view.pending?.kind === 'prompt' && view.pending.prompt.player === view.me ? view.pending.prompt : null;
@@ -83,9 +85,9 @@ export function GameScreen({
       {expanded !== null && (
         <section className="expanded">
           <h3>{view.players[expanded]!.name}'s stable</h3>
-          <div className="row">{view.players[expanded]!.stable.map((c) => <CardView key={c} data={data(c)} />)}</div>
+          <div className="row">{view.players[expanded]!.stable.map((c) => <CardView key={c} data={data(c)} onClick={() => setDetail(c)} />)}</div>
           {view.players[expanded]!.hand && (
-            <><h3>{view.players[expanded]!.name}'s hand (Nanny Cam)</h3><div className="row">{view.players[expanded]!.hand!.map((c) => <CardView key={c} data={data(c)} />)}</div></>
+            <><h3>{view.players[expanded]!.name}'s hand (Nanny Cam)</h3><div className="row">{view.players[expanded]!.hand!.map((c) => <CardView key={c} data={data(c)} onClick={() => setDetail(c)} />)}</div></>
           )}
         </section>
       )}
@@ -111,7 +113,7 @@ export function GameScreen({
         </div>
         <div className="stable row">
           {me.stable.length === 0 && <span className="empty">Your stable is empty.</span>}
-          {me.stable.map((c) => <CardView key={c} data={data(c)} compact />)}
+          {me.stable.map((c) => <CardView key={c} data={data(c)} compact onClick={() => setDetail(c)} />)}
         </div>
         <div className="hand-head">
           <span>Hand · {me.hand?.length ?? 0}</span>
@@ -120,22 +122,22 @@ export function GameScreen({
         </div>
         <div className="hand row" data-testid="hand">
           {(me.hand ?? []).map((c) => (
-            <CardView key={c} data={data(c)} onClick={() => onHandCard(c)} disabled={!myTurn || !playable.has(c)} />
+            <CardView key={c} data={data(c)} onClick={() => setDetail(c)} playable={myTurn && playable.has(c)} dim={!myTurn || !playable.has(c)} />
           ))}
         </div>
       </section>
 
       {/* ---------- sheets ---------- */}
-      {targeting !== null && (
-        <Sheet title={`Play ${data(targeting).name} into whose stable?`} onClose={() => setTargeting(null)} testId="target">
-          <div className="choices">
-            {view.players.map((p) => (
-              <button type="button" key={p.id} className="choice" onClick={() => { onAction({ type: 'play', player: view.me, card: targeting, targetPlayer: p.id }); setTargeting(null); }}>
-                {p.id === view.me ? `${p.name} (me)` : p.name}
-              </button>
-            ))}
-          </div>
-        </Sheet>
+      {detail !== null && view.cards[detail] && (
+        <CardDetailSheet
+          data={data(detail)}
+          inHand={inHand(detail)}
+          canPlay={inHand(detail) && myTurn && playable.has(detail)}
+          myTurn={myTurn}
+          players={view.players.map((p) => ({ id: p.id, name: p.id === view.me ? `${p.name} (me)` : p.name }))}
+          onPlay={playDetail}
+          onClose={() => setDetail(null)}
+        />
       )}
 
       {neighWindow && stackTop && (
@@ -169,6 +171,44 @@ export function GameScreen({
 
       {error && <div className="toast" role="alert" onClick={onDismissError}>{error}</div>}
     </div>
+  );
+}
+
+/** The opened-up card: big art, full text, and whatever you can do with it right now. */
+function CardDetailSheet({ data, inHand, canPlay, myTurn, players, onPlay, onClose }: {
+  data: CardData; inHand: boolean; canPlay: boolean; myTurn: boolean;
+  players: { id: PlayerId; name: string }[]; onPlay: (target?: PlayerId) => void; onClose: () => void;
+}) {
+  const art = artFor(data.id);
+  const needsTarget = data.type === 'upgrade' || data.type === 'downgrade';
+  return (
+    <Sheet title={data.name} onClose={onClose} testId="detail">
+      <div className={`detail t-${data.type}`}>
+        {art
+          ? <img className="detail-art" src={art} alt="" />
+          : <div className="detail-art placeholder" aria-hidden="true">{data.name.split(' ').map((w) => w[0]).join('').slice(0, 3)}</div>}
+        <div className="detail-body">
+          <span className="detail-type"><span className="type-badge" aria-hidden="true"><TypeGlyph type={data.type} /></span>{TYPE_LABEL[data.type]}</span>
+          <p className="detail-text">{data.type === 'basic_unicorn' && !data.text ? 'A unicorn. No special powers, but it counts.' : data.text}</p>
+        </div>
+      </div>
+      {inHand && (canPlay ? (
+        needsTarget ? (
+          <>
+            <p className="sheet-sub">Play it into whose stable?</p>
+            <div className="choices" data-testid="target">
+              {players.map((p) => <button type="button" key={p.id} className="choice" onClick={() => onPlay(p.id)}>{p.name}</button>)}
+            </div>
+          </>
+        ) : (
+          <div className="choices">
+            <button type="button" className="choice primary" data-testid="play" onClick={() => onPlay()}>Play {data.name}</button>
+          </div>
+        )
+      ) : (
+        <p className="sheet-sub">{data.type === 'instant' ? 'Instants are played when someone else plays a card. Watch for the Neigh window.' : myTurn ? 'This card can\'t be played right now.' : 'Wait for your turn to play this.'}</p>
+      ))}
+    </Sheet>
   );
 }
 

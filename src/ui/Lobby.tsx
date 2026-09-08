@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { GameClient, Snapshot } from './net/client';
+import { Wordmark } from './Wordmark';
 
 const ls = {
   get: (k: string) => {
@@ -36,7 +37,8 @@ export function Lobby({ client, snap, onBack }: { client: GameClient; snap: Snap
       <main className="setup lobby">
         <header className="setup-head">
           <button type="button" className="ghost small" onClick={onBack}>Back</button>
-          <h1>Play online</h1>
+          <Wordmark size="md" />
+          <h2 className="display screen-title">Play online</h2>
           <p className="hint">{snap.status === 'open' ? 'Connected.' : snap.status === 'connecting' ? 'Connecting…' : 'Offline. Retrying…'}</p>
         </header>
         <label className="field">Your name
@@ -81,7 +83,8 @@ export function Lobby({ client, snap, onBack }: { client: GameClient; snap: Snap
   return (
     <main className="setup lobby">
       <header className="setup-head">
-        <h1>Room <span className="code" data-testid="roomcode">{lobby.code}</span></h1>
+        <Wordmark size="sm" />
+        <h2 className="display screen-title">Room <span className="code" data-testid="roomcode">{lobby.code}</span></h2>
         <p className="hint">{lobby.status === 'finished' ? 'Game over. ' : ''}{isHost ? 'You are the host. Start when everyone is in.' : `Waiting for ${lobby.seats[lobby.host]?.name ?? 'the host'} to start.`}</p>
         <button type="button" className="ghost small" onClick={share}>Share invite link</button>
       </header>
@@ -97,7 +100,7 @@ export function Lobby({ client, snap, onBack }: { client: GameClient; snap: Snap
         {isHost && lobby.status === 'lobby' && <button type="button" className="ghost add" onClick={() => client.send({ type: 'addBot' })} disabled={lobby.seats.length >= 8}>+ Add a bot</button>}
       </section>
       <section className="setup-foot">
-        {isHost && lobby.status === 'lobby' && <button type="button" className="primary big" onClick={() => client.send({ type: 'start' })} disabled={lobby.seats.length < 2} data-testid="start">Start game</button>}
+        {isHost && lobby.status === 'lobby' && <button type="button" className="primary big go" onClick={() => client.send({ type: 'start' })} disabled={lobby.seats.length < 2} data-testid="start">Start game</button>}
         {isHost && lobby.status === 'finished' && <button type="button" className="primary big" onClick={() => client.send({ type: 'playAgain' })} data-testid="playagain">Play again</button>}
         {lobby.status === 'lobby' && <button type="button" className="ghost" onClick={() => { client.leave(); onBack(); }}>Leave room</button>}
         {lobby.status !== 'lobby' && <button type="button" className="ghost" onClick={() => { client.forget(); onBack(); }} data-testid="forget">Leave this game</button>}

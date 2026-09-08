@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Seat } from './seats';
+import { Wordmark } from './Wordmark';
 
 export const BOT_NAMES = ['Sprinkles', 'Glitterhoof', 'Stabbington', 'Nimbus', 'Marshmallow', 'Twinkle', 'Rhubarb'];
 
@@ -19,8 +20,9 @@ export function Setup({ onStart, onBack }: { onStart: (seats: Seat[], seed: numb
   return (
     <main className="setup">
       <header className="setup-head">
-        <h1>Unstable Unicorns</h1>
         {onBack && <button type="button" className="ghost small" onClick={onBack}>Back</button>}
+        <Wordmark size="md" />
+        <h2 className="display screen-title">Play on this device</h2>
         <p className="lede">Base set, 2nd Edition. First to 7 Unicorns wins (6 with six or more players). Bots fill any seat you leave to them; more than one human means pass-and-play on this device.</p>
       </header>
       <section className="seats" aria-label="Players">
@@ -40,7 +42,7 @@ export function Setup({ onStart, onBack }: { onStart: (seats: Seat[], seed: numb
       <section className="setup-foot">
         <label className="seed">Seed <input value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="random" inputMode="numeric" /></label>
         <p className="hint">{seats.length === 2 ? 'Two players: the official 2-player deck is used (32 cards removed, one Neigh each to start).' : `${seats.length} players, ${humans} human.`}</p>
-        <button type="button" className="primary big" onClick={() => onStart(seats, seed ? Number(seed) : Math.floor(Math.random() * 1e9))}>
+        <button type="button" className="primary big go" onClick={() => onStart(seats, seed ? Number(seed) : Math.floor(Math.random() * 1e9))}>
           Deal me in
         </button>
       </section>

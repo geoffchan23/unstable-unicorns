@@ -5,3 +5,4 @@ assets/art/
 .cache/
 test-results/
 playwright-report/
+screens/
