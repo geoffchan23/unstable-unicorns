@@ -259,7 +259,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .sheet-wrap { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; z-index: 10; backdrop-filter: blur(2px); }
 .sheet { background: var(--ground); color: var(--ink); width: 100%; max-width: 720px; max-height: 84vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding: 16px 16px calc(22px + env(safe-area-inset-bottom)); display: grid; gap: 12px; box-shadow: var(--lift-2); position: relative; }
 .sheet::before { content: ""; position: sticky; top: -16px; display: block; margin: -16px -16px 4px; height: 5px; background: var(--rb); }
-.sheet .row.center .card { width: 190px; height: 326px; }
+.sheet .row.center .card:not(.compact) { width: 190px; height: 326px; }
 .sheet .row.center .card .name { font-size: 15px; }
 .sheet .row.center .card .text { font-size: 12px; }
 .sheet-head { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
@@ -345,3 +345,11 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .history-lines li.notice { color: var(--btn); }
 .cardref { background: none; border: 0; padding: 0; font: inherit; font-weight: 800; color: var(--type); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
 .cardref.t-downgrade { color: #b58a00; }
+
+/* the Neigh chain next to the contested card */
+.neigh-stage { align-items: flex-start; gap: 14px; }
+.neigh-chain { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.neigh-chain li { display: grid; gap: 3px; justify-items: start; position: relative; padding-left: 14px; }
+.neigh-chain li::before { content: "↳"; position: absolute; left: 0; top: 2px; color: var(--ink-2); font-weight: 800; }
+.neigh-chain li.latest .card.compact { border-color: var(--neigh); box-shadow: 0 0 0 2px color-mix(in srgb, var(--neigh) 35%, transparent); }
+.chain-who { font-size: 12px; font-weight: 800; color: var(--ink-2); padding-left: 4px; }

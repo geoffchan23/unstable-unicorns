@@ -200,9 +200,18 @@ export function GameScreen({
       {neighWindow && stackTop && neighText && (
         <Sheet title={neighText.title} testId="neigh">
           <p className="sheet-sub">{neighText.sub}</p>
-          <div className="row center">
+          <div className="row center neigh-stage">
             <CardView data={data(neighText.base)} onClick={() => openCard(neighText.base)} />
-            {neighText.neighCount > 0 && <CardView data={data(neighText.featured)} compact />}
+            {neighText.neighCount > 0 && (
+              <ol className="neigh-chain" aria-label="Neighs played">
+                {view.stack.slice(1).map((item, i) => (
+                  <li key={item.card} className={i === view.stack.length - 2 ? 'latest' : ''}>
+                    <CardView data={data(item.card)} compact onClick={() => openCard(item.card)} />
+                    <span className="chain-who">{view.players[item.player]!.name}{item.player === view.me ? ' (you)' : ''}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
           <div className="choices">
             {legal.filter((a) => a.type === 'neigh').map((a) => (
