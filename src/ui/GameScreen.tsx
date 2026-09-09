@@ -55,6 +55,18 @@ export function GameScreen({
   const logRef = useRef<HTMLOListElement>(null);
   useEffect(() => { logRef.current?.scrollTo({ top: 1e9 }); }, [view.log.length]);
 
+  // notices: things that happened without a prompt ("no Magic cards in the discard pile") get a toast
+  const [notice, setNotice] = useState<string | null>(null);
+  const seenLog = useRef(view.log.length);
+  useEffect(() => {
+    const fresh = view.log.slice(seenLog.current).filter((l) => l.notice);
+    seenLog.current = view.log.length;
+    if (!fresh.length) return;
+    setNotice(fresh[fresh.length - 1]!.text);
+    const id = setTimeout(() => setNotice(null), 4500);
+    return () => clearTimeout(id);
+  }, [view.log.length, view.log]);
+
   return (
     <div className="game">
       <header className="topbar" data-testid="topbar">
@@ -106,7 +118,7 @@ export function GameScreen({
           </div>
         )}
         <ol className="log" ref={logRef}>
-          {recent.map((l, i) => <li key={view.log.length - recent.length + i} className={l.text.startsWith('---') ? 'turnmark' : ''}>{l.text.replace(/^--- | ---$/g, '')}</li>)}
+          {recent.map((l, i) => <li key={view.log.length - recent.length + i} className={l.text.startsWith('---') ? 'turnmark' : l.notice ? 'notice' : ''}>{l.text.replace(/^--- | ---$/g, '')}</li>)}
         </ol>
       </section>
 
@@ -180,6 +192,7 @@ export function GameScreen({
       )}
 
       {error && <div className="toast" role="alert" onClick={onDismissError}>{error}</div>}
+      {!error && notice && <div className="toast notice" role="status" data-testid="notice" onClick={() => setNotice(null)}>{notice}</div>}
     </div>
   );
 }

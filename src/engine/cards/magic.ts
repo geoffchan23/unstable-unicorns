@@ -154,7 +154,7 @@ defineCard('reset-button', {
 defineCard('kiss-of-life', {
   onPlayMagic(ctx) {
     const me = ctx.controller;
-    const t = ctx.chooseCard(me, ctx.discardOfType((c) => ctx.isUnicorn(c) && ctx.canEnter(c, me)), 'Kiss of Life: bring which Unicorn into your Stable?');
+    const t = ctx.chooseCard(me, ctx.discardOfType((c) => ctx.isUnicorn(c) && ctx.canEnter(c, me)), 'Kiss of Life: bring which Unicorn into your Stable?', { empty: 'no Unicorn in the discard pile could enter your Stable.' });
     if (t !== null) ctx.enterStable(t, me, 'bring');
   },
 });

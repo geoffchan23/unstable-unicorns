@@ -106,6 +106,8 @@ export type PendingEffect =
 export interface LogEntry {
   turn: number;
   text: string;
+  /** something the players should be told about that did not raise a prompt (e.g. "nothing to choose from") */
+  notice?: boolean;
 }
 
 export interface GameState {

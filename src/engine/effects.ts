@@ -52,10 +52,17 @@ export class Ctx {
     return this.effect.kind === 'card' ? this.effect.card : undefined;
   }
 
+  /** Log a notice when a choice has nothing to offer, so a skipped "you may..." never passes silently. */
+  private nothingToChoose(player: PlayerId, empty?: string): void {
+    const src = this.source();
+    const who = `${this.state.players[player]!.name}'s ${src !== undefined ? nameOf(this.state, src) : 'effect'}`;
+    this.state.log.push({ turn: this.state.turn.number, text: `${who}: ${empty ?? 'nothing to choose from.'}`, notice: true });
+  }
+
   chooseCard(
-    player: PlayerId, options: InstanceId[], message: string, opts: { optional?: boolean } = {},
+    player: PlayerId, options: InstanceId[], message: string, opts: { optional?: boolean; empty?: string } = {},
   ): InstanceId | null {
-    if (options.length === 0) return null;
+    if (options.length === 0) { this.nothingToChoose(player, opts.empty); return null; }
     const a = this.ask({
       player, kind: 'chooseCard', message, options, optional: !!opts.optional, source: this.source(),
     });
@@ -63,8 +70,9 @@ export class Ctx {
     return a as InstanceId;
   }
 
-  chooseCards(player: PlayerId, options: InstanceId[], count: number, message: string): InstanceId[] {
+  chooseCards(player: PlayerId, options: InstanceId[], count: number, message: string, opts: { empty?: string } = {}): InstanceId[] {
     const n = Math.min(count, options.length);
+    if (n === 0) { this.nothingToChoose(player, opts.empty); return []; }
     if (n === 0) return [];
     if (n === options.length) return [...options];
     const a = this.ask({

@@ -139,7 +139,7 @@ defineCard('annoying-flying-unicorn', {
 defineCard('magical-flying-unicorn', {
   onEnter(ctx) {
     const me = ctx.controller;
-    const c = ctx.chooseCard(me, ctx.discardOfType((x) => ctx.isMagic(x)), 'Magical Flying Unicorn: take a Magic card from the discard pile?', { optional: true });
+    const c = ctx.chooseCard(me, ctx.discardOfType((x) => ctx.isMagic(x)), 'Magical Flying Unicorn: take a Magic card from the discard pile?', { optional: true, empty: 'no Magic cards in the discard pile.' });
     if (c !== null) ctx.addToHand(c, me);
   },
   replaceRemoval: flyer,
@@ -148,7 +148,7 @@ defineCard('magical-flying-unicorn', {
 defineCard('swift-flying-unicorn', {
   onEnter(ctx) {
     const me = ctx.controller;
-    const c = ctx.chooseCard(me, ctx.discardOfType((x) => ctx.isNeigh(x)), 'Swift Flying Unicorn: take a Neigh card from the discard pile?', { optional: true });
+    const c = ctx.chooseCard(me, ctx.discardOfType((x) => ctx.isNeigh(x)), 'Swift Flying Unicorn: take a Neigh card from the discard pile?', { optional: true, empty: 'no Neigh cards in the discard pile.' });
     if (c !== null) ctx.addToHand(c, me);
   },
   replaceRemoval: flyer,
@@ -157,7 +157,7 @@ defineCard('swift-flying-unicorn', {
 defineCard('majestic-flying-unicorn', {
   onEnter(ctx) {
     const me = ctx.controller;
-    const c = ctx.chooseCard(me, ctx.discardOfType((x) => ctx.isUnicorn(x)), 'Majestic Flying Unicorn: take a Unicorn card from the discard pile?', { optional: true });
+    const c = ctx.chooseCard(me, ctx.discardOfType((x) => ctx.isUnicorn(x)), 'Majestic Flying Unicorn: take a Unicorn card from the discard pile?', { optional: true, empty: 'no Unicorn cards in the discard pile.' });
     if (c !== null) ctx.addToHand(c, me);
   },
   replaceRemoval: flyer,
@@ -281,7 +281,7 @@ defineCard('necromancer-unicorn', {
     if (!ctx.confirm(me, 'Necromancer Unicorn: DISCARD 2 Unicorn cards to bring a Unicorn from the discard pile into your Stable?')) return;
     const picks = ctx.chooseCards(me, unis, 2, 'DISCARD which 2 Unicorn cards?');
     for (const c of picks) ctx.discardCard(me, c);
-    const t = ctx.chooseCard(me, ctx.discardOfType((c) => ctx.isUnicorn(c) && ctx.canEnter(c, me)), 'Bring which Unicorn into your Stable?');
+    const t = ctx.chooseCard(me, ctx.discardOfType((c) => ctx.isUnicorn(c) && ctx.canEnter(c, me)), 'Bring which Unicorn into your Stable?', { empty: 'no Unicorn in the discard pile could enter your Stable.' });
     if (t !== null) ctx.enterStable(t, me, 'bring');
   },
 });
@@ -293,7 +293,7 @@ defineCard('dark-angel-unicorn', {
     const s = ctx.chooseCard(me, options, 'Dark Angel Unicorn: SACRIFICE a Unicorn to bring one back from the discard pile?', { optional: true });
     if (s === null) return;
     ctx.sacrifice(s);
-    const t = ctx.chooseCard(me, ctx.discardOfType((c) => ctx.isUnicorn(c) && ctx.canEnter(c, me)), 'Bring which Unicorn into your Stable?');
+    const t = ctx.chooseCard(me, ctx.discardOfType((c) => ctx.isUnicorn(c) && ctx.canEnter(c, me)), 'Bring which Unicorn into your Stable?', { empty: 'no Unicorn in the discard pile could enter your Stable.' });
     if (t !== null) ctx.enterStable(t, me, 'bring');
   },
 });
