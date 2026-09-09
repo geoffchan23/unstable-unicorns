@@ -40,9 +40,13 @@ export function describeNeighWindow(stack: StackItem[], me: PlayerId, n: NeighNa
   const whose = mine ? 'your' : possessive(n.player(base.player));
 
   const verb = canNeigh ? 'plays' : 'played';
+  const onto = base.targetPlayer === undefined ? ''
+    : base.targetPlayer === me ? ' on you'
+    : base.targetPlayer === base.player ? ' on themselves'
+    : ` on ${n.player(base.targetPlayer)}`;
   let title: string;
   if (neighCount === 0) {
-    title = `${n.player(base.player)} ${verb} ${baseName}`;
+    title = `${n.player(base.player)} ${verb} ${baseName}${onto}`;
   } else {
     const answered = stack[stack.length - 2]!;
     const target = stack.length - 2 === 0

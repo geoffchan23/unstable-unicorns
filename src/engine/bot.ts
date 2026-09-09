@@ -5,7 +5,7 @@ import { legalActions } from './game';
 export function playersToAct(state: GameState): PlayerId[] {
   if (state.winner !== null) return [];
   const p = state.pending;
-  if (p) return p.kind === 'prompt' ? [p.prompt.player] : [...p.awaiting];
+  if (p) return p.kind === 'prompt' ? [p.prompt.player] : p.kind === 'beginTurn' ? [p.player] : [...p.awaiting];
   return state.turn.phase === 'action' ? [state.turn.player] : [];
 }
 
@@ -32,7 +32,17 @@ function score(state: GameState, me: PlayerId): number {
   for (const p of state.players) if (p.id !== me) best = Math.max(best, unicornCount(state, p.id));
   const hand = state.players[me]!.hand.length;
   const stable = state.players[me]!.stable.length;
-  return mine * 10 - best * 8 + Math.min(hand, 6) * 0.6 + stable * 0.3;
+  // Upgrades help their owner, Downgrades hurt them: count mine for me, and everyone else's against me
+  let gear = 0;
+  for (const p of state.players) {
+    const sign = p.id === me ? 1 : -1 / (state.players.length - 1);
+    for (const c of p.stable) {
+      const t = typeOf(state, c);
+      if (t === 'upgrade') gear += 2 * sign;
+      else if (t === 'downgrade') gear -= 2 * sign;
+    }
+  }
+  return mine * 10 - best * 8 + Math.min(hand, 6) * 0.6 + stable * 0.3 + gear;
 }
 
 /** apply an action, then auto-resolve Neigh windows (everyone passes) and prompts (greedily for `me`, first option otherwise). */
@@ -47,6 +57,11 @@ function settle(state: GameState, me: PlayerId, action: Action, rand: () => numb
     const p = s.pending;
     if (p.kind === 'neighWindow') {
       s = applyAction(s, { type: 'pass', player: p.awaiting[0]! });
+      continue;
+    }
+    if (p.kind === 'beginTurn') {
+      // during lookahead, take the plain option: draw without using anything
+      s = applyAction(s, { type: 'beginTurn', player: p.player, card: null });
       continue;
     }
     const who = p.prompt.player;

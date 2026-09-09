@@ -11,6 +11,9 @@ export interface CardDef {
   // --- queued triggers (run through the prompt/replay machinery) ---
   onEnter?(ctx: Ctx): void;
   onBeginTurn?(ctx: Ctx): void;
+  /** how the beginning-of-turn effect is offered: 'auto' runs without asking (Double Dutch), 'mandatory' must
+   *  resolve before the draw (Sadistic Ritual); default: optional, the player chooses whether and when. */
+  beginTurn?: 'auto' | 'mandatory';
   /** fires after a real (non-replaced) sacrifice or destroy of this card. */
   onLeave?(ctx: Ctx): void;
   onPlayMagic?(ctx: Ctx): void;

@@ -9,6 +9,7 @@ describe('Upgrades and Downgrades played into another stable', () => {
     const line = h.state.log[h.state.log.length - 1]!;
     expect(line.text).toBe("P1 plays Stable Artillery into P2's stable.");
     expect(line.affects).toEqual([1]);
+    expect(h.state.log.some((l) => l.text === 'P1 plays Stable Artillery on P2.' && l.affects?.[0] === 1)).toBe(true);
     // into your own stable stays the plain wording
     const h2 = new Harness({ players: 2, hands: [['stable-artillery'], []], babies: false, plays: 9, twoPlayerVariant: false });
     h2.play(0, 'stable-artillery', 0);

@@ -30,6 +30,8 @@ async function open(browser: Browser, name: string) {
  */
 async function play(page: Page, force: boolean): Promise<boolean> {
   const opts = { force };
+  const begin = page.getByTestId('begin');
+  if (await begin.isVisible().catch(() => false)) { await begin.getByTestId('begin-draw').click(opts); return true; }
   const prompt = page.getByTestId('prompt');
   if (await prompt.isVisible().catch(() => false)) {
     const choice = prompt.locator('button:enabled:not(.sheet-x):not(.sheet-pill)').first();

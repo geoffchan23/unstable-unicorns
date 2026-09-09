@@ -10,6 +10,7 @@ defineCard('pandamonium', {
 });
 
 defineCard('sadistic-ritual', {
+  beginTurn: 'mandatory',
   onBeginTurn(ctx) {
     const me = ctx.controller;
     const c = ctx.chooseCard(me, ctx.unicornsIn([me]), 'Sadistic Ritual: SACRIFICE a Unicorn');

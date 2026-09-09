@@ -10,6 +10,7 @@ const browser = await chromium.launch();
 
 async function step(page) {
   for (const [sel, pick] of [
+    ['[data-testid=begin]', (l) => l.locator('[data-testid=begin-draw]')],
     ['[data-testid=prompt]', (l) => l.locator('button:enabled:not(.sheet-x):not(.sheet-pill)').first()],
     ['[data-testid=neigh]', (l) => l.getByRole('button', { name: /^(Let it happen|OK)$/ })],
     ['[data-testid=target]', (l) => l.locator('.choice').first()],
@@ -40,9 +41,16 @@ for (const [tag, device] of [['pixel', devices['Pixel 7']], ['ipad', devices['iP
     }
     await page.waitForTimeout(300); await shot('4-sheet');
     // keep going until a choose-a-card prompt (the fluid card grid) is on screen
+    // capture the beginning-of-turn window the first time it appears
+    for (let i = 0; i < 700; i++) {
+      if (await page.getByTestId('begin').isVisible()) { await page.waitForTimeout(300); await shot('3e-begin'); break; }
+      if (await page.getByTestId('win').isVisible()) break;
+      if (!(await step(page))) await page.waitForTimeout(200);
+    }
     // drawing every turn overfills the hand, which forces the end-of-turn discard prompt (a card grid)
     for (let i = 0; i < 300; i++) {
       if (await page.locator('[data-testid=prompt] .card-grid').isVisible() || await page.getByTestId('win').isVisible()) break;
+      if (await page.locator('.sheet-wrap').count()) { if (!(await step(page))) await page.waitForTimeout(200); continue; }
       const draw = page.getByTestId('draw');
       if (await draw.isVisible()) { await draw.click(); continue; }
       if (!(await step(page))) await page.waitForTimeout(200);

@@ -9,7 +9,9 @@ export function OnlineGame({ client, snap, onQuit }: { client: GameClient; snap:
   const waitingOn = st.view.pending
     ? st.view.pending.kind === 'prompt'
       ? [st.view.pending.prompt.player]
-      : st.view.pending.awaiting
+      : st.view.pending.kind === 'beginTurn'
+        ? [st.view.pending.player]
+        : st.view.pending.awaiting
     : st.view.turn.phase === 'action'
       ? [st.view.turn.player]
       : [];

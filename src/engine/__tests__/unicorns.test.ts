@@ -26,7 +26,7 @@ describe('Baby Unicorns', () => {
 describe('Magical Unicorns', () => {
   it('Rhinocorn: destroy a unicorn at start of turn, then end the turn (no draw, no action)', () => {
     const h = setup({ stables: [[], ['rhinocorn']], hands: [[]] });
-    h.draw(0); // P1's turn ends, P2 begins: Rhinocorn asks
+    h.draw(0).useBegin('rhinocorn'); // P1's turn ends, P2 begins and uses Rhinocorn
     expect(h.prompt()?.message).toMatch(/Rhinocorn/);
     const handBefore = h.hand(1).length;
     h.answerCard(h.stable(0)[0]!);
@@ -36,7 +36,7 @@ describe('Magical Unicorns', () => {
   });
   it('Rhinocorn: declining keeps the turn normal', () => {
     const h = setup({ stables: [[], ['rhinocorn']], hands: [[]] });
-    h.draw(0).skip();
+    h.draw(0).skipBegin();
     expect(h.state.turn.player).toBe(1);
     expect(h.state.turn.phase).toBe('action');
   });
@@ -177,7 +177,7 @@ describe('Magical Unicorns', () => {
   });
   it('Black Knight Unicorn does not protect against sacrifice', () => {
     const h = setup({ stables: [[], ['black-knight-unicorn', 'basic-unicorn-red', 'sadistic-ritual']], hands: [[]] });
-    h.draw(0); // P2's begin: Sadistic Ritual
+    h.draw(0).useBegin('sadistic-ritual'); // P2's begin: Sadistic Ritual
     h.answerCard('basic-unicorn-red');
     expect(h.discard()).toContain('basic-unicorn-red');
     expect(h.stable(1)).toContain('black-knight-unicorn');

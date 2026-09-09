@@ -56,6 +56,7 @@ export function GameScreen({
   const neighWindow = view.pending?.kind === 'neighWindow' && view.pending.awaiting.includes(view.me) ? view.pending : null;
   const stackTop = view.stack.length ? view.stack[0]! : null;
   const canNeigh = legal.some((a) => a.type === 'neigh');
+  const mandatoryBegin = view.pending?.kind === 'beginTurn' ? view.pending.mandatory : [];
   const neighText = view.stack.length && view.pending?.kind === 'neighWindow'
     ? describeNeighWindow(view.stack, view.me, { player: (p) => view.players[p]!.name, card: (id) => data(id).name }, canNeigh)
     : null;
@@ -186,18 +187,6 @@ export function GameScreen({
         </Sheet>
       )}
 
-      {detail && (
-        <CardDetailSheet
-          data={detail.data}
-          inHand={detail.id !== null && inHand(detail.id)}
-          canPlay={detail.id !== null && inHand(detail.id) && myTurn && playable.has(detail.id)}
-          blockedBy={detail.id !== null ? view.playBlocks[detail.id] ?? null : null}
-          myTurn={myTurn}
-          players={view.players.map((p) => ({ id: p.id, name: p.id === view.me ? `${p.name} (me)` : p.name }))}
-          onPlay={playDetail}
-          onClose={() => setDetail(null)}
-        />
-      )}
 
       {neighWindow && stackTop && neighText && (
         <Sheet title={neighText.title} testId="neigh">
@@ -228,6 +217,48 @@ export function GameScreen({
 
       {prompt && <PromptSheet prompt={prompt} view={view} onAnswer={(answer) => onAction({ type: 'respond', player: view.me, promptId: prompt.id, answer })} />}
 
+      {view.pending?.kind === 'beginTurn' && view.pending.player === view.me && (
+        <Sheet title="Beginning of your turn" testId="begin">
+          <p className="sheet-sub">
+            Use your stable's beginning-of-turn cards in any order, then draw.
+            {view.pending.mandatory.length > 0 && ' Cards marked "must resolve" happen either way.'}
+          </p>
+          <ol className="begin-list">
+            {view.pending.options.map((c) => {
+              const must = mandatoryBegin.includes(c);
+              return (
+                <li key={c}>
+                  <CardView data={data(c)} compact onClick={() => openCard(c)} />
+                  <span className="begin-text">{data(c).text}</span>
+                  <span className="begin-actions">
+                    {must && <span className="must">must resolve</span>}
+                    <button type="button" className="primary small" data-testid="begin-use" onClick={() => onAction({ type: 'beginTurn', player: view.me, card: c })}>{must ? 'Resolve now' : 'Use it'}</button>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+          <div className="choices">
+            <button type="button" className="choice primary" data-testid="begin-draw" onClick={() => onAction({ type: 'beginTurn', player: view.me, card: null })}>
+              {view.pending.mandatory.length > 0 ? 'Resolve the rest and draw' : 'Skip these and draw a card'}
+            </button>
+          </div>
+        </Sheet>
+      )}
+
+      {detail && (
+        <CardDetailSheet
+          data={detail.data}
+          inHand={detail.id !== null && inHand(detail.id)}
+          canPlay={detail.id !== null && inHand(detail.id) && myTurn && playable.has(detail.id)}
+          blockedBy={detail.id !== null ? view.playBlocks[detail.id] ?? null : null}
+          myTurn={myTurn}
+          players={view.players.map((p) => ({ id: p.id, name: p.id === view.me ? `${p.name} (me)` : p.name }))}
+          onPlay={playDetail}
+          onClose={() => setDetail(null)}
+        />
+      )}
+
       {children}
 
       {view.winner !== null && (
@@ -254,7 +285,7 @@ function CardDetailSheet({ data, inHand, canPlay, myTurn, blockedBy, players, on
   const art = artFor(data.id);
   const needsTarget = data.type === 'upgrade' || data.type === 'downgrade';
   return (
-    <Sheet title={data.name} onClose={onClose} testId="detail">
+    <Sheet title={data.name} onClose={onClose} testId="detail" className="above">
       <div className={`detail t-${data.type}`}>
         {art
           ? <img className="detail-art" src={art} alt="" />
@@ -293,7 +324,7 @@ function CardDetailSheet({ data, inHand, canPlay, myTurn, blockedBy, players, on
  * game is waiting on) a backdrop tap only tucks it away so you can look at the table; a pill
  * brings it back.
  */
-function Sheet({ title, children, onClose, testId }: { title: string; children: React.ReactNode; onClose?: () => void; testId?: string }) {
+function Sheet({ title, children, onClose, testId, className }: { title: string; children: React.ReactNode; onClose?: () => void; testId?: string; className?: string }) {
   const [tucked, setTucked] = useState(false);
   useEffect(() => setTucked(false), [title]);
   if (tucked) {
@@ -306,7 +337,7 @@ function Sheet({ title, children, onClose, testId }: { title: string; children: 
     );
   }
   return (
-    <div className="sheet-wrap" role="dialog" aria-modal="true" aria-label={title} data-testid={testId}
+    <div className={`sheet-wrap ${className ?? ''}`} role="dialog" aria-modal="true" aria-label={title} data-testid={testId}
       onClick={(e) => { if (e.target === e.currentTarget) (onClose ? onClose() : setTucked(true)); }}>
       <div className="sheet">
         <div className="sheet-head">

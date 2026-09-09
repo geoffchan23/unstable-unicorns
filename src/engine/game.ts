@@ -1,4 +1,4 @@
-import type { Action, Answer, GameState, PlayerId, Prompt, StackItem } from './types';
+import type { Action, Answer, GameState, InstanceId, PlayerId, Prompt, StackItem } from './types';
 import { shuffleInPlace } from './rng';
 import { allCardData, hasDef } from './registry';
 import { Ctx, GameWon, runEffect, systemCtx } from './effects';
@@ -35,7 +35,7 @@ export function createGame(opts: GameOptions): GameState {
     discard: [],
     nursery: [],
     limbo: [],
-    turn: { player: 0, phase: 'begin', beginTurnQueued: false, playsRemaining: 1, extraTurns: 0, endDiscardQueued: false, number: 1 },
+    turn: { player: 0, phase: 'begin', beginTurnQueued: false, playsRemaining: 1, extraTurns: 0, endDiscardQueued: false, number: 1, beginDone: [] },
     stack: [],
     pending: null,
     effectQueue: [],
@@ -110,14 +110,18 @@ export function run(state: GameState): GameState {
 
     const t = state.turn;
     switch (t.phase) {
-      case 'begin':
-        if (!t.beginTurnQueued) {
-          t.beginTurnQueued = true;
-          queueBeginTurn(state);
-        } else {
-          t.phase = 'draw';
+      case 'begin': {
+        const p = t.player;
+        const eligible = state.players[p]!.stable.filter((c) => defOf(state, c).onBeginTurn && effectsActive(state, c) && !t.beginDone.includes(c));
+        const auto = eligible.filter((c) => defOf(state, c).beginTurn === 'auto');
+        if (auto.length) {
+          for (const c of auto) { t.beginDone.push(c); state.effectQueue.push({ kind: 'card', card: c, handler: 'onBeginTurn', controller: p, answers: [] }); }
+          break;
         }
-        break;
+        if (eligible.length === 0) { t.beginTurnQueued = true; t.phase = 'draw'; break; }
+        state.pending = { kind: 'beginTurn', player: p, options: eligible, mandatory: eligible.filter((c) => defOf(state, c).beginTurn === 'mandatory') };
+        return state;
+      }
       case 'draw': {
         systemCtx(state, t.player).draw(t.player, 1);
         t.phase = 'action';
@@ -139,15 +143,6 @@ export function run(state: GameState): GameState {
   throw new Error('run: exceeded step guard');
 }
 
-function queueBeginTurn(state: GameState): void {
-  const p = state.turn.player;
-  // Tiny Stable first, then stable order. (Owner-chosen ordering is a later refinement.)
-  const cards = [...state.players[p]!.stable].filter((c) => defOf(state, c).onBeginTurn && effectsActive(state, c));
-  cards.sort((a, b) => Number(state.cards[b]!.def === 'tiny-stable') - Number(state.cards[a]!.def === 'tiny-stable'));
-  for (const c of cards) {
-    state.effectQueue.push({ kind: 'card', card: c, handler: 'onBeginTurn', controller: p, answers: [] });
-  }
-}
 
 function nextTurn(state: GameState): void {
   const t = state.turn;
@@ -160,6 +155,7 @@ function nextTurn(state: GameState): void {
   t.number++;
   t.phase = 'begin';
   t.beginTurnQueued = false;
+  t.beginDone = [];
   t.endDiscardQueued = false;
   t.playsRemaining = 1;
   state.log.push({ turn: t.number, text: `--- ${state.players[t.player]!.name}'s turn ---` });
@@ -224,6 +220,10 @@ export function legalActions(state: GameState, player: PlayerId): Action[] {
   if (state.winner !== null) return [];
   const out: Action[] = [];
   const pend = state.pending;
+  if (pend && pend.kind === 'beginTurn') {
+    if (pend.player !== player) return [];
+    return [...pend.options.map((c): Action => ({ type: 'beginTurn', player, card: c })), { type: 'beginTurn', player, card: null }];
+  }
   if (pend) {
     if (pend.kind === 'prompt') {
       if (pend.prompt.player !== player) return [];
@@ -330,6 +330,23 @@ export function applyAction(input: GameState, action: Action): GameState {
       if (pend.awaiting.length === 0) state.pending = null;
       break;
     }
+    case 'beginTurn': {
+      if (!pend || pend.kind !== 'beginTurn') throw new IllegalAction('it is not the beginning of a turn');
+      if (pend.player !== action.player) throw new IllegalAction('not your turn');
+      const t = state.turn;
+      const use = (c: InstanceId) => state.effectQueue.push({ kind: 'card', card: c, handler: 'onBeginTurn', controller: action.player, answers: [], payload: { chosen: true } });
+      if (action.card === null) {
+        for (const c of pend.mandatory) use(c);
+        t.beginDone.push(...pend.options);
+      } else {
+        if (!pend.options.includes(action.card)) throw new IllegalAction('that card has no beginning-of-turn effect to use now');
+        state.log.push({ turn: t.number, text: `${state.players[action.player]!.name} uses ${nameOf(state, action.card)}.` });
+        use(action.card);
+        t.beginDone.push(action.card);
+      }
+      state.pending = null;
+      break;
+    }
     case 'neigh': {
       if (!pend || pend.kind !== 'neighWindow') throw new IllegalAction('no Neigh window');
       if (!pend.awaiting.includes(action.player)) throw new IllegalAction('not awaiting you');
@@ -368,7 +385,11 @@ export function applyAction(input: GameState, action: Action): GameState {
       state.limbo.push(action.card);
       state.turn.playsRemaining--;
       state.stack.push({ card: action.card, player: action.player, targetPlayer });
-      state.log.push({ turn: state.turn.number, text: `${state.players[action.player]!.name} plays ${nameOf(state, action.card)}.` });
+      {
+        const who = state.players[action.player]!.name;
+        const onto = targetPlayer === undefined ? '' : targetPlayer === action.player ? ' on themselves' : ` on ${state.players[targetPlayer]!.name}`;
+        state.log.push({ turn: state.turn.number, text: `${who} plays ${nameOf(state, action.card)}${onto}.`, ...(targetPlayer !== undefined && targetPlayer !== action.player ? { affects: [targetPlayer] } : {}) });
+      }
       openNeighWindow(state, 0);
       break;
     }

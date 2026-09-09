@@ -91,6 +91,16 @@ describe('Neigh window wording, driven by the real engine', () => {
     expect(text(h, 2).ok).toBe('Let it happen');
   });
 
+  it('Upgrades and Downgrades say whose stable they are aimed at', () => {
+    const h = new Harness({ players: 3, hands: [['nanny-cam', 'stable-artillery'], [], []], plays: 9 });
+    h.play(0, 'nanny-cam', 1, { autoPass: false });
+    expect(text(h, 1).title).toBe('Ann plays Nanny Cam on you');
+    expect(text(h, 2).title).toBe('Ann plays Nanny Cam on Ben');
+    h.passAll();
+    h.play(0, 'stable-artillery', 0, { autoPass: false });
+    expect(text(h, 2).title).toBe('Ann plays Stable Artillery on themselves');
+  });
+
   it('never says "Neighs Neigh"', () => {
     const h = played().neigh(1).neigh(0).neigh(2);
     for (const me of [0, 1, 2] as PlayerId[]) {

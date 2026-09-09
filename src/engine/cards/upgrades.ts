@@ -19,6 +19,7 @@ defineCard('rainbow-aura', {
 });
 
 defineCard('double-dutch', {
+  beginTurn: 'auto',
   onBeginTurn(ctx) {
     ctx.state.turn.playsRemaining = 2;
     ctx.log(`${ctx.playerName(ctx.controller)} may play 2 cards this turn (Double Dutch).`);

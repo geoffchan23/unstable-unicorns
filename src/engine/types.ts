@@ -37,6 +37,8 @@ export interface Turn {
   extraTurns: number;
   endDiscardQueued: boolean;
   number: number;
+  /** beginning-of-turn cards already used (or skipped) this turn */
+  beginDone: InstanceId[];
 }
 
 export interface Player {
@@ -81,7 +83,17 @@ export interface NeighWindow {
   awaiting: PlayerId[];
 }
 
-export type Pending = { kind: 'prompt'; prompt: Prompt } | NeighWindow;
+/** The beginning of a turn: the player picks which of their beginning-of-turn cards to use, in any order. */
+export interface BeginTurnWindow {
+  kind: 'beginTurn';
+  player: PlayerId;
+  /** stable cards whose beginning-of-turn effect has not been used yet this turn */
+  options: InstanceId[];
+  /** the subset that must resolve before the draw (they run in stable order if skipped) */
+  mandatory: InstanceId[];
+}
+
+export type Pending = { kind: 'prompt'; prompt: Prompt } | NeighWindow | BeginTurnWindow;
 
 export type Answer = number | string | boolean | number[] | null;
 
@@ -142,7 +154,9 @@ export type Action =
   | { type: 'draw'; player: PlayerId }
   | { type: 'neigh'; player: PlayerId; card: InstanceId }
   | { type: 'pass'; player: PlayerId }
-  | { type: 'respond'; player: PlayerId; promptId: number; answer: Answer };
+  | { type: 'respond'; player: PlayerId; promptId: number; answer: Answer }
+  /** beginning of turn: use one card's effect now, or `card: null` to stop and draw */
+  | { type: 'beginTurn'; player: PlayerId; card: InstanceId | null };
 
 export type RemovalKind = 'destroy' | 'sacrifice' | 'returnToHand';
 

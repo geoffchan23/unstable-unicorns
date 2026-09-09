@@ -354,3 +354,11 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .neigh-chain li.latest .card.compact { border-color: var(--neigh); box-shadow: 0 0 0 2px color-mix(in srgb, var(--neigh) 35%, transparent); }
 .chain-who { font-size: 12px; font-weight: 800; color: var(--ink-2); padding-left: 4px; }
 .sheet-sub.blocked { color: var(--neigh); font-weight: 800; }
+
+/* beginning-of-turn window */
+.begin-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.begin-list li { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; padding: 10px; background: var(--ground-2); border-radius: 12px; }
+.begin-text { grid-column: 1 / -1; font-size: 13px; font-weight: 700; font-style: italic; color: var(--ink-2); }
+.begin-actions { display: flex; align-items: center; gap: 8px; justify-self: end; }
+.must { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--warn); }
+.sheet-wrap.above { z-index: 14; }

@@ -4,6 +4,8 @@ import type { Page } from '@playwright/test';
 export async function step(page: Page): Promise<boolean> {
   const handoff = page.getByRole('button', { name: /^I'm / });
   if (await handoff.isVisible()) { await handoff.click(); return true; }
+  const begin = page.getByTestId('begin');
+  if (await begin.isVisible()) { await begin.getByTestId('begin-draw').click(); return true; }
   const prompt = page.getByTestId('prompt');
   if (await prompt.isVisible()) {
     const choice = prompt.locator('button:enabled:not(.sheet-x):not(.sheet-pill)').first();

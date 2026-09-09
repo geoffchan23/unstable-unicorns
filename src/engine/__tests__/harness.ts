@@ -58,7 +58,7 @@ export class Harness {
     s.deck.push(...top.reverse()); // last element of deck is the top
     s.turn = {
       player: opts.turnPlayer ?? 0, phase: 'action', beginTurnQueued: true, playsRemaining: opts.plays ?? 1,
-      extraTurns: 0, endDiscardQueued: false, number: 1,
+      extraTurns: 0, endDiscardQueued: false, number: 1, beginDone: [],
     };
     s.pending = null;
     s.effectQueue = [];
@@ -157,12 +157,35 @@ export class Harness {
 
   /** answer whatever prompts are pending with the first legal option until input is needed from a player action. */
   autoAnswer(): this {
-    while (this.prompt()) {
-      const pr = this.prompt()!;
+    for (;;) {
+      const w = this.beginWindow();
+      if (w) { this.apply({ type: 'beginTurn', player: w.player, card: w.options[0]! }); continue; }
+      const pr = this.prompt();
+      if (!pr) break;
       const acts = legalActions(this.state, pr.player);
       this.apply(acts[0]!);
     }
     return this;
+  }
+
+  /** the beginning-of-turn window, if one is open. */
+  beginWindow() {
+    const p = this.state.pending;
+    return p && p.kind === 'beginTurn' ? p : null;
+  }
+  /** use one beginning-of-turn card from the open window. */
+  useBegin(def: string): this {
+    const w = this.beginWindow();
+    if (!w) throw new Error('no beginning-of-turn window open');
+    const c = w.options.find((x) => this.state.cards[x]!.def === def);
+    if (c === undefined) throw new Error(`${def} is not offered; options: ${this.defs(w.options).join(', ')}`);
+    return this.apply({ type: 'beginTurn', player: w.player, card: c });
+  }
+  /** stop using beginning-of-turn cards and draw (mandatory ones still resolve). */
+  skipBegin(): this {
+    const w = this.beginWindow();
+    if (!w) throw new Error('no beginning-of-turn window open');
+    return this.apply({ type: 'beginTurn', player: w.player, card: null });
   }
 
   /** run the turn to the next player's action phase, drawing as the action and auto-discarding. */

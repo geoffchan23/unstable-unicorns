@@ -42,7 +42,11 @@ export class Ctx {
 
   // ---------- prompts ----------
 
+  /** prompts asked so far in this run of the effect (identical on replay) */
+  private asks = 0;
+
   private ask(p: Omit<Prompt, 'id'>): Answer {
+    this.asks++;
     const answers = this.effect.answers;
     if (this.cursor < answers.length) return answers[this.cursor++]!;
     const cause = this.effect.kind === 'card' && this.effect.handler === 'onPlayMagic' ? 'play' : 'effect';
@@ -90,6 +94,8 @@ export class Ctx {
   }
 
   confirm(player: PlayerId, message: string): boolean {
+    // A card the player picked from the beginning-of-turn list was already confirmed by that choice.
+    if (this.asks === 0 && this.effect.kind === 'card' && this.effect.payload?.chosen === true) return true;
     const a = this.ask({
       player, kind: 'confirm', message, options: ['yes', 'no'], optional: false, source: this.source(),
     });

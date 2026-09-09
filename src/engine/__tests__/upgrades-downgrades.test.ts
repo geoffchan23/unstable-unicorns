@@ -9,6 +9,7 @@ const p2turn = (o: SetupOptions = {}) => { const h = base({ ...o, plays: 1 }); h
 describe('Upgrades', () => {
   it('Glitter Bomb: sacrifice a card to destroy a card', () => {
     const h = p2turn({ stables: [['basic-unicorn-red'], ['glitter-bomb', 'basic-unicorn-blue']] });
+    h.useBegin('glitter-bomb');
     expect(h.prompt()?.message).toMatch(/Glitter Bomb/);
     h.answerCard('basic-unicorn-blue').answerCard('basic-unicorn-red');
     expect(h.stable(0)).not.toContain('basic-unicorn-red');
@@ -35,26 +36,26 @@ describe('Upgrades', () => {
   it('Claw Machine: discard to draw', () => {
     // deck top: P1's draw action, then Claw Machine's draw, then P2's draw phase
     const h = p2turn({ stables: [[], ['claw-machine']], hands: [[], ['neigh']], deckTop: ['yay', 'slowdown', 'good-deal'] });
-    h.yes().answerCard('neigh');
+    h.useBegin('claw-machine').answerCard('neigh');   // choosing it from the list is the "yes"
     expect(h.hand(1)).toEqual(['slowdown', 'good-deal']);
     expect(h.discard()).toEqual(['neigh']);
   });
 
   it('Stable Artillery: discard 2 to destroy a unicorn', () => {
     const h = p2turn({ stables: [['basic-unicorn-red'], ['stable-artillery']], hands: [[], ['neigh', 'neigh']] });
-    h.yes().answerCard('neigh').answerCard('neigh').answerCard('basic-unicorn-red');
+    h.useBegin('stable-artillery').answerCard('neigh').answerCard('neigh').answerCard('basic-unicorn-red');
     expect(h.stable(0)).not.toContain('basic-unicorn-red');
   });
 
   it('Rainbow Lasso: discard 3 to steal a unicorn', () => {
     const h = p2turn({ stables: [['basic-unicorn-red'], ['rainbow-lasso']], hands: [[], ['neigh', 'neigh', 'neigh']] });
-    h.yes().answerCard('neigh').answerCard('neigh').answerCard('neigh').answerCard('basic-unicorn-red');
+    h.useBegin('rainbow-lasso').answerCard('neigh').answerCard('neigh').answerCard('neigh').answerCard('basic-unicorn-red');
     expect(h.stable(1)).toContain('basic-unicorn-red');
   });
 
   it('Caffeine Overload: sacrifice to draw 2', () => {
     const h = p2turn({ stables: [[], ['caffeine-overload', 'basic-unicorn-red']], deckTop: ['neigh', 'slowdown', 'good-deal', 'yay'] });
-    h.answerCard('basic-unicorn-red');
+    h.useBegin('caffeine-overload').answerCard('basic-unicorn-red');
     expect(h.hand(1)).toEqual(['slowdown', 'good-deal', 'yay']);
   });
 
@@ -81,6 +82,8 @@ describe('Downgrades', () => {
 
   it('Sadistic Ritual: mandatory sacrifice then draw', () => {
     const h = p2turn({ stables: [[], ['sadistic-ritual', 'basic-unicorn-red']], deckTop: ['neigh', 'slowdown', 'good-deal'] });
+    expect(h.beginWindow()?.mandatory).toHaveLength(1);
+    h.skipBegin();                        // skipping still resolves the mandatory ritual
     h.answerCard('basic-unicorn-red');
     expect(h.stable(1)).not.toContain('basic-unicorn-red');
     expect(h.hand(1)).toEqual(['slowdown', 'good-deal']);
