@@ -22,7 +22,7 @@ export function randomBotAction(state: GameState, player: PlayerId, rand: () => 
 // ---------------------------------------------------------------------------
 
 import { applyAction, previewState } from './game';
-import { unicornCount } from './queries';
+import { typeOf, unicornCount } from './queries';
 
 function score(state: GameState, me: PlayerId): number {
   if (state.winner === me) return 1e6;
@@ -72,8 +72,20 @@ function bestOf(state: GameState, me: PlayerId, options: Action[], rand: () => n
   return best;
 }
 
+/** Drop plays no sane player makes: Upgrades into someone else's stable, Downgrades into your own. */
+function sensiblePlays(state: GameState, me: PlayerId, opts: Action[]): Action[] {
+  const kept = opts.filter((a) => {
+    if (a.type !== 'play' || a.targetPlayer === undefined) return true;
+    const t = typeOf(state, a.card);
+    if (t === 'upgrade') return a.targetPlayer === me;
+    if (t === 'downgrade') return a.targetPlayer !== me;
+    return true;
+  });
+  return kept.length ? kept : opts;
+}
+
 export function greedyBotAction(state: GameState, me: PlayerId, rand: () => number): Action | null {
-  const opts = legalActions(state, me);
+  const opts = sensiblePlays(state, me, legalActions(state, me));
   if (opts.length === 0) return null;
   const pend = state.pending;
   if (pend && pend.kind === 'neighWindow') {

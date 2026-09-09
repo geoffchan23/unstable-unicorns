@@ -338,6 +338,9 @@ export class Ctx {
     this.stable(player).push(card);
     if (reason === 'steal' && fromOwner !== null && fromOwner !== player) {
       this.log(`${this.playerName(player)} steals ${this.name(card)} from ${this.playerName(fromOwner)}${this.source() !== undefined ? ` with ${this.name(this.source()!)}` : ''}.`, [fromOwner]);
+    } else if (reason === 'play' && this.controller !== player) {
+      // an Upgrade or Downgrade played into someone else's stable
+      this.log(`${this.playerName(this.controller)} plays ${this.name(card)} into ${this.playerName(player)}'s stable.`, [player]);
     } else {
       const verb = reason === 'play' ? 'plays' : 'brings';
       this.log(`${this.playerName(player)} ${verb} ${this.name(card)} into their stable.`);
