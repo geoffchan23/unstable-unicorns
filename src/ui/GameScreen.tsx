@@ -4,6 +4,7 @@ import type { Action, Answer, InstanceId, PlayerId, Prompt } from '../engine/typ
 import type { PlayerView } from '../engine/view';
 import { CardView, TYPE_LABEL, TypeGlyph } from './Card';
 import { artFor } from './art';
+import { describeNeighWindow } from './neighText';
 import type { CardData } from '../engine/types';
 import { useWakeLock } from './pwa/wakeLock';
 import type { SeatInfo } from './seats';
@@ -46,6 +47,9 @@ export function GameScreen({
   const prompt = view.pending?.kind === 'prompt' && view.pending.prompt.player === view.me ? view.pending.prompt : null;
   const neighWindow = view.pending?.kind === 'neighWindow' && view.pending.awaiting.includes(view.me) ? view.pending : null;
   const stackTop = view.stack.length ? view.stack[0]! : null;
+  const neighText = view.stack.length && view.pending?.kind === 'neighWindow'
+    ? describeNeighWindow(view.stack, view.me, { player: (p) => view.players[p]!.name, card: (id) => data(id).name })
+    : null;
 
   const recent = view.log.slice(-40);
   const logRef = useRef<HTMLOListElement>(null);
@@ -96,8 +100,8 @@ export function GameScreen({
         {stackTop && view.pending?.kind === 'neighWindow' && (
           <div className="playing">
             <span>{view.players[stackTop.player]!.name} plays</span>
-            <CardView data={data(stackTop.card)} compact />
-            {view.stack.length > 1 && <span className="chain">{view.stack.length - 1} Neigh{view.stack.length > 2 ? 's' : ''} on it</span>}
+            <CardView data={data(stackTop.card)} compact onClick={() => setDetail(stackTop.card)} />
+            {neighText && <span className="chain">{neighText.banner}</span>}
             <span className="waiting">waiting on {view.pending.awaiting.map((p) => view.players[p]!.name).join(', ')}</span>
           </div>
         )}
@@ -143,10 +147,13 @@ export function GameScreen({
         />
       )}
 
-      {neighWindow && stackTop && (
-        <Sheet title={`${view.players[view.stack[view.stack.length - 1]!.player]!.name} ${view.stack.length > 1 ? 'Neighs' : 'plays'} ${data(view.stack[view.stack.length - 1]!.card).name}`} testId="neigh">
-          <p className="sheet-sub">{view.stack.length > 1 ? `Neigh the Neigh and ${data(stackTop.card).name} ${view.stack.length % 2 === 0 ? 'resolves' : 'is cancelled'}.` : `Neigh it and it goes straight to the discard pile.`}</p>
-          <div className="row center"><CardView data={data(view.stack[view.stack.length - 1]!.card)} /></div>
+      {neighWindow && stackTop && neighText && (
+        <Sheet title={neighText.title} testId="neigh">
+          <p className="sheet-sub">{neighText.sub}</p>
+          <div className="row center">
+            <CardView data={data(neighText.base)} onClick={() => setDetail(neighText.base)} />
+            {neighText.neighCount > 0 && <CardView data={data(neighText.featured)} compact />}
+          </div>
           <div className="choices">
             {legal.filter((a) => a.type === 'neigh').map((a) => (
               <button type="button" key={(a as { card: number }).card} className="choice neigh" onClick={() => onAction(a)}>
