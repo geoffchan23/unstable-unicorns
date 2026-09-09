@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createGame, applyAction, legalActions, IllegalAction } from '../engine/game';
 import { viewFor } from '../engine/view';
 import { playersToAct, greedyBotAction } from '../engine/bot';
@@ -34,16 +34,21 @@ export function LocalGame({ seats, seed, onQuit }: { seats: Seat[]; seed: number
   }, [humanActor, viewer, humans.length]);
 
   const [error, setError] = useState<string | null>(null);
+  // every action applied, in order: with the seed and seats this replays the whole game (scripts/replay.ts)
+  const history = useRef<Action[]>([]);
   const dispatch = useCallback((a: Action) => {
     setState((s) => {
       try {
-        return applyAction(s, a);
+        const next = applyAction(s, a);
+        history.current.push(a);
+        return next;
       } catch (e) {
         if (e instanceof IllegalAction) { setError(e.message); return s; }
         throw e;
       }
     });
   }, []);
+  const report = useCallback(() => JSON.stringify({ kind: 'unstable-unicorns-game', seed, seats, actions: history.current }), [seed, seats]);
 
   // bots think in the background
   const [botDelay] = useState(650);
@@ -63,7 +68,7 @@ export function LocalGame({ seats, seed, onQuit }: { seats: Seat[]; seed: number
   const legal = useMemo(() => legalActions(state, viewer), [state, viewer]);
   const seatInfos: SeatInfo[] = seats.map((s) => ({ ...s, connected: true }));
   return (
-    <GameScreen view={view} legal={legal} seats={seatInfos} onAction={dispatch} onQuit={onQuit}
+    <GameScreen view={view} legal={legal} seats={seatInfos} onAction={dispatch} onQuit={onQuit} seed={seed} report={report}
       error={error} onDismissError={() => setError(null)} youLabel={humans.length > 1 ? '' : ' (you)'}>
       {handoffTo !== null && (
         <div className="overlay">

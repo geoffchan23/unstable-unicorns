@@ -10,7 +10,9 @@ export function Setup({ onStart, onBack }: { onStart: (seats: Seat[], seed: numb
     { name: BOT_NAMES[0]!, kind: 'bot' },
     { name: BOT_NAMES[1]!, kind: 'bot' },
   ]);
-  const [seed, setSeed] = useState<string>('');
+  // the seed is a testing hook: ?seed=123 in the URL fixes the shuffle and the bots' choices
+  const urlSeed = Number(new URLSearchParams(location.search).get('seed') ?? '');
+  const seed = Number.isFinite(urlSeed) && urlSeed > 0 ? String(urlSeed) : '';
   const humans = seats.filter((s) => s.kind === 'human').length;
 
   const update = (i: number, patch: Partial<Seat>) => setSeats((ss) => ss.map((s, j) => (j === i ? { ...s, ...patch } : s)));
@@ -40,8 +42,7 @@ export function Setup({ onStart, onBack }: { onStart: (seats: Seat[], seed: numb
         <button type="button" className="ghost add" onClick={add} disabled={seats.length >= 8}>+ Add a player</button>
       </section>
       <section className="setup-foot">
-        <label className="seed">Seed <input value={seed} onChange={(e) => setSeed(e.target.value)} placeholder="random" inputMode="numeric" /></label>
-        <p className="hint">{seats.length === 2 ? 'Two players: the official 2-player deck is used (32 cards removed, one Neigh each to start).' : `${seats.length} players, ${humans} human.`}</p>
+        <p className="hint">{seats.length === 2 ? 'Two players: the official 2-player deck is used (32 cards removed, one Neigh each to start).' : `${seats.length} players, ${humans} human.`}{seed && ` Seed ${seed}.`}</p>
         <button type="button" className="primary big go" onClick={() => onStart(seats, seed ? Number(seed) : Math.floor(Math.random() * 1e9))}>
           Deal me in
         </button>

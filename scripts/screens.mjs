@@ -27,9 +27,9 @@ for (const [tag, device] of [['pixel', devices['Pixel 7']], ['ipad', devices['iP
     const ctx = await browser.newContext({ ...device, colorScheme: scheme });
     const page = await ctx.newPage();
     const shot = (name) => page.screenshot({ path: `${OUT}/${tag}-${scheme}-${name}.png`, fullPage: false });
-    await page.goto(BASE); await page.waitForTimeout(600); await shot('1-home');
+    await page.goto(BASE + '?seed=4'); await page.waitForTimeout(600); await shot('1-home');
     await page.getByRole('button', { name: 'Play on this device' }).click(); await shot('2-setup');
-    await page.getByLabel('Seed').fill('4'); await page.getByRole('button', { name: 'Deal me in' }).click();
+    await page.getByRole('button', { name: 'Deal me in' }).click();
     await page.getByTestId('topbar').waitFor(); await page.waitForTimeout(900); await shot('3-game-start');
     { await page.getByTestId('history-open').click(); await page.waitForTimeout(300); await shot('3c-history'); await page.getByTestId('history').getByRole('button', { name: 'Close' }).click(); }
     { await page.getByTestId('stable-toggle').click(); await page.waitForTimeout(300); await shot('3d-stable-open'); await page.getByTestId('stable-toggle').click(); }

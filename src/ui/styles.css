@@ -40,6 +40,13 @@
     color-scheme: dark;
   }
 }
+:root[data-theme="barf"] {
+  --ground: #fff6fb; --ground-2: #fff0f7; --panel: rgba(255, 255, 255, 0.94); --ink: #26232d; --ink-2: #5d4a70; --line: #ffd0e8;
+  --pattern-ink: rgba(255, 255, 255, 0.45);
+  --btn: #ff3d9a; --btn-edge: #b0206a; --focus: #ff3d9a;
+  --lift: 0 6px 18px rgba(120, 40, 160, 0.18); --lift-2: 0 14px 40px rgba(120, 40, 160, 0.3); --scrim: rgba(110, 30, 150, 0.5);
+  color-scheme: light;
+}
 :root[data-theme="dark"] {
   --ground: #121015; --ground-2: #1c1920; --panel: #201d25; --ink: #f4f1f7; --ink-2: #aaa4b5; --line: #35313d;
   --pattern-ink: rgba(255, 255, 255, 0.06);
@@ -370,3 +377,23 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .expanded { border: 2px solid var(--btn); margin-top: -2px; }
 .expanded-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .expanded-head .sheet-x { width: 30px; height: 30px; font-size: 18px; }
+
+/* ---------- theme toggle + barf ---------- */
+.theme-toggle { justify-self: center; margin-bottom: 8px; }
+.seedlink { font-size: inherit; font-weight: 700; color: var(--ink-2); text-decoration: underline dotted; }
+:root[data-theme="barf"] body { background: linear-gradient(135deg, #ffcdd2 0%, #ffe0b2 18%, #fff59d 36%, #c8e6c9 54%, #b3e5fc 72%, #d1c4e9 88%, #f8bbd0 100%); background-attachment: fixed; }
+:root[data-theme="barf"] .primary, :root[data-theme="barf"] .choice.primary, :root[data-theme="barf"] .toggle button.on, :root[data-theme="barf"] .primary.go, :root[data-theme="barf"] .sheet-pill {
+  --b: transparent; background: var(--rb); color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); box-shadow: 0 4px 0 #7a2a8a;
+}
+:root[data-theme="barf"] .opp, :root[data-theme="barf"] .table, :root[data-theme="barf"] .stable-panel, :root[data-theme="barf"] .seat,
+:root[data-theme="barf"] .expanded, :root[data-theme="barf"] .overlay-box, :root[data-theme="barf"] .banner, :root[data-theme="barf"] .home .big-choices .choice:not(.primary) {
+  border: 2px solid transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--rb) border-box;
+}
+:root[data-theme="barf"] .sheet { border: 3px solid transparent; background: linear-gradient(var(--ground), var(--ground)) padding-box, var(--rb) border-box; }
+:root[data-theme="barf"] .card::after { background: var(--rb); height: 6px; }
+:root[data-theme="barf"] .card.compact { border-color: transparent; background: linear-gradient(#fff, #fff) padding-box, var(--rb) border-box; }
+:root[data-theme="barf"] .section-label, :root[data-theme="barf"] .tagline, :root[data-theme="barf"] .screen-title, :root[data-theme="barf"] .sheet h2, :root[data-theme="barf"] .count b, :root[data-theme="barf"] .opp-count b {
+  background: var(--rb); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+:root[data-theme="barf"] .log .turnmark, :root[data-theme="barf"] .cue, :root[data-theme="barf"] .table-hint, :root[data-theme="barf"] .cardref { color: #c2189a; }
+:root[data-theme="barf"] .ghost, :root[data-theme="barf"] .choice, :root[data-theme="barf"] .sheet-x { border-color: #ff9ad0; }

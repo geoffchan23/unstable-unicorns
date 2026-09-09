@@ -23,11 +23,23 @@ export interface GameScreenProps {
   banner?: React.ReactNode;      // rendered under the top bar (reconnecting, offline player)
   renderWin?: (winner: PlayerId) => React.ReactNode;  // default: "New game" button -> onQuit
   children?: React.ReactNode;    // extra overlays (hot-seat handoff)
+  /** the game's seed, shown so a bug report can name it */
+  seed?: number;
+  /** builds a JSON game report (seed, seats, every action) for bug reports */
+  report?: () => string;
 }
 
 export function GameScreen({
-  view, legal, seats, onAction, onQuit, error, onDismissError, youLabel, banner, renderWin, children,
+  view, legal, seats, onAction, onQuit, error, onDismissError, youLabel, banner, renderWin, children, seed, report,
 }: GameScreenProps) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const copyReport = async () => {
+    if (!report) return;
+    const text = report();
+    try { await navigator.clipboard.writeText(text); setCopied('Game report copied. Paste it into a message to reproduce this game.'); }
+    catch { setCopied(`Could not copy. Seed ${seed ?? '?'}.`); }
+    setTimeout(() => setCopied(null), 4000);
+  };
   useWakeLock(true);
   const me = view.players[view.me]!;
   const myTurn = view.turn.player === view.me && view.turn.phase === 'action' && !view.pending && view.winner === null;
@@ -82,7 +94,9 @@ export function GameScreen({
       <header className="topbar" data-testid="topbar">
         <div className="turn">
           <span className="who">{view.winner !== null ? `${view.players[view.winner]!.name} wins!` : `${view.players[view.turn.player]!.name}'s turn`}</span>
-          <span className="meta">Turn {view.turn.number} · deck {view.deckCount} · nursery {view.nursery.length} · first to {view.unicornsToWin}</span>
+          <span className="meta">Turn {view.turn.number} · deck {view.deckCount} · nursery {view.nursery.length} · first to {view.unicornsToWin}
+            {seed !== undefined && <> · <button type="button" className="link seedlink" onClick={copyReport} title="Copy a report of this game for bug fixing" data-testid="report">seed {seed}</button></>}
+          </span>
         </div>
         <button type="button" className="ghost small" onClick={onQuit}>Quit</button>
       </header>
@@ -275,6 +289,7 @@ export function GameScreen({
       )}
 
       {error && <div className="toast" role="alert" onClick={onDismissError}>{error}</div>}
+      {!error && copied && <div className="toast notice" role="status" onClick={() => setCopied(null)}>{copied}</div>}
       {!error && notice && <div className="toast notice" role="status" data-testid="notice" onClick={() => setNotice(null)}>{notice}</div>}
     </div>
   );

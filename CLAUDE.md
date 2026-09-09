@@ -46,6 +46,13 @@ scripts/deploy-server.sh  # ship the game server to the VM (see docs/DEPLOY.md)
 scripts/deploy-web.sh     # publish the client to geoffreychan.com/unicorns/
 ```
 
+## Reproducing a game from a bug report
+
+The seed input is hidden; `?seed=123` on the URL fixes the shuffle and the bots' choices. In a local game the top bar
+shows `seed N`; tapping it copies a JSON game report (seed, seats, every action) to the clipboard. Replay one with
+`npx tsx scripts/replay.ts report.json --verbose` to see each action, the log lines it produced, and the first illegal
+action if the report no longer matches the engine. Themes: light, dark, barf (toggle on the home screen, stored as `uu.theme`).
+
 ## Decisions already made (don't relitigate)
 
 - 2nd Edition card list and wording (127 playable cards, 84 unique). 1st Edition differs; see RULES.md §11.
