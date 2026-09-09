@@ -32,7 +32,7 @@ async function play(page: Page, force: boolean): Promise<boolean> {
   const opts = { force };
   const prompt = page.getByTestId('prompt');
   if (await prompt.isVisible().catch(() => false)) {
-    const choice = prompt.locator('button:enabled').first();
+    const choice = prompt.locator('button:enabled:not(.sheet-x):not(.sheet-pill)').first();
     await choice.click(opts);
     return true;
   }
@@ -50,7 +50,7 @@ async function play(page: Page, force: boolean): Promise<boolean> {
   if (await detail.isVisible().catch(() => false)) {
     const playBtn = detail.getByTestId('play');
     if (await playBtn.isVisible().catch(() => false)) await playBtn.click(opts);
-    else await detail.getByRole('button', { name: 'Cancel' }).click(opts);
+    else await detail.getByRole('button', { name: 'Close' }).click(opts);
     return true;
   }
   const hand = page.getByTestId('hand');

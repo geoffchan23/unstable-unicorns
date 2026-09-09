@@ -107,16 +107,19 @@ export function GameScreen({
       </section>
 
       <section className="mine">
-        <div className="mine-head">
-          <span className="you">{me.name}{youLabel ?? ' (you)'}</span>
-          <span className="count"><b>{view.unicornCounts[view.me]}</b> / {view.unicornsToWin} unicorns</span>
-        </div>
-        <div className="stable row">
-          {me.stable.length === 0 && <span className="empty">Your stable is empty.</span>}
-          {me.stable.map((c) => <CardView key={c} data={data(c)} compact onClick={() => setDetail(c)} />)}
+        <div className={`stable-panel ${myTurn ? 'active' : ''}`}>
+          <div className="mine-head">
+            <span className="section-label">Your stable</span>
+            <span className="you">{me.name}{youLabel ?? ' (you)'}</span>
+            <span className="count"><b>{view.unicornCounts[view.me]}</b> / {view.unicornsToWin} unicorns</span>
+          </div>
+          <div className="stable row">
+            {me.stable.length === 0 && <span className="empty">Nothing here yet. Play Unicorns to fill it.</span>}
+            {me.stable.map((c) => <CardView key={c} data={data(c)} compact onClick={() => setDetail(c)} />)}
+          </div>
         </div>
         <div className="hand-head">
-          <span>Hand · {me.hand?.length ?? 0}</span>
+          <span className="section-label">Your hand · {me.hand?.length ?? 0}</span>
           {myTurn && <span className="cue">{view.turn.playsRemaining > 1 ? `Play a card (${view.turn.playsRemaining} left)` : 'Play a card, or draw instead'}</span>}
           {myTurn && canDraw && <button type="button" className="primary small" data-testid="draw" onClick={() => onAction({ type: 'draw', player: view.me })}>Draw instead</button>}
         </div>
@@ -212,13 +215,30 @@ function CardDetailSheet({ data, inHand, canPlay, myTurn, players, onPlay, onClo
   );
 }
 
+/**
+ * Bottom sheet. With `onClose` the X and a tap on the backdrop dismiss it. Without (a prompt the
+ * game is waiting on) a backdrop tap only tucks it away so you can look at the table; a pill
+ * brings it back.
+ */
 function Sheet({ title, children, onClose, testId }: { title: string; children: React.ReactNode; onClose?: () => void; testId?: string }) {
+  const [tucked, setTucked] = useState(false);
+  useEffect(() => setTucked(false), [title]);
+  if (tucked) {
+    return (
+      <div className="sheet-wrap tucked" data-testid={testId}>
+        <button type="button" className="sheet-pill" onClick={() => setTucked(false)}>
+          <span className="sheet-pill-title">{title}</span><span aria-hidden="true">▲</span>
+        </button>
+      </div>
+    );
+  }
   return (
-    <div className="sheet-wrap" role="dialog" aria-modal="true" aria-label={title} data-testid={testId}>
+    <div className="sheet-wrap" role="dialog" aria-modal="true" aria-label={title} data-testid={testId}
+      onClick={(e) => { if (e.target === e.currentTarget) (onClose ? onClose() : setTucked(true)); }}>
       <div className="sheet">
         <div className="sheet-head">
           <h2>{title}</h2>
-          {onClose && <button type="button" className="ghost small" onClick={onClose}>Cancel</button>}
+          <button type="button" className="sheet-x" onClick={() => (onClose ? onClose() : setTucked(true))} aria-label={onClose ? 'Close' : 'Hide for now'}>×</button>
         </div>
         {children}
       </div>
@@ -267,7 +287,7 @@ function PromptSheet({ prompt, view, onAnswer }: { prompt: Prompt; view: PlayerV
       const multi = (prompt.count ?? 1) > 1;
       body = (
         <>
-          <div className="row wrap">
+          <div className="card-grid">
             {(prompt.options as number[]).map((id) => {
               const owner = ownerOf(id);
               const where = owner

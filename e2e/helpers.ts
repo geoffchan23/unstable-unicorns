@@ -6,7 +6,7 @@ export async function step(page: Page): Promise<boolean> {
   if (await handoff.isVisible()) { await handoff.click(); return true; }
   const prompt = page.getByTestId('prompt');
   if (await prompt.isVisible()) {
-    const choice = prompt.locator('button:enabled').first();
+    const choice = prompt.locator('button:enabled:not(.sheet-x):not(.sheet-pill)').first();
     await choice.click(); return true;
   }
   const neigh = page.getByTestId('neigh');
@@ -17,7 +17,7 @@ export async function step(page: Page): Promise<boolean> {
   if (await detail.isVisible()) {
     const play = detail.getByTestId('play');
     if (await play.isVisible()) { await play.click(); return true; }
-    await detail.getByRole('button', { name: 'Cancel' }).click(); return true;
+    await detail.getByRole('button', { name: 'Close' }).click(); return true;
   }
   const draw = page.getByTestId('draw');
   if (await draw.isVisible()) { await draw.click(); return true; }

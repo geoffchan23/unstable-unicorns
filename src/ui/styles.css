@@ -163,7 +163,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 
 /* ---------- menus: home, setup, lobby ---------- */
 .setup { max-width: 560px; margin: 0 auto; padding: 28px 18px 48px; display: grid; gap: 22px; }
-.setup-head { display: grid; gap: 12px; justify-items: start; }
+.setup-head { display: grid; gap: 12px; justify-items: center; text-align: center; }
+.setup-head .brand { justify-items: center; }
+.setup-head .ghost.small { justify-self: start; }
 .setup-head h1:not(.wordmark) { font-size: 34px; }
 .lede { margin: 0; color: var(--ink-2); max-width: 60ch; }
 .home { min-height: 100dvh; align-content: center; justify-items: center; text-align: center; padding-top: 40px; }
@@ -249,7 +251,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .cue { color: var(--btn); font-weight: 800; font-size: 13px; margin-left: auto; }
 .stable { flex-wrap: wrap; min-height: 30px; }
 .empty { color: var(--ink-2); font-size: 13px; font-weight: 700; }
-.hand-head > span:first-child { font-weight: 800; color: var(--ink-2); font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+
 .hand { overflow-x: auto; padding: 8px 4px 14px; scroll-snap-type: x proximity; gap: 10px; }
 .hand .card { scroll-snap-align: start; }
 
@@ -305,3 +307,24 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .t-downgrade .detail-type { color: #b58a00; }
 .detail-text { margin: 0; font-size: 17px; line-height: 1.4; font-weight: 700; font-style: italic; color: var(--ink); }
 @media (min-width: 720px) { .detail { grid-template-columns: 300px 1fr; align-items: start; } .detail-art { width: 300px; } }
+
+/* ---------- sheet chrome ---------- */
+.sheet-x { width: 36px; height: 36px; border-radius: 999px; border: 2px solid var(--line); background: var(--panel); color: var(--ink-2); font-size: 22px; line-height: 1; display: grid; place-items: center; cursor: pointer; flex: 0 0 auto; }
+.sheet-x:hover { border-color: var(--ink-2); color: var(--ink); }
+.sheet-wrap.tucked { background: transparent; pointer-events: none; align-items: flex-end; justify-content: center; }
+.sheet-pill { pointer-events: auto; margin-bottom: calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; align-items: center; max-width: 92vw; padding: 10px 16px 11px; border: 0; border-radius: 999px; background: var(--btn); color: #fff; font-weight: 800; box-shadow: 0 4px 0 var(--btn-edge), var(--lift-2); cursor: pointer; }
+.sheet-pill-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* fluid card grid inside sheets: fills the width, cards keep a 2:3 face */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; justify-items: stretch; }
+.card-grid .card { width: 100%; height: auto; aspect-ratio: 2 / 3; }
+.card-grid .card .text { -webkit-line-clamp: 4; }
+@media (min-width: 720px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); } .hand { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; } .hand .card { width: 100%; height: auto; aspect-ratio: 2 / 3; } }
+
+/* your stable */
+.stable-panel { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px 10px; display: grid; gap: 6px; box-shadow: var(--lift); }
+.stable-panel.active { border-color: transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--rb) border-box; }
+.section-label { font-family: "Bebas Neue", Fredoka, sans-serif; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); }
+.mine-head .section-label { flex: 1 1 100%; }
+.mine-head .you { font-weight: 800; }
+.hand-head .section-label { color: var(--ink-2); }
