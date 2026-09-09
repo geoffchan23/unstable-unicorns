@@ -216,11 +216,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .who { font-size: 22px; line-height: 1.05; background: var(--rb); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .meta { color: var(--ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; font-weight: 700; }
 
-.opponents { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin; }
+.opponents { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 20px; margin-bottom: -12px; scrollbar-width: thin; }
 .opp {
   flex: 1 0 160px; display: grid; grid-template-columns: 1fr auto; align-content: start; gap: 2px 8px; text-align: left;
   background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px; cursor: pointer; box-shadow: var(--lift);
-  color: var(--ink); min-width: 0; overflow: hidden;
+  color: var(--ink); min-width: 0;
 }
 .opp.active { border-color: transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--rb) border-box; }
 .opp-name { font-weight: 800; font-size: 13px; }
@@ -359,6 +359,14 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .begin-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .begin-list li { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; padding: 10px; background: var(--ground-2); border-radius: 12px; }
 .begin-text { grid-column: 1 / -1; font-size: 13px; font-weight: 700; font-style: italic; color: var(--ink-2); }
-.begin-actions { display: flex; align-items: center; gap: 8px; justify-self: end; }
+.begin-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; justify-self: end; }
 .must { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--warn); }
 .sheet-wrap.above { z-index: 14; }
+
+/* an opened opponent stable reads as a tab of the player card above it */
+.opp.open { border-color: var(--btn); background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--btn) border-box; position: relative; z-index: 1; }
+.opp.open::after { content: ""; position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); border: 9px solid transparent; border-top-color: var(--btn); }
+.opp.open .opp-name::before { content: "▾ "; color: var(--btn); }
+.expanded { border: 2px solid var(--btn); margin-top: -2px; }
+.expanded-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.expanded-head .sheet-x { width: 30px; height: 30px; font-size: 18px; }

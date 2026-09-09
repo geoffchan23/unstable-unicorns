@@ -109,8 +109,11 @@ export function GameScreen({
       </section>
 
       {expanded !== null && expanded !== view.me && (
-        <section className="expanded">
-          <h3>{view.players[expanded]!.name}'s stable</h3>
+        <section className="expanded" data-testid="expanded">
+          <div className="expanded-head">
+            <h3>{view.players[expanded]!.name}'s stable</h3>
+            <button type="button" className="sheet-x" onClick={() => setExpanded(null)} aria-label="Close stable" data-testid="expanded-close">×</button>
+          </div>
           <div className="row">{view.players[expanded]!.stable.map((c) => <CardView key={c} data={data(c)} onClick={() => openCard(c)} />)}</div>
           {view.players[expanded]!.hand && (
             <><h3>{view.players[expanded]!.name}'s hand (Nanny Cam)</h3><div className="row">{view.players[expanded]!.hand!.map((c) => <CardView key={c} data={data(c)} onClick={() => openCard(c)} />)}</div></>
