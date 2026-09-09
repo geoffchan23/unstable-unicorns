@@ -45,7 +45,8 @@ export class Ctx {
   private ask(p: Omit<Prompt, 'id'>): Answer {
     const answers = this.effect.answers;
     if (this.cursor < answers.length) return answers[this.cursor++]!;
-    throw new NeedInput({ id: this.state.nextPromptId, ...p });
+    const cause = this.effect.kind === 'card' && this.effect.handler === 'onPlayMagic' ? 'play' : 'effect';
+    throw new NeedInput({ id: this.state.nextPromptId, actor: this.controller, cause, ...p });
   }
 
   private source(): InstanceId | undefined {
@@ -103,8 +104,8 @@ export class Ctx {
 
   // ---------- logging ----------
 
-  log(text: string): void {
-    this.state.log.push({ turn: this.state.turn.number, text });
+  log(text: string, affects?: PlayerId[]): void {
+    this.state.log.push({ turn: this.state.turn.number, text, ...(affects && affects.length ? { affects } : {}) });
   }
 
   name(card: InstanceId): string {
@@ -335,8 +336,12 @@ export class Ctx {
     }
     this.pluck(card);
     this.stable(player).push(card);
-    const verb = reason === 'steal' ? 'steals' : reason === 'play' ? 'plays' : 'brings';
-    this.log(`${this.playerName(player)} ${verb} ${this.name(card)} into their stable.`);
+    if (reason === 'steal' && fromOwner !== null && fromOwner !== player) {
+      this.log(`${this.playerName(player)} steals ${this.name(card)} from ${this.playerName(fromOwner)}${this.source() !== undefined ? ` with ${this.name(this.source()!)}` : ''}.`, [fromOwner]);
+    } else {
+      const verb = reason === 'play' ? 'plays' : 'brings';
+      this.log(`${this.playerName(player)} ${verb} ${this.name(card)} into their stable.`);
+    }
 
     // the card's own on-enter trigger
     const def = defOf(this.state, card);
@@ -413,7 +418,12 @@ export class Ctx {
     this.fireLeaveTriggers(card, owner, kind !== 'returnToHand');
     this.pluck(card);
     this.state.discard.push(card);
-    this.log(`${this.name(card)} is ${verbOf(kind)}.`);
+    if (ev.actor !== owner) {
+      const by = ev.source !== undefined ? `${this.playerName(ev.actor)}'s ${this.name(ev.source)}` : this.playerName(ev.actor);
+      this.log(`${by} ${kind === 'destroy' ? 'destroys' : 'sacrifices'} ${this.playerName(owner)}'s ${this.name(card)}.`, [owner]);
+    } else {
+      this.log(`${this.playerName(owner)} ${kind === 'destroy' ? 'destroys' : 'sacrifices'} their ${this.name(card)}.`);
+    }
     checkWin(this.state);
     return true;
   }
@@ -430,12 +440,16 @@ export class Ctx {
   leaveStableTo(card: InstanceId, dest: 'hand' | 'nursery', owner: PlayerId): void {
     this.fireLeaveTriggers(card, owner, false);
     this.pluck(card);
+    const by = this.controller !== owner
+      ? `${this.playerName(this.controller)}'s ${this.source() !== undefined ? this.name(this.source()!) : 'effect'} returns `
+      : '';
+    const hit = this.controller !== owner ? [owner] : undefined;
     if (dest === 'hand') {
       this.hand(owner).push(card);
-      this.log(`${this.name(card)} returns to ${this.playerName(owner)}'s hand.`);
+      this.log(by ? `${by}${this.playerName(owner)}'s ${this.name(card)} to their hand.` : `${this.name(card)} returns to ${this.playerName(owner)}'s hand.`, hit);
     } else {
       this.state.nursery.push(card);
-      this.log(`${this.name(card)} returns to the Nursery.`);
+      this.log(by ? `${by}${this.playerName(owner)}'s ${this.name(card)} to the Nursery.` : `${this.name(card)} returns to the Nursery.`, hit);
     }
     checkWin(this.state);
   }

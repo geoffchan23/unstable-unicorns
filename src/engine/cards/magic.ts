@@ -73,7 +73,7 @@ defineCard('unfair-bargain', {
     const a = ctx.state.players[me]!;
     const b = ctx.state.players[p]!;
     [a.hand, b.hand] = [b.hand, a.hand];
-    ctx.log(`${ctx.playerName(me)} trades hands with ${ctx.playerName(p)}.`);
+    ctx.log(`${ctx.playerName(me)} trades hands with ${ctx.playerName(p)} (Unfair Bargain).`, [p]);
   },
 });
 
@@ -137,7 +137,7 @@ defineCard('blatant-thievery', {
     const c = ctx.chooseCard(me, [...ctx.hand(p)], `Take which card from ${ctx.playerName(p)}'s hand?`);
     if (c !== null) {
       ctx.addToHand(c, me);
-      ctx.log(`${ctx.playerName(me)} takes a card from ${ctx.playerName(p)}'s hand.`);
+      ctx.log(`${ctx.playerName(me)} takes a card from ${ctx.playerName(p)}'s hand.`, [p]);
     }
   },
 });

@@ -85,7 +85,7 @@ defineCard('americorn', {
     const c = ctx.randomFromHand(p);
     if (c !== null) {
       ctx.addToHand(c, me);
-      ctx.log(`${ctx.playerName(me)} pulls a card from ${ctx.playerName(p)}'s hand.`);
+      ctx.log(`${ctx.playerName(me)} pulls a card from ${ctx.playerName(p)}'s hand.`, [p]);
     }
   },
 });
@@ -113,7 +113,7 @@ defineCard('seductive-unicorn', {
 defineCard('queen-bee-unicorn', {
   vetoEntry(state, controller, card, into) {
     return into !== controller && state.cards[card] && cardIsBasic(state.cards[card]!.def)
-      ? 'Queen Bee Unicorn: Basic Unicorns cannot enter other stables' : null;
+      ? `${state.players[controller]!.name}'s Queen Bee Unicorn: Basic Unicorns cannot enter any other stable` : null;
   },
 });
 

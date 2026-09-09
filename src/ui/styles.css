@@ -353,3 +353,4 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .neigh-chain li::before { content: "↳"; position: absolute; left: 0; top: 2px; color: var(--ink-2); font-weight: 800; }
 .neigh-chain li.latest .card.compact { border-color: var(--neigh); box-shadow: 0 0 0 2px color-mix(in srgb, var(--neigh) 35%, transparent); }
 .chain-who { font-size: 12px; font-weight: 800; color: var(--ink-2); padding-left: 4px; }
+.sheet-sub.blocked { color: var(--neigh); font-weight: 800; }

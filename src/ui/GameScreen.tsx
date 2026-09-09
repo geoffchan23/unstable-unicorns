@@ -6,6 +6,7 @@ import { CardView, TYPE_LABEL, TypeGlyph } from './Card';
 import { artFor } from './art';
 import { describeNeighWindow } from './neighText';
 import { groupTurns, tokenizeLine } from './turnLog';
+import { describePrompt } from './promptText';
 import type { CardData } from '../engine/types';
 import { useWakeLock } from './pwa/wakeLock';
 import type { SeatInfo } from './seats';
@@ -190,6 +191,7 @@ export function GameScreen({
           data={detail.data}
           inHand={detail.id !== null && inHand(detail.id)}
           canPlay={detail.id !== null && inHand(detail.id) && myTurn && playable.has(detail.id)}
+          blockedBy={detail.id !== null ? view.playBlocks[detail.id] ?? null : null}
           myTurn={myTurn}
           players={view.players.map((p) => ({ id: p.id, name: p.id === view.me ? `${p.name} (me)` : p.name }))}
           onPlay={playDetail}
@@ -245,8 +247,8 @@ export function GameScreen({
 }
 
 /** The opened-up card: big art, full text, and whatever you can do with it right now. */
-function CardDetailSheet({ data, inHand, canPlay, myTurn, players, onPlay, onClose }: {
-  data: CardData; inHand: boolean; canPlay: boolean; myTurn: boolean;
+function CardDetailSheet({ data, inHand, canPlay, myTurn, blockedBy, players, onPlay, onClose }: {
+  data: CardData; inHand: boolean; canPlay: boolean; myTurn: boolean; blockedBy: string | null;
   players: { id: PlayerId; name: string }[]; onPlay: (target?: PlayerId) => void; onClose: () => void;
 }) {
   const art = artFor(data.id);
@@ -276,7 +278,11 @@ function CardDetailSheet({ data, inHand, canPlay, myTurn, players, onPlay, onClo
           </div>
         )
       ) : (
-        <p className="sheet-sub">{data.type === 'instant' ? 'Instants are played when someone else plays a card. Watch for the Neigh window.' : myTurn ? 'This card can\'t be played right now.' : 'Wait for your turn to play this.'}</p>
+        <p className={`sheet-sub ${blockedBy ? 'blocked' : ''}`}>
+          {blockedBy ? `Blocked: ${blockedBy}.`
+            : data.type === 'instant' ? 'Instants are played when someone else plays a card. Watch for the Neigh window.'
+            : myTurn ? 'This card can\'t be played right now.' : 'Wait for your turn to play this.'}
+        </p>
       ))}
     </Sheet>
   );
@@ -316,9 +322,8 @@ function Sheet({ title, children, onClose, testId }: { title: string; children: 
 function PromptSheet({ prompt, view, onAnswer }: { prompt: Prompt; view: PlayerView; onAnswer: (a: Answer) => void }) {
   const [picked, setPicked] = useState<number[]>([]);
   useEffect(() => setPicked([]), [prompt.id]);
-  const source = prompt.source !== undefined ? cardData.get(view.cards[prompt.source]!.def)?.name : undefined;
-  const title = prompt.message;
   const data = (id: number) => cardData.get(view.cards[id]!.def)!;
+  const t = describePrompt(prompt, { player: (p) => view.players[p]!.name, card: (id) => data(id).name, cardText: (id) => data(id).text });
   const ownerOf = (id: number) => view.players.find((p) => p.stable.includes(id) || (p.hand ?? []).includes(id));
 
   let body: React.ReactNode;
@@ -383,8 +388,12 @@ function PromptSheet({ prompt, view, onAnswer }: { prompt: Prompt; view: PlayerV
       body = <button type="button" className="choice" onClick={() => onAnswer(prompt.options as number[])}>Continue</button>;
   }
   return (
-    <Sheet title={title} testId="prompt">
-      {source && <p className="sheet-sub">{source}</p>}
+    <Sheet title={t.title} testId="prompt">
+      {t.hitBy && prompt.source !== undefined && (
+        <div className="hit-by"><CardView data={data(prompt.source)} compact /><span className="sheet-sub">{t.sub}</span></div>
+      )}
+      {!t.hitBy && t.sub && <p className="sheet-sub">{t.sub}</p>}
+      {t.instruction && <p className="instruction">{t.instruction}</p>}
       {body}
     </Sheet>
   );

@@ -69,6 +69,10 @@ export interface Prompt {
   /** for chooseCard: how many to pick (default 1). */
   count?: number;
   source?: InstanceId;
+  /** the player whose effect raised this prompt (may differ from `player` when a card hits someone else). */
+  actor?: PlayerId;
+  /** how the effect came about: a Magic card being played, or a card's triggered effect. */
+  cause?: 'play' | 'effect';
 }
 
 export interface NeighWindow {
@@ -108,6 +112,8 @@ export interface LogEntry {
   text: string;
   /** something the players should be told about that did not raise a prompt (e.g. "nothing to choose from") */
   notice?: boolean;
+  /** players on the receiving end of this line (their card was destroyed, their hand taken...) */
+  affects?: PlayerId[];
 }
 
 export interface GameState {
