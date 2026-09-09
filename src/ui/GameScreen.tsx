@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cardData } from '../engine/registry';
 import type { Action, Answer, InstanceId, PlayerId, Prompt } from '../engine/types';
 import type { PlayerView } from '../engine/view';
 import { CardView, TYPE_LABEL, TypeGlyph } from './Card';
 import { artFor } from './art';
 import { describeNeighWindow } from './neighText';
+import { groupTurns, tokenizeLine } from './turnLog';
 import type { CardData } from '../engine/types';
 import { useWakeLock } from './pwa/wakeLock';
 import type { SeatInfo } from './seats';
@@ -32,23 +33,30 @@ export function GameScreen({
   const playable = new Set(legal.filter((a) => a.type === 'play').map((a) => (a as { card: InstanceId }).card));
   const canDraw = legal.some((a) => a.type === 'draw');
 
-  const [detail, setDetail] = useState<InstanceId | null>(null);
+  const [detail, setDetail] = useState<{ id: InstanceId | null; data: CardData } | null>(null);
+  const [history, setHistory] = useState<number | null>(null);
   const [expanded, setExpanded] = useState<PlayerId | null>(null);
 
   const data = (id: InstanceId) => cardData.get(view.cards[id]!.def)!;
+  const openCard = (id: InstanceId) => setDetail({ id, data: data(id) });
+  const openDef = (d: CardData) => setDetail({ id: null, data: d });
+  const byName = useMemo(() => new Map([...cardData.values()].map((d) => [d.name, d] as const)), []);
+  const allNames = useMemo(() => [...byName.keys()], [byName]);
+  const turns = useMemo(() => groupTurns(view.log), [view.log]);
 
   const inHand = (id: InstanceId) => (me.hand ?? []).includes(id);
   const playDetail = (target?: PlayerId) => {
-    if (detail === null) return;
-    onAction({ type: 'play', player: view.me, card: detail, ...(target !== undefined ? { targetPlayer: target } : {}) });
+    if (!detail || detail.id === null) return;
+    onAction({ type: 'play', player: view.me, card: detail.id, ...(target !== undefined ? { targetPlayer: target } : {}) });
     setDetail(null);
   };
 
   const prompt = view.pending?.kind === 'prompt' && view.pending.prompt.player === view.me ? view.pending.prompt : null;
   const neighWindow = view.pending?.kind === 'neighWindow' && view.pending.awaiting.includes(view.me) ? view.pending : null;
   const stackTop = view.stack.length ? view.stack[0]! : null;
+  const canNeigh = legal.some((a) => a.type === 'neigh');
   const neighText = view.stack.length && view.pending?.kind === 'neighWindow'
-    ? describeNeighWindow(view.stack, view.me, { player: (p) => view.players[p]!.name, card: (id) => data(id).name })
+    ? describeNeighWindow(view.stack, view.me, { player: (p) => view.players[p]!.name, card: (id) => data(id).name }, canNeigh)
     : null;
 
   const recent = view.log.slice(-40);
@@ -98,12 +106,12 @@ export function GameScreen({
         })}
       </section>
 
-      {expanded !== null && (
+      {expanded !== null && expanded !== view.me && (
         <section className="expanded">
           <h3>{view.players[expanded]!.name}'s stable</h3>
-          <div className="row">{view.players[expanded]!.stable.map((c) => <CardView key={c} data={data(c)} onClick={() => setDetail(c)} />)}</div>
+          <div className="row">{view.players[expanded]!.stable.map((c) => <CardView key={c} data={data(c)} onClick={() => openCard(c)} />)}</div>
           {view.players[expanded]!.hand && (
-            <><h3>{view.players[expanded]!.name}'s hand (Nanny Cam)</h3><div className="row">{view.players[expanded]!.hand!.map((c) => <CardView key={c} data={data(c)} onClick={() => setDetail(c)} />)}</div></>
+            <><h3>{view.players[expanded]!.name}'s hand (Nanny Cam)</h3><div className="row">{view.players[expanded]!.hand!.map((c) => <CardView key={c} data={data(c)} onClick={() => openCard(c)} />)}</div></>
           )}
         </section>
       )}
@@ -112,27 +120,37 @@ export function GameScreen({
         {stackTop && view.pending?.kind === 'neighWindow' && (
           <div className="playing">
             <span>{view.players[stackTop.player]!.name} plays</span>
-            <CardView data={data(stackTop.card)} compact onClick={() => setDetail(stackTop.card)} />
+            <CardView data={data(stackTop.card)} compact onClick={() => openCard(stackTop.card)} />
             {neighText && <span className="chain">{neighText.banner}</span>}
             <span className="waiting">waiting on {view.pending.awaiting.map((p) => view.players[p]!.name).join(', ')}</span>
           </div>
         )}
-        <ol className="log" ref={logRef}>
+        <button type="button" className="table-head" onClick={() => setHistory(turns.length - 1)} data-testid="history-open">
+          <span className="section-label">Turn log</span><span className="table-hint">Tap for the full story ▸</span>
+        </button>
+        <ol className="log" ref={logRef} onClick={() => setHistory(turns.length - 1)}>
           {recent.map((l, i) => <li key={view.log.length - recent.length + i} className={l.text.startsWith('---') ? 'turnmark' : l.notice ? 'notice' : ''}>{l.text.replace(/^--- | ---$/g, '')}</li>)}
         </ol>
       </section>
 
       <section className="mine">
-        <div className={`stable-panel ${myTurn ? 'active' : ''}`}>
-          <div className="mine-head">
-            <span className="section-label">Your stable</span>
+        <div className={`stable-panel ${myTurn ? 'active' : ''} ${expanded === view.me ? 'open' : ''}`}>
+          <button type="button" className="mine-head" onClick={() => setExpanded(expanded === view.me ? null : view.me)} aria-expanded={expanded === view.me} data-testid="stable-toggle">
+            <span className="section-label">Your stable <span className="chev" aria-hidden="true">{expanded === view.me ? '▾' : '▸'}</span></span>
             <span className="you">{me.name}{youLabel ?? ' (you)'}</span>
             <span className="count"><b>{view.unicornCounts[view.me]}</b> / {view.unicornsToWin} unicorns</span>
-          </div>
-          <div className="stable row">
-            {me.stable.length === 0 && <span className="empty">Nothing here yet. Play Unicorns to fill it.</span>}
-            {me.stable.map((c) => <CardView key={c} data={data(c)} compact onClick={() => setDetail(c)} />)}
-          </div>
+          </button>
+          {expanded === view.me ? (
+            <div className="stable-full row">
+              {me.stable.length === 0 && <span className="empty">Nothing here yet. Play Unicorns to fill it.</span>}
+              {me.stable.map((c) => <CardView key={c} data={data(c)} onClick={() => openCard(c)} />)}
+            </div>
+          ) : (
+            <div className="stable row">
+              {me.stable.length === 0 && <span className="empty">Nothing here yet. Play Unicorns to fill it.</span>}
+              {me.stable.map((c) => <CardView key={c} data={data(c)} compact onClick={() => openCard(c)} />)}
+            </div>
+          )}
         </div>
         <div className="hand-head">
           <span className="section-label">Your hand · {me.hand?.length ?? 0}</span>
@@ -141,17 +159,37 @@ export function GameScreen({
         </div>
         <div className="hand row" data-testid="hand">
           {(me.hand ?? []).map((c) => (
-            <CardView key={c} data={data(c)} onClick={() => setDetail(c)} playable={myTurn && playable.has(c)} dim={!myTurn || !playable.has(c)} />
+            <CardView key={c} data={data(c)} onClick={() => openCard(c)} playable={myTurn && playable.has(c)} dim={!myTurn || !playable.has(c)} />
           ))}
         </div>
       </section>
 
       {/* ---------- sheets ---------- */}
-      {detail !== null && view.cards[detail] && (
+      {history !== null && turns[history] && (
+        <Sheet title={turns[history]!.player ? `${turns[history]!.player}'s turn` : 'Setup'} onClose={() => setHistory(null)} testId="history">
+          <div className="history-nav">
+            <button type="button" className="ghost small" disabled={history <= 0} onClick={() => setHistory(history - 1)}>◀ Earlier</button>
+            <span className="history-pos">Turn {turns[history]!.turn}{turns[history]!.player ? '' : ' · before play'} · {history + 1} of {turns.length}</span>
+            <button type="button" className="ghost small" disabled={history >= turns.length - 1} onClick={() => setHistory(history + 1)}>Later ▶</button>
+          </div>
+          <ol className="history-lines">
+            {turns[history]!.lines.map((l, i) => (
+              <li key={i} className={l.notice ? 'notice' : ''}>
+                {tokenizeLine(l.text, allNames).map((part, j) => part.card
+                  ? <button type="button" key={j} className={`cardref t-${byName.get(part.card)!.type}`} onClick={() => openDef(byName.get(part.card!)!)}>{part.text}</button>
+                  : <span key={j}>{part.text}</span>)}
+              </li>
+            ))}
+            {turns[history]!.lines.length === 0 && <li className="empty">Nothing happened yet this turn.</li>}
+          </ol>
+        </Sheet>
+      )}
+
+      {detail && (
         <CardDetailSheet
-          data={data(detail)}
-          inHand={inHand(detail)}
-          canPlay={inHand(detail) && myTurn && playable.has(detail)}
+          data={detail.data}
+          inHand={detail.id !== null && inHand(detail.id)}
+          canPlay={detail.id !== null && inHand(detail.id) && myTurn && playable.has(detail.id)}
           myTurn={myTurn}
           players={view.players.map((p) => ({ id: p.id, name: p.id === view.me ? `${p.name} (me)` : p.name }))}
           onPlay={playDetail}
@@ -163,7 +201,7 @@ export function GameScreen({
         <Sheet title={neighText.title} testId="neigh">
           <p className="sheet-sub">{neighText.sub}</p>
           <div className="row center">
-            <CardView data={data(neighText.base)} onClick={() => setDetail(neighText.base)} />
+            <CardView data={data(neighText.base)} onClick={() => openCard(neighText.base)} />
             {neighText.neighCount > 0 && <CardView data={data(neighText.featured)} compact />}
           </div>
           <div className="choices">
@@ -172,7 +210,7 @@ export function GameScreen({
                 {data((a as { card: number }).card).name}!
               </button>
             ))}
-            <button type="button" className="choice" onClick={() => onAction({ type: 'pass', player: view.me })}>Let it happen</button>
+            <button type="button" className={`choice ${canNeigh ? '' : 'primary'}`} data-testid="pass" onClick={() => onAction({ type: 'pass', player: view.me })}>{neighText.ok}</button>
           </div>
         </Sheet>
       )}

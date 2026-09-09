@@ -82,6 +82,15 @@ describe('Neigh window wording, driven by the real engine', () => {
     expect(t.sub).toMatch(/^If nobody responds, Sprinkles' Classy Narwhal goes ahead\./);
   });
 
+  it('without a Neigh in hand: past tense, no "Neigh back" advice, and an OK button', () => {
+    const h = played().neigh(1);
+    const t = describeNeighWindow(h.state.stack, 2, names(h.state), false);
+    expect(t.title).toBe('Ben played Neigh on Classy Narwhal');
+    expect(t.sub).toBe("If nobody responds, Ann's Classy Narwhal is Neigh'd and goes to the discard pile.");
+    expect(t.ok).toBe('OK');
+    expect(text(h, 2).ok).toBe('Let it happen');
+  });
+
   it('never says "Neighs Neigh"', () => {
     const h = played().neigh(1).neigh(0).neigh(2);
     for (const me of [0, 1, 2] as PlayerId[]) {

@@ -38,7 +38,7 @@ async function play(page: Page, force: boolean): Promise<boolean> {
   }
   const neigh = page.getByTestId('neigh');
   if (await neigh.isVisible().catch(() => false)) {
-    await neigh.getByRole('button', { name: 'Let it happen' }).click(opts);
+    await neigh.getByRole('button', { name: /^(Let it happen|OK)$/ }).click(opts);
     return true;
   }
   const target = page.getByTestId('target');

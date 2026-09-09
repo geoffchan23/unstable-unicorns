@@ -10,7 +10,7 @@ export async function step(page: Page): Promise<boolean> {
     await choice.click(); return true;
   }
   const neigh = page.getByTestId('neigh');
-  if (await neigh.isVisible()) { await neigh.getByRole('button', { name: 'Let it happen' }).click(); return true; }
+  if (await neigh.isVisible()) { await neigh.getByRole('button', { name: /^(Let it happen|OK)$/ }).click(); return true; }
   const target = page.getByTestId('target');
   if (await target.isVisible()) { await target.locator('.choice').first().click(); return true; }
   const detail = page.getByTestId('detail');

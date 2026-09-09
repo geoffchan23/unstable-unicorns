@@ -140,14 +140,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .card .text { font-size: 10.5px; line-height: 1.3; font-weight: 700; font-style: italic; color: #3a3542; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .card .badge { align-self: flex-start; font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: #6b6776; background: #f1eef5; border-radius: 6px; padding: 2px 6px; font-weight: 800; }
 .card.compact {
-  width: auto; height: auto; padding: 3px 9px 3px 3px; border-radius: 999px; flex-direction: row; align-items: center; gap: 6px; box-shadow: none;
+  width: auto; height: auto; max-width: 100%; min-width: 0; padding: 3px 9px 3px 3px; border-radius: 999px; flex-direction: row; align-items: center; gap: 6px; box-shadow: none;
   border: 1px solid rgba(40, 30, 60, 0.14);
 }
 .card.compact::after { display: none; }
 .card.compact .type-badge { width: 20px; height: 20px; border-radius: 999px; }
 .card.compact .type-badge svg { width: 12px; height: 12px; }
 .card.compact .thumb { width: 22px; height: 22px; border-radius: 999px; object-fit: cover; flex: 0 0 auto; }
-.card.compact .name { font-size: 12px; padding: 0; text-align: left; text-transform: none; font-family: Nunito, sans-serif; font-weight: 800; font-stretch: normal; font-variation-settings: normal; letter-spacing: 0; }
+.card.compact .name { font-size: 12px; padding: 0; text-align: left; text-transform: none; min-width: 0; white-space: normal; line-height: 1.15; font-family: Nunito, sans-serif; font-weight: 800; font-stretch: normal; font-variation-settings: normal; letter-spacing: 0; }
 .card.tappable { cursor: pointer; transition: transform 140ms ease, box-shadow 140ms ease; }
 .card.tappable:not(:disabled):hover { transform: translateY(-6px) rotate(-1deg); box-shadow: var(--lift-2); }
 .card.selected { outline: 3px solid var(--focus); outline-offset: 2px; }
@@ -220,14 +220,14 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .opp {
   flex: 1 0 160px; display: grid; grid-template-columns: 1fr auto; align-content: start; gap: 2px 8px; text-align: left;
   background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px; cursor: pointer; box-shadow: var(--lift);
-  color: var(--ink);
+  color: var(--ink); min-width: 0; overflow: hidden;
 }
 .opp.active { border-color: transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--rb) border-box; }
 .opp-name { font-weight: 800; font-size: 13px; }
 .opp-count { grid-row: 1 / span 2; align-self: start; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 2px; }
 .opp-count small { font-size: 12px; color: var(--ink-2); font-family: Nunito, sans-serif; font-weight: 700; text-transform: none; }
 .opp-hand { color: var(--ink-2); font-size: 12px; font-weight: 700; }
-.chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; min-width: 0; }
 .chips .card.compact { padding: 2px 8px 2px 2px; }
 .chips .card.compact .thumb { width: 18px; height: 18px; }
 .chips .card.compact .type-badge { width: 18px; height: 18px; }
@@ -252,7 +252,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .stable { flex-wrap: wrap; min-height: 30px; }
 .empty { color: var(--ink-2); font-size: 13px; font-weight: 700; }
 
-.hand { overflow-x: auto; padding: 8px 4px 14px; scroll-snap-type: x proximity; gap: 10px; }
+.hand { overflow-x: auto; padding: 8px 8px 14px; margin: 0 -8px; scroll-snap-type: x proximity; scroll-padding-inline: 8px; gap: 10px; }
 .hand .card { scroll-snap-align: start; }
 
 /* ---------- sheets & overlays ---------- */
@@ -330,3 +330,18 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .mine-head .section-label { flex: 1 1 100%; }
 .mine-head .you { font-weight: 800; }
 .hand-head .section-label { color: var(--ink-2); }
+
+/* ---------- your stable (expandable) + turn history ---------- */
+.stable-panel .mine-head { background: none; border: 0; padding: 0; width: 100%; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.stable-panel .chev { font-size: 12px; margin-left: 4px; }
+.stable-full { overflow-x: auto; padding: 4px 2px 8px; }
+.table-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: none; border: 0; padding: 0 0 2px; width: 100%; cursor: pointer; color: inherit; font: inherit; text-align: left; }
+.table-hint { font-size: 12px; font-weight: 800; color: var(--btn); }
+.log { cursor: pointer; }
+.history-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.history-pos { font-size: 13px; font-weight: 800; color: var(--ink-2); text-align: center; }
+.history-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 15px; font-weight: 600; line-height: 1.45; }
+.history-lines li { padding: 8px 10px; background: var(--ground-2); border-radius: 10px; }
+.history-lines li.notice { color: var(--btn); }
+.cardref { background: none; border: 0; padding: 0; font: inherit; font-weight: 800; color: var(--type); text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+.cardref.t-downgrade { color: #b58a00; }

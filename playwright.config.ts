@@ -5,6 +5,7 @@ export default defineConfig({
   timeout: 90_000,
   expect: { timeout: 10_000 },
   retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : 1,
   forbidOnly: !!process.env.CI,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: { baseURL: 'http://localhost:5173/unicorns/', screenshot: 'only-on-failure', trace: 'retain-on-failure' },

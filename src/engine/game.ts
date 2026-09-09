@@ -75,6 +75,7 @@ export function createGame(opts: GameOptions): GameState {
   for (let i = 0; i < 5; i++) for (const p of state.players) p.hand.push(state.deck.pop()!);
 
   state.log.push({ turn: 1, text: `Game start. ${n} players, first to ${state.unicornsToWin} Unicorns.` });
+  state.log.push({ turn: state.turn.number, text: `--- ${state.players[state.turn.player]!.name}'s turn ---` });
   run(state);
   return state;
 }
