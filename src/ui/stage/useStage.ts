@@ -72,6 +72,15 @@ export function useStage(view: PlayerView): Stage {
     }
     const fresh = freshEvents(view, lastSeq.current);
     if (fresh.length) lastSeq.current = fresh[fresh.length - 1]!.seq;
+    if (reducedMotion()) {
+      // no staging at all: the picture is the engine's, and the table is never busy
+      queue.current = [];
+      if (!playing.current) {
+        for (const e of fresh) if (e.kind === 'say' && e.notice) setNotice({ id: ids.current++, text: e.text });
+        show(view);
+      }
+      return;
+    }
     if (fresh.length === 0 || fresh.length > MAX_REPLAY) {
       if (!playing.current) show(view);
       else if (fresh.length > MAX_REPLAY) { queue.current = []; }
