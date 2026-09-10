@@ -127,6 +127,20 @@ Stable for its contribution (Ginormous = 2, or 1 under Blinding Light; Pandas = 
 asks Yay. Blinding Light is implemented as a filter on which handlers of a Stable's Unicorns
 are consulted at all, with Baby Unicorns exempt.
 
+## 5b. The event stream (for the UI)
+
+`state.events` is an ordered list of everything that happened, appended by the same primitives that write
+the log (`src/engine/events.ts`): a `move` for every zone change after the deal (card, from, to, why, actor),
+a `say` mirroring every log line (with its actor), `turn`, `shuffle`, `protected`, `win`. `seq` is the index;
+because effects re-run deterministically from a snapshot, a preview run (`previewState`) numbers its events
+exactly like the committed run, so a client can de-duplicate by `seq`. `viewFor` blanks the card id on a move
+whose ends are both hidden from the viewer (a draw into someone else's hand). The simulator asserts that
+replaying the fresh events onto the previous state's zones reproduces the next state's zones.
+
+The client (`src/ui/stage/`) rewinds a new view through its fresh events and replays them one at a time,
+flying cards between DOM anchors; decisions (prompts, the Neigh window) are held back until the picture has
+caught up.
+
 ## 6. Turn loop
 
 ```

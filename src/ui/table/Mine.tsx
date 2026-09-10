@@ -65,7 +65,8 @@ function Fan({ hand, anchors, hidden, playable, myTurn, onOpenCard, data, me }: 
     return () => ro.disconnect();
   }, []);
   const n = hand.length;
-  const cw = width >= 720 ? 168 : 136;
+  const tall = typeof window !== 'undefined' ? window.innerHeight : 900;
+  const cw = width >= 720 ? (tall >= 900 ? 168 : 148) : tall < 640 ? 112 : 136;
   const maxStep = cw * 0.72;
   const step = n > 1 ? Math.min(maxStep, Math.max(24, (width - cw - 8) / (n - 1))) : 0;
   const mid = (n - 1) / 2;

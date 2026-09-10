@@ -211,57 +211,6 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .seat.offline { opacity: .55; }
 .error { margin: 0; color: var(--neigh); font-weight: 800; }
 
-/* ---------- game layout ---------- */
-.game { display: grid; gap: 10px; padding: 8px 10px 24px; max-width: 960px; margin: 0 auto; }
-.topbar {
-  display: flex; justify-content: space-between; align-items: center; gap: 10px;
-  padding-top: calc(0.4rem + env(safe-area-inset-top));
-  padding-left: calc(0.25rem + env(safe-area-inset-left));
-  padding-right: calc(0.25rem + env(safe-area-inset-right));
-}
-.turn { display: grid; }
-.who { font-size: 22px; line-height: 1.05; background: var(--rb); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.meta { color: var(--ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; font-weight: 700; }
-
-.opponents { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 20px; margin-bottom: -12px; scrollbar-width: thin; }
-.opp {
-  flex: 1 0 160px; display: grid; grid-template-columns: 1fr auto; align-content: start; gap: 2px 8px; text-align: left;
-  background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px; cursor: pointer; box-shadow: var(--lift);
-  color: var(--ink); min-width: 0;
-}
-.opp.active { border-color: transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--rb) border-box; }
-.opp-name { font-weight: 800; font-size: 13px; }
-.opp-count { grid-row: 1 / span 2; align-self: start; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 2px; }
-.opp-count small { font-size: 12px; color: var(--ink-2); font-family: Nunito, sans-serif; font-weight: 700; text-transform: none; }
-.opp-hand { color: var(--ink-2); font-size: 12px; font-weight: 700; }
-.chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; min-width: 0; }
-.chips .card.compact { padding: 2px 8px 2px 2px; }
-.chips .card.compact .thumb { width: 18px; height: 18px; }
-.chips .card.compact .type-badge { width: 18px; height: 18px; }
-.chips .card.compact .name { font-size: 11px; }
-.expanded { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px; display: grid; gap: 8px; box-shadow: var(--lift); }
-.expanded h3 { font-size: 14px; }
-.expanded .row { overflow-x: auto; padding-bottom: 6px; }
-
-.table { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px 10px; display: grid; gap: 6px; box-shadow: var(--lift); }
-.playing { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-weight: 800; }
-.playing .chain, .playing .waiting { font-weight: 700; color: var(--ink-2); font-size: 13px; }
-.log { list-style: none; margin: 0; padding: 0; max-height: 132px; overflow-y: auto; font-size: 13px; display: grid; gap: 2px; color: var(--ink-2); font-weight: 600; }
-.log li:last-child { color: var(--ink); font-weight: 800; }
-.log .turnmark { margin-top: 5px; font-family: "Bebas Neue", Fredoka, sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--btn); }
-
-.mine { display: grid; gap: 8px; padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
-.mine-head, .hand-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.you { font-weight: 800; font-size: 15px; }
-.count { font-weight: 700; color: var(--ink-2); }
-.count b { font-size: 24px; color: var(--ink); }
-.cue { color: var(--btn); font-weight: 800; font-size: 13px; margin-left: auto; }
-.stable { flex-wrap: wrap; min-height: 30px; }
-.empty { color: var(--ink-2); font-size: 13px; font-weight: 700; }
-
-.hand { overflow-x: auto; padding: 8px 8px 14px; margin: 0 -8px; scroll-snap-type: x proximity; scroll-padding-inline: 8px; gap: 10px; }
-.hand .card { scroll-snap-align: start; }
-
 /* ---------- sheets & overlays ---------- */
 .sheet-wrap { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; z-index: 10; backdrop-filter: blur(2px); }
 .sheet { background: var(--ground); color: var(--ink); width: 100%; max-width: 720px; max-height: 84vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding: 16px 16px calc(22px + env(safe-area-inset-bottom)); display: grid; gap: 12px; box-shadow: var(--lift-2); position: relative; }
@@ -289,20 +238,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .overlay-box p { margin: 0; color: var(--ink-2); font-weight: 700; }
 .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--warn); color: #2a1a05; padding: 10px 16px; border-radius: 999px; font-weight: 800; z-index: 30; box-shadow: 0 4px 0 var(--warn-edge); }
 .toast.notice { background: var(--panel); color: var(--ink); border: 2px solid var(--btn); box-shadow: var(--lift-2); max-width: min(92vw, 520px); text-align: center; bottom: calc(1rem + env(safe-area-inset-bottom)); }
-.log li.notice { color: var(--btn); }
 .toast.update { display: flex; align-items: center; gap: 10px; bottom: calc(1rem + env(safe-area-inset-bottom)); }
 .banner { padding: .5rem .9rem; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; font-size: .9rem; font-weight: 700; }
 .banner.warn { background: var(--warn); border-color: transparent; color: #2a1a05; }
 button.link { background: none; border: 0; color: var(--btn); text-decoration: underline; padding: 0; font: inherit; font-weight: 800; }
 
-@media (min-width: 720px) {
-  .game { grid-template-columns: 1fr 1fr; grid-template-areas: "top top" "ban ban" "opp opp" "exp exp" "table mine"; gap: 12px; padding-top: 12px; }
-  .topbar { grid-area: top; } .opponents { grid-area: opp; } .expanded { grid-area: exp; } .table { grid-area: table; align-content: start; align-self: start; } .mine { grid-area: mine; }
-  .banner { grid-area: ban; }
-  .log { max-height: 320px; }
-  .hand { flex-wrap: wrap; }
-  .who { font-size: 26px; }
-}
 .screen-title { font-size: 26px; color: var(--ink); }
 
 /* ---------- card detail ---------- */
@@ -328,23 +268,9 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; justify-items: stretch; }
 .card-grid .card { width: 100%; height: auto; aspect-ratio: 7 / 12; }
 .card-grid .card .text { -webkit-line-clamp: 4; }
-@media (min-width: 720px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); } .hand { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; } .hand .card { width: 100%; height: auto; aspect-ratio: 7 / 12; } }
+@media (min-width: 720px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); } }
 
-/* your stable */
-.stable-panel { background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px 10px; display: grid; gap: 6px; box-shadow: var(--lift); }
-.stable-panel.active { border-color: transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--rb) border-box; }
-.section-label { font-family: "Bebas Neue", Fredoka, sans-serif; font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); }
-.mine-head .section-label { flex: 1 1 100%; }
-.mine-head .you { font-weight: 800; }
-.hand-head .section-label { color: var(--ink-2); }
-
-/* ---------- your stable (expandable) + turn history ---------- */
-.stable-panel .mine-head { background: none; border: 0; padding: 0; width: 100%; text-align: left; cursor: pointer; color: inherit; font: inherit; }
-.stable-panel .chev { font-size: 12px; margin-left: 4px; }
-.stable-full { overflow-x: auto; padding: 4px 2px 8px; }
-.table-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: none; border: 0; padding: 0 0 2px; width: 100%; cursor: pointer; color: inherit; font: inherit; text-align: left; }
-.table-hint { font-size: 12px; font-weight: 800; color: var(--btn); }
-.log { cursor: pointer; }
+/* ---------- turn history ---------- */
 .history-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .history-pos { font-size: 13px; font-weight: 800; color: var(--ink-2); text-align: center; }
 .history-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 15px; font-weight: 600; line-height: 1.45; }
@@ -369,14 +295,6 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .begin-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; justify-self: end; }
 .must { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--warn); }
 .sheet-wrap.above { z-index: 14; }
-
-/* an opened opponent stable reads as a tab of the player card above it */
-.opp.open { border-color: var(--btn); background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--btn) border-box; position: relative; z-index: 1; }
-.opp.open::after { content: ""; position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%); border: 9px solid transparent; border-top-color: var(--btn); }
-.opp.open .opp-name::before { content: "▾ "; color: var(--btn); }
-.expanded { border: 2px solid var(--btn); margin-top: -2px; }
-.expanded-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.expanded-head .sheet-x { width: 30px; height: 30px; font-size: 18px; }
 
 /* ---------- theme toggle + barf ---------- */
 .theme-toggle { justify-self: center; margin-bottom: 8px; }

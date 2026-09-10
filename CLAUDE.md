@@ -12,12 +12,18 @@ docs/ENGINE.md          engine design: replay-based prompts, Neigh stack, remova
 src/engine/             pure TS game engine, no UI/network deps (a test enforces this)
   game.ts               createGame / applyAction / legalActions / run / previewState
   effects.ts            Ctx (primitives + prompts), removal pipeline, runEffect
+  events.ts             emit/say/moved: the event stream (state.events) the UI animates; see ENGINE.md §5b
   cards/*.ts            one defineCard() per card, grouped by type
   bot.ts                playersToAct, randomBotAction, greedyBotAction
   sim.ts                random-game simulator with invariants (npm run sim [games] [players])
   __tests__/            harness.ts + per-card tests; every card has at least one
 src/server/             ws game server: Room/RoomRegistry, protocol, startServer (bundled by scripts/build-server.mjs)
-src/ui/                 React app: Home/Setup/Lobby, GameScreen (presentational) + LocalGame/OnlineGame drivers
+src/ui/                 React app: Home/Setup/Lobby, GameScreen (the table) + LocalGame/OnlineGame drivers
+src/ui/stage/           staged playback: playback.ts (rewind/apply a view through events, pure), useStage (queue +
+                        flyers/bubbles/banner), anchors (DOM rects per card/zone), busy (bots wait for the stage)
+src/ui/table/           Seats (avatars), Centre (deck/stage/piles), Mine (stable row + hand fan), TurnBanner, WinOverlay
+src/ui/sheets.tsx       bottom sheets: prompt, Neigh, begin-turn, card detail, stable, history
+src/ui/table.css        the table; styles.css keeps menus, cards, sheets
 src/ui/net/             GameClient: reconnecting websocket, typed send/subscribe (src/ui/net/client.ts)
 src/ui/pwa/             manifest, service worker, icons, wake lock (copied into dist/unicorns by scripts/build.mjs)
 e2e/                    Playwright specs (local, online, pwa) against the dev and production builds
@@ -52,6 +58,7 @@ The seed input is hidden; `?seed=123` on the URL fixes the shuffle and the bots'
 shows `seed N`; tapping it copies a JSON game report (seed, seats, every action) to the clipboard. Replay one with
 `npx tsx scripts/replay.ts report.json --verbose` to see each action, the log lines it produced, and the first illegal
 action if the report no longer matches the engine. Themes: light, dark, barf (toggle on the home screen, stored as `uu.theme`).
+`?motion=off` (or the OS reduced-motion setting) plays events instantly; the e2e specs use it, except animations.spec.ts.
 
 ## Decisions already made (don't relitigate)
 
@@ -67,6 +74,10 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
   Never store closures in state. Effects that need to run "instead of" a removal use the
   immuneTo / protectsOthers (pure) and replaceRemoval / protectOther (effectful, called once) hooks.
 - Engine must stay free of DOM/React imports.
+- Every zone change goes through a Ctx primitive that emits a `move` event; every log line goes through `say()`
+  (the sim fails if the events do not explain the zones). The UI never reads the log for animation, only events.
+- The table stays React + DOM (no game engine); animation is the Web Animations API + CSS, no animation library.
+  Decisions wait for the staged playback (`stage.busy`); bots wait for it too.
 - A family passphrase gates room creation only; joining an existing room needs only its 4-letter code.
 - Rooms live in server memory only — a server restart drops all games; clients get NO_ROOM and clear
   their session back to Home.
@@ -85,8 +96,10 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
 ## Status and next steps
 
 Done: online multiplayer PWA (spec: `docs/superpowers/specs/2026-09-08-online-pwa-design.md`). Deploy
-runbook: `docs/DEPLOY.md`.
+runbook: `docs/DEPLOY.md`. v0.5 (tag + branch) is the text-first UI; main has the animated table
+(spec: `docs/superpowers/specs/2026-09-10-game-table-animations-design.md`).
 
-Known gaps: Unicorn Oracle has no art (placeholder); the bot sees hidden hands; log shows last 40 lines.
+Known gaps: Unicorn Oracle has no art (placeholder); the bot sees hidden hands; no sound; no dealing animation at
+game start; online seats derive their avatar from the name (no picker).
 `viewFor` includes `pending` prompt options and the full `cards` map, so a curious online player can read
 some card ids they should not see.

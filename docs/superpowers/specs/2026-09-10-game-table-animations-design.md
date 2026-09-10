@@ -1,6 +1,6 @@
 # Game table and animations — design
 
-Status: approved in conversation 2026-09-10 (the user asked for the full animated version and to build it without
+Status: built 2026-09-10 (approved in conversation) (the user asked for the full animated version and to build it without
 further check-ins). v0.5 (the text-first UI) is tagged and branched as `v0.5`; this work lands on `main`.
 
 ## Why
@@ -27,13 +27,13 @@ particle layer can be added later without changing anything below.
 the ordering between "what was said" and "what moved" is exact. The log stays for history and tests.
 
 ```ts
-type Zone =
-  | { kind: 'deck' } | { kind: 'discard' } | { kind: 'nursery' } | { kind: 'limbo' }
-  | { kind: 'hand'; player: PlayerId } | { kind: 'stable'; player: PlayerId };
+type Zone =                      // the shape queries.ts already used
+  | { zone: 'deck' } | { zone: 'discard' } | { zone: 'nursery' } | { zone: 'limbo' }
+  | { zone: 'hand'; player: PlayerId } | { zone: 'stable'; player: PlayerId };
 
 type MoveHow =
   | 'draw' | 'play' | 'neigh' | 'resolve' | 'countered' | 'discard' | 'destroy' | 'sacrifice'
-  | 'return' | 'steal' | 'move' | 'bring' | 'search' | 'deckTop' | 'nursery';
+  | 'return' | 'steal' | 'move' | 'bring' | 'search' | 'deckTop';
 
 type GameEvent = { seq: number } & (
   | { kind: 'move'; card: InstanceId | null; from: Zone; to: Zone; how: MoveHow; actor?: PlayerId }
@@ -78,9 +78,8 @@ pre-state) — cheap card-conservation for events.
   face changes). The destination slot renders `visibility: hidden` until the flyer lands.
 - Anchors are a `Map<string, HTMLElement>` filled by ref callbacks: `card:<id>`, `zone:deck`, `zone:discard`,
   `zone:nursery`, `zone:stage`, `zone:hand:<p>`, `zone:stable:<p>`.
-- Durations (ms): draw 550, play 600 (+ a 350 showcase hold on the stage), resolve 500, destroy/sacrifice 700
-  (shake, then fly), steal 650, return 500, turn banner 900, say 0 (bubbles are fire-and-forget, 2.6 s on screen),
-  shuffle 600, win 0 (overlay after drain). `prefers-reduced-motion` collapses all to 0 and skips flyers.
+- Durations live in `stage/motion.ts` (draw 520, play 560 + 380 hold, destroy/sacrifice 380 shake + 560, turn banner
+  950, bubbles 2.8 s on screen, shuffle 520). `prefers-reduced-motion` or `?motion=off` collapses all to 0 and skips flyers.
 - Bot pacing: a tiny `stage/busy.ts` publishes the busy flag; `LocalGame` waits for idle before a bot acts, so the
   queue never lags far behind. Online, the server already spaces bots; the client queue simply plays.
 
