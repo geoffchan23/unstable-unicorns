@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import './styles.css';
+import './table.css';
 import { App } from './App';
 import { registerServiceWorker } from './pwa/register';
 import { applyTheme, storedTheme } from './theme';

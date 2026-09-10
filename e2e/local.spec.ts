@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { playUntil } from './helpers';
 
 test('vs-bot game reaches a prompt and a winner', async ({ page }) => {
-  await page.goto('./?seed=4');
+  await page.goto('./?seed=4&motion=off');
   await page.getByRole('button', { name: 'Play on this device' }).click();
   // Seed 42 doesn't reach a winner within the 400-step budget (bots keep
   // Neigh-ing each other into a long game); seed 4 reliably finishes around
@@ -20,7 +20,7 @@ test('vs-bot game reaches a prompt and a winner', async ({ page }) => {
 });
 
 test('hot-seat handoff appears with two humans', async ({ page }) => {
-  await page.goto('./?seed=7');
+  await page.goto('./?seed=7&motion=off');
   await page.getByRole('button', { name: 'Play on this device' }).click();
   await page.getByRole('group', { name: 'Human or bot' }).nth(1).getByRole('button', { name: 'Human' }).click();
   await page.getByRole('button', { name: 'Deal me in' }).click();

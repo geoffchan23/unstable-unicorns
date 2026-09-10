@@ -3,7 +3,7 @@ import { test, expect, type Browser, type Page } from '@playwright/test';
 async function open(browser: Browser, name: string) {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
-  await page.goto('./');
+  await page.goto('./?motion=off');
   await page.getByRole('button', { name: 'Play online' }).click();
   await page.getByTestId('name').fill(name);
   return { ctx, page };
@@ -63,7 +63,7 @@ async function play(page: Page, force: boolean): Promise<boolean> {
     await unicorn.click(opts);
     return true;
   }
-  const card = hand.locator('button.card.playable').first();
+  const card = hand.locator('button.card.playable').last();
   if (await card.count()) {
     await card.click(opts);
     return true;

@@ -1,3 +1,3 @@
 export type SeatKind = 'human' | 'bot';
-export interface SeatInfo { name: string; kind: SeatKind; connected: boolean }
-export type Seat = { name: string; kind: SeatKind };   // local setup
+export interface SeatInfo { name: string; kind: SeatKind; connected: boolean; avatar?: string }
+export type Seat = { name: string; kind: SeatKind; avatar?: string };   // local setup

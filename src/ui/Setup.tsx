@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Seat } from './seats';
 import { Wordmark } from './Wordmark';
+import { avatarFor, nextAvatar } from './avatars';
 
 export const BOT_NAMES = ['Sprinkles', 'Glitterhoof', 'Stabbington', 'Nimbus', 'Marshmallow', 'Twinkle', 'Rhubarb'];
 
@@ -30,7 +31,9 @@ export function Setup({ onStart, onBack }: { onStart: (seats: Seat[], seed: numb
       <section className="seats" aria-label="Players">
         {seats.map((s, i) => (
           <div className="seat" key={i}>
-            <span className="seat-no">{i + 1}</span>
+            <button type="button" className="seat-no seat-avatar" style={{ '--seat': avatarFor(s, i).color } as React.CSSProperties} onClick={() => update(i, { avatar: nextAvatar(s.avatar ?? avatarFor(s, i).emoji) })} aria-label={`Player ${i + 1} avatar, tap to change`} title="Tap to change">
+              {avatarFor(s, i).emoji}
+            </button>
             <input value={s.name} onChange={(e) => update(i, { name: e.target.value })} aria-label={`Player ${i + 1} name`} />
             <div className="toggle" role="group" aria-label="Human or bot">
               <button type="button" className={s.kind === 'human' ? 'on' : ''} onClick={() => update(i, { kind: 'human' })}>Human</button>

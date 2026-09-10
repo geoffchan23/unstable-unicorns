@@ -5,6 +5,7 @@ import { playersToAct, greedyBotAction } from '../engine/bot';
 import type { Action, GameState, PlayerId } from '../engine/types';
 import { GameScreen } from './GameScreen';
 import type { Seat, SeatInfo } from './seats';
+import { stageBusy } from './stage/busy';
 
 function mulberry(seed: number) {
   let a = seed >>> 0;
@@ -50,19 +51,21 @@ export function LocalGame({ seats, seed, onQuit }: { seats: Seat[]; seed: number
   }, []);
   const report = useCallback(() => JSON.stringify({ kind: 'unstable-unicorns-game', seed, seats, actions: history.current }), [seed, seats]);
 
-  // bots think in the background
-  const [botDelay] = useState(650);
+  // bots think in the background, but only once the table has finished showing what happened
+  const [botDelay] = useState(500);
   useEffect(() => {
     if (state.winner !== null || botActor === undefined) return;
-    if (humanActor !== undefined && state.pending?.kind === 'neighWindow' && actors.indexOf(humanActor) < actors.indexOf(botActor)) {
-      // let bots go first anyway: less waiting for the human
-    }
-    const id = setTimeout(() => {
-      const a = greedyBotAction(state, botActor, rand);
-      if (a) dispatch(a);
-    }, botDelay);
-    return () => clearTimeout(id);
-  }, [state, botActor, humanActor, actors, rand, dispatch, botDelay]);
+    let id: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
+    void stageBusy.idle().then(() => {
+      if (cancelled) return;
+      id = setTimeout(() => {
+        const a = greedyBotAction(state, botActor, rand);
+        if (a) dispatch(a);
+      }, botDelay);
+    });
+    return () => { cancelled = true; if (id !== undefined) clearTimeout(id); };
+  }, [state, botActor, rand, dispatch, botDelay]);
 
   const view = useMemo(() => viewFor(state, viewer), [state, viewer]);
   const legal = useMemo(() => legalActions(state, viewer), [state, viewer]);
