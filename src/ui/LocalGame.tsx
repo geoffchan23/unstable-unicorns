@@ -7,6 +7,7 @@ import { GameScreen } from './GameScreen';
 import type { Seat, SeatInfo } from './seats';
 import { stageBusy } from './stage/busy';
 import { clearLocalGame, saveLocalGame } from './localSave';
+import { handoffTarget } from './handoff';
 
 function mulberry(seed: number) {
   let a = seed >>> 0;
@@ -36,14 +37,10 @@ export function LocalGame({ seats, seed, resume, onQuit }: { seats: Seat[]; seed
 
   const actors = playersToAct(state);
   const botActor = actors.find((p) => !isHuman(p));
-  const humanActor = actors.find((p) => isHuman(p));
 
-  // whose eyes we look through
+  // whose eyes we look through; the pass-the-device prompt is derived from the live state (see handoff.ts)
   const [viewer, setViewer] = useState<PlayerId>(humans[0] ?? 0);
-  const [handoffTo, setHandoffTo] = useState<PlayerId | null>(null);
-  useEffect(() => {
-    if (humanActor !== undefined && humanActor !== viewer && humans.length > 1) setHandoffTo(humanActor);
-  }, [humanActor, viewer, humans.length]);
+  const handoffTo = handoffTarget(actors, isHuman, viewer, humans.length);
 
   const [error, setError] = useState<string | null>(null);
   // every action applied, in order: with the seed and seats this replays the whole game (scripts/replay.ts)
@@ -94,7 +91,7 @@ export function LocalGame({ seats, seed, resume, onQuit }: { seats: Seat[]; seed
           <div className="overlay-box">
             <h2>Pass the device to {state.players[handoffTo]!.name}</h2>
             <p>{state.players[handoffTo]!.name} has a decision to make. Tap when only they can see the screen.</p>
-            <button type="button" className="primary big" onClick={() => { setViewer(handoffTo); setHandoffTo(null); }}>I'm {state.players[handoffTo]!.name}</button>
+            <button type="button" className="primary big" onClick={() => setViewer(handoffTo)}>I'm {state.players[handoffTo]!.name}</button>
           </div>
         </div>
       )}
