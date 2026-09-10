@@ -76,3 +76,44 @@ test('the seat row is one fixed-height strip, current player first, and slides w
   expect(after.height).toBe(before.height);
   expect(after.tops).toBe(1);
 });
+
+test('dragging a card onto the table plays it, and a cancelled pointer does not', async ({ page }) => {
+  await page.goto('./?seed=4&motion=off');
+  await page.getByRole('button', { name: 'Play on this device' }).click();
+  await page.getByRole('button', { name: 'Start Game' }).click();
+  await expect(page.getByTestId('draw')).toBeVisible();
+
+  // drag the topmost playable card towards the middle of the table, ending the gesture how we are told
+  const dragTo = (end: 'up' | 'cancel') => page.evaluate(async (how) => {
+    const slot = [...document.querySelectorAll('[data-testid=hand] .fan-slot.can')].pop() as HTMLElement | undefined;
+    if (!slot) return { ok: false as const };
+    const name = slot.querySelector('button')!.getAttribute('aria-label')!;
+    const r = slot.getBoundingClientRect();
+    const centre = document.querySelector('.centre')!.getBoundingClientRect();
+    const from = { x: r.left + r.width / 2, y: r.top + 40 };
+    const to = { x: centre.left + centre.width / 2, y: centre.top + centre.height / 2 };
+    const fire = (type: string, x: number, y: number) => slot.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, button: 0, isPrimary: true }));
+    fire('pointerdown', from.x, from.y);
+    for (let i = 1; i <= 10; i++) fire('pointermove', from.x + (to.x - from.x) * i / 10, from.y + (to.y - from.y) * i / 10);
+    await new Promise((f) => requestAnimationFrame(() => f(null)));
+    const lifted = !!document.querySelector('.fan-slot.lifted');
+    fire(how === 'cancel' ? 'pointercancel' : 'pointerup', to.x, to.y);
+    return { ok: true as const, name, lifted };
+  }, end);
+
+  const handNames = () => page.getByTestId('hand').locator('button.card').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
+
+  // a cancelled gesture (a second finger, an OS gesture) puts the card back and plays nothing
+  const before = await handNames();
+  const cancelled = await dragTo('cancel');
+  expect(cancelled.ok && cancelled.lifted).toBe(true);
+  await page.waitForTimeout(300);
+  expect(await handNames()).toEqual(before);
+  await expect(page.locator('.stage-base')).toHaveCount(0);
+  await expect(page.locator('.fan-slot.lifted')).toHaveCount(0);
+
+  // letting go over the table plays it
+  const played = await dragTo('up');
+  expect(played.ok).toBe(true);
+  await expect.poll(handNames, { timeout: 5000 }).not.toContain(played.name);
+});

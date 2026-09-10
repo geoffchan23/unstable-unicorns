@@ -118,7 +118,7 @@ if (process.argv[1] && process.argv[1].endsWith('sim.ts')) {
   let totalTurns = 0;
   const t0 = Date.now();
   for (let i = 0; i < games; i++) {
-    const r = simulate(1000 + i, players);
+    const r = simulate(1000 + i, players, 40_000); // random bots need far more than the 5k default at 6-8 players
     totalTurns += r.turns;
   }
   console.log(`${games} games of ${players} players in ${Date.now() - t0}ms, avg ${(totalTurns / games).toFixed(1)} turns`);

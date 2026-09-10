@@ -5,6 +5,7 @@ import { createGame, applyAction } from '../game';
 import { playersToAct, randomBotAction } from '../bot';
 import { checkEventsExplain } from '../sim';
 import type { GameEvent, GameState } from '../types';
+import type { PlayerView } from '../view';
 
 const moves = (s: GameState, since = 0) => s.events.filter((e) => e.seq >= since && e.kind === 'move') as Extract<GameEvent, { kind: 'move' }>[];
 
@@ -47,6 +48,8 @@ describe('event stream', () => {
     const m = moves(h.state, since);
     expect(m.map((x) => [x.card, x.how])).toEqual([[uni, 'play'], [neigh, 'neigh'], [neigh, 'resolve'], [uni, 'countered']]);
     expect(m[3]!.to).toEqual({ zone: 'discard' });
+    // the Neigh is discarded by the player who played it, not by the player whose turn it is
+    expect(m[2]!.actor).toBe(1);
   });
 
   it('destroy: stable -> discard with the actor, and an immune card emits protected instead', () => {
@@ -90,6 +93,31 @@ describe('event stream', () => {
     expect(sacrificed).toHaveLength(1);
     h.answer(h.inStable(1, 'basic-unicorn-red'));
     for (const e of preview) expect(h.state.events[e.seq]).toEqual(e);
+  });
+
+  it('a Nanny Cam played later never reveals moves that were hidden when they happened', () => {
+    // P1 trades hands with P2 while P3 is not looking, and only then does a Nanny Cam land on P2.
+    const h = new Harness({ players: 3, hands: [['unfair-bargain'], ['nanny-cam', 'neigh', 'super-neigh'], []], plays: 9 });
+    const since = h.state.events.length;
+    h.play(0, 'unfair-bargain');
+    h.answer(1);
+    const swap = (v: PlayerView) => v.events.filter((e) => e.seq >= since && e.kind === 'move' && e.from.zone === 'hand' && e.to.zone === 'hand') as Extract<GameEvent, { kind: 'move' }>[];
+    expect(swap(viewFor(h.state, 2)).length).toBeGreaterThan(0);
+    expect(swap(viewFor(h.state, 2)).every((e) => e.card === null)).toBe(true);
+    // the players who were part of the trade did see it
+    expect(swap(viewFor(h.state, 0)).every((e) => e.card !== null)).toBe(true);
+
+    h.play(0, 'nanny-cam', 1);
+    const after = viewFor(h.state, 2);
+    expect(after.players[1]!.hand).not.toBeNull();          // the camera shows the hand as it is now
+    expect(swap(after).every((e) => e.card === null)).toBe(true);  // but not how it got there
+
+    // from here on, cards moving into that hand are visible to everyone
+    const since2 = h.state.events.length;
+    h.draw(0);                                               // ends P1's turn; P2 draws at the start of theirs
+    const fresh = viewFor(h.state, 2).events.filter((e) => e.seq >= since2 && e.kind === 'move' && e.how === 'draw' && e.to.zone === 'hand' && e.to.player === 1) as Extract<GameEvent, { kind: 'move' }>[];
+    expect(fresh.length).toBeGreaterThan(0);
+    expect(fresh.every((e) => e.card !== null)).toBe(true);
   });
 
   it('explains every zone change in random games', () => {

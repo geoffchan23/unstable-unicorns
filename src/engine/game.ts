@@ -189,7 +189,8 @@ function resolveStack(state: GameState): void {
   const ctx = systemCtx(state, state.turn.player);
 
   // all Neighs go to the discard pile
-  for (let i = n - 1; i >= 1; i--) ctx.toDiscard(items[i]!.card, 'resolve');
+  // each Neigh is discarded by the player who played it, not by whoever's turn it is
+  for (let i = n - 1; i >= 1; i--) ctx.toDiscard(items[i]!.card, 'resolve', items[i]!.player);
 
   const base = items[0]!;
   state.stack = [];

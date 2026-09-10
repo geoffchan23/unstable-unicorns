@@ -147,7 +147,13 @@ export type MoveHow =
  * preview run and the committed run number the same events identically.
  */
 export type GameEventBody =
-  | { kind: 'move'; card: InstanceId | null; from: Zone; to: Zone; how: MoveHow; actor?: PlayerId }
+  /**
+   * A card changed zone. `seenBy` lists the players who were allowed to know which card it was, decided
+   * when the move happened; missing means everybody was (at least one end was a public zone). `viewFor`
+   * blanks `card` for anyone else. It has to be recorded here rather than worked out later, because
+   * who can see a hand changes during a game (Nanny Cam) and the past must not change with it.
+   */
+  | { kind: 'move'; card: InstanceId | null; from: Zone; to: Zone; how: MoveHow; actor?: PlayerId; seenBy?: PlayerId[] }
   | { kind: 'shuffle'; count: number }
   | { kind: 'turn'; player: PlayerId; number: number }
   | { kind: 'say'; text: string; actor?: PlayerId; affects?: PlayerId[]; notice?: boolean }

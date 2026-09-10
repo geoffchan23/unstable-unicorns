@@ -60,6 +60,10 @@ export function useStage(view: PlayerView): Stage {
   useEffect(() => () => { alive.current = false; stageBusy.set(false); }, []);
 
   const show = (v: PlayerView) => { shownRef.current = v; setShown(v); };
+  /** say the notices in these events without playing them (used when a burst is snapped, not staged) */
+  const flushNotices = (es: GameEvent[]) => {
+    for (const e of es) if (e.kind === 'say' && e.notice) setNotice({ id: ids.current++, text: e.text });
+  };
 
   useEffect(() => {
     target.current = view;
@@ -75,15 +79,13 @@ export function useStage(view: PlayerView): Stage {
     if (reducedMotion()) {
       // no staging at all: the picture is the engine's, and the table is never busy
       queue.current = [];
-      if (!playing.current) {
-        for (const e of fresh) if (e.kind === 'say' && e.notice) setNotice({ id: ids.current++, text: e.text });
-        show(view);
-      }
+      if (!playing.current) { flushNotices(fresh); show(view); }
       return;
     }
     if (fresh.length === 0 || fresh.length > MAX_REPLAY) {
+      // a burst too long to play out is snapped, but its notices still have to be said
+      if (fresh.length > MAX_REPLAY) { queue.current = []; flushNotices(fresh); }
       if (!playing.current) show(view);
-      else if (fresh.length > MAX_REPLAY) { queue.current = []; }
       return;
     }
     if (!playing.current) {

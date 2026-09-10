@@ -30,7 +30,9 @@ function rebuild(seats: Seat[], seed: number, actions: Action[]): { state: GameS
 }
 
 export function LocalGame({ seats, seed, resume, onQuit }: { seats: Seat[]; seed: number; resume?: Action[]; onQuit: () => void }) {
-  const [state, setState] = useState<GameState>(() => rebuild(seats, seed, resume ?? []).state);
+  // one rebuild for the life of the component: replaying a resumed game is not free on a phone
+  const [start] = useState(() => rebuild(seats, seed, resume ?? []));
+  const [state, setState] = useState<GameState>(start.state);
   const rand = useMemo(() => mulberry(seed ^ 0x51ed), [seed]);
   const isHuman = useCallback((p: PlayerId) => seats[p]!.kind === 'human', [seats]);
   const humans = useMemo(() => seats.map((s, i) => (s.kind === 'human' ? i : -1)).filter((i) => i >= 0), [seats]);
@@ -44,20 +46,27 @@ export function LocalGame({ seats, seed, resume, onQuit }: { seats: Seat[]; seed
 
   const [error, setError] = useState<string | null>(null);
   // every action applied, in order: with the seed and seats this replays the whole game (scripts/replay.ts)
-  const history = useRef<Action[]>(resume ? rebuild(seats, seed, resume).applied : []);
+  const history = useRef<Action[]>(start.applied);
+  /**
+   * The game state lives in this ref and is mirrored into React state for rendering. Applying the
+   * action inside a `setState` updater instead would be a side effect in a function React is free to
+   * run more than once, which can push an action into `history` twice and persist the duplicate; the
+   * saved game then refuses to replay past it.
+   */
+  const stateRef = useRef(start.state);
   const dispatch = useCallback((a: Action) => {
-    setState((s) => {
-      try {
-        const next = applyAction(s, a);
-        history.current.push(a);
-        if (next.winner === null) saveLocalGame({ seed, seats, actions: history.current });
-        else clearLocalGame();
-        return next;
-      } catch (e) {
-        if (e instanceof IllegalAction) { setError(e.message); return s; }
-        throw e;
-      }
-    });
+    let next: GameState;
+    try {
+      next = applyAction(stateRef.current, a);
+    } catch (e) {
+      if (e instanceof IllegalAction) { setError(e.message); return; }
+      throw e;
+    }
+    stateRef.current = next;
+    history.current.push(a);
+    if (next.winner === null) saveLocalGame({ seed, seats, actions: history.current });
+    else clearLocalGame();
+    setState(next);
   }, [seed, seats]);
   const quit = useCallback(() => { clearLocalGame(); onQuit(); }, [onQuit]);
   // a fresh game is saved right away so a reload during the first turn still resumes it

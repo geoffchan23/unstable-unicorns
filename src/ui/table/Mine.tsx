@@ -99,6 +99,10 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
   const [drag, setDrag] = useState<{ card: InstanceId; x: number; y: number; lift: boolean; over: DropTarget | null } | null>(null);
   const press = useRef<{ card: InstanceId; startX: number; startY: number; mode: 'none' | 'sort' | 'lift' } | null>(null);
   const suppressClick = useRef(false);
+  const dragging = useRef(false);
+  // window listeners are registered once, so they read the current callback through a ref
+  const dragOverRef = useRef(onDragOver);
+  dragOverRef.current = onDragOver;
   const fanRect = () => ref.current?.getBoundingClientRect() ?? null;
   const centreX = () => { const r = fanRect(); return r ? r.left + r.width / 2 : 0; };
 
@@ -124,10 +128,12 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
       const r = fanRect();
       const y = r ? e.clientY - (r.top + 18 + (cw * 288 / 168) / 2) : 0;
       const over = targetAt(e.clientX, e.clientY);
+      dragging.current = true;
       setDrag({ card: p.card, x, y, lift: true, over });
       onDragOver(over, true);
       return;
     }
+    dragging.current = true;
     setDrag({ card: p.card, x, y: 0, lift: false, over: null });
     // the card moves to the slot under the pointer
     const target = Math.max(0, Math.min(n - 1, Math.round(x / (step || 1) + mid)));
@@ -140,29 +146,34 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
   };
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     const p = press.current;
-    press.current = null;
-    if (p && p.mode !== 'none') { suppressClick.current = true; setTimeout(() => { suppressClick.current = false; }, 0); }
-    if (p?.mode === 'lift') {
-      const over = targetAt(e.clientX, e.clientY);
-      onDragOver(null, false);
-      if (over) onDrop(p.card, over);
-    }
-    setDrag(null);
+    const over = p?.mode === 'lift' ? targetAt(e.clientX, e.clientY) : null;
+    endDrag();
+    if (p?.mode === 'lift' && over) onDrop(p.card, over);
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* already released */ }
   };
-  // if the pointer is lost mid-drag (the window blurs, a native drag or gesture takes over), drop the drag
-  const cancelDrag = () => {
-    if (!press.current && !drag) return;
+
+  /**
+   * Put the card back and forget the gesture, without playing anything. Used both when the pointer is
+   * released and when it is taken away: a pointercancel (a second finger, an OS gesture, a native drag)
+   * must never count as "dropped here", or the game plays a card the player did not let go of.
+   */
+  const endDrag = () => {
+    const p = press.current;
     press.current = null;
-    onDragOver(null, false);
+    if (p && p.mode !== 'none') { suppressClick.current = true; setTimeout(() => { suppressClick.current = false; }, 0); }
+    if (!p && !dragging.current) return;
+    dragging.current = false;
+    dragOverRef.current(null, false);
     setDrag(null);
   };
+  // the window may take the pointer away without telling this element (a blur, a gesture takeover)
   useEffect(() => {
-    window.addEventListener('blur', cancelDrag);
-    window.addEventListener('pointercancel', cancelDrag);
-    return () => { window.removeEventListener('blur', cancelDrag); window.removeEventListener('pointercancel', cancelDrag); };
+    const onCancel = () => endDrag();
+    window.addEventListener('blur', onCancel);
+    window.addEventListener('pointercancel', onCancel);
+    return () => { window.removeEventListener('blur', onCancel); window.removeEventListener('pointercancel', onCancel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [drag]);
+  }, []);
 
   return (
     <div className={`fan ${n > 0 ? '' : 'empty'}`} data-testid="hand" ref={(el) => { (ref as React.MutableRefObject<HTMLDivElement | null>).current = el; anchors.ref(zoneKey({ zone: 'hand', player: me }))(el); }} style={{ '--cw': `${cw}px` } as React.CSSProperties}>
@@ -185,8 +196,8 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
             onPointerDown={onPointerDown(c)}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            onLostPointerCapture={() => { if (press.current?.mode === 'lift') cancelDrag(); }}
+            onPointerCancel={endDrag}
+            onLostPointerCapture={() => { if (press.current?.mode === 'lift') endDrag(); }}
             onDragStart={(e) => e.preventDefault()}
             onClickCapture={(e) => { if (suppressClick.current) { e.stopPropagation(); e.preventDefault(); } }}
           >

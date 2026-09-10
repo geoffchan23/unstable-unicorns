@@ -1,6 +1,6 @@
 // The table. Presentational: everything it knows comes in as props; the staged playback (useStage) keeps a
 // picture that lags behind the real view while cards fly, and the sheets that need a decision wait for it.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cardData } from '../engine/registry';
 import type { Action, CardData, InstanceId, PlayerId } from '../engine/types';
 import type { PlayerView } from '../engine/view';
@@ -127,12 +127,15 @@ export function GameScreen({
 
   const winner = !busy ? live.winner : null;
 
-  // an error toast (often a stale tap after the game moved on) clears itself
+  // an error toast (often a stale tap after the game moved on) clears itself. The callback is read
+  // through a ref: drivers pass a fresh closure every render, which would restart the timer forever.
+  const dismissRef = useRef(onDismissError);
+  dismissRef.current = onDismissError;
   useEffect(() => {
     if (!error) return;
-    const id = setTimeout(onDismissError, 3500);
+    const id = setTimeout(() => dismissRef.current(), 3500);
     return () => clearTimeout(id);
-  }, [error, onDismissError]);
+  }, [error]);
 
   return (
     <div className={`tbl ${busy ? 'busy' : ''}`}>
@@ -171,7 +174,7 @@ export function GameScreen({
       {history && <HistorySheet log={live.log} start={null} onClose={() => setHistory(false)} onOpenDef={openDef} seed={seed} onCopyReport={report ? copyReport : undefined} />}
       {expanded !== null && <StableSheet player={expanded} view={live} isMe={expanded === live.me} onClose={() => setExpanded(null)} onOpenCard={openCard} data={data} />}
       {neighWindow && neighText && <NeighSheet text={neighText} view={live} legal={legal} onAction={onAction} onOpenCard={openCard} data={data} />}
-      {prompt && <PromptSheet prompt={prompt} view={live} onAnswer={(answer) => onAction({ type: 'respond', player: live.me, promptId: prompt.id, answer })} />}
+      {prompt && <PromptSheet key={prompt.id} prompt={prompt} view={live} onAnswer={(answer) => onAction({ type: 'respond', player: live.me, promptId: prompt.id, answer })} />}
       {beginWindow && <BeginSheet pending={beginWindow} view={live} onAction={onAction} onOpenCard={openCard} data={data} />}
 
       {detail && (

@@ -116,7 +116,7 @@ export class Ctx {
     say(this.state, { text, affects, actor });
   }
 
-  private moved(card: InstanceId, from: Zone, to: Zone, how: MoveHow, actor: PlayerId = this.controller): void {
+  private moved(card: InstanceId, from: Zone, to: Zone, how: MoveHow, actor: PlayerId | undefined = this.controller): void {
     moved(this.state, card, from, to, how, actor);
   }
 
@@ -331,10 +331,10 @@ export class Ctx {
     this.moved(card, from, { zone: 'hand', player }, how ?? (from.zone === 'deck' ? 'search' : from.zone === 'hand' ? 'move' : 'return'));
   }
 
-  toDiscard(card: InstanceId, how?: MoveHow): void {
+  toDiscard(card: InstanceId, how?: MoveHow, actor?: PlayerId): void {
     const from = this.pluck(card);
     this.state.discard.push(card);
-    this.moved(card, from, { zone: 'discard' }, how ?? (from.zone === 'limbo' ? 'resolve' : 'discard'));
+    this.moved(card, from, { zone: 'discard' }, how ?? (from.zone === 'limbo' ? 'resolve' : 'discard'), actor);
   }
 
   toDeckTop(card: InstanceId): void {

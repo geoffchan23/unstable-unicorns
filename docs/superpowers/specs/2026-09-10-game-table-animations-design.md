@@ -36,7 +36,7 @@ type MoveHow =
   | 'return' | 'steal' | 'move' | 'bring' | 'search' | 'deckTop';
 
 type GameEvent = { seq: number } & (
-  | { kind: 'move'; card: InstanceId | null; from: Zone; to: Zone; how: MoveHow; actor?: PlayerId }
+  | { kind: 'move'; card: InstanceId | null; from: Zone; to: Zone; how: MoveHow; actor?: PlayerId; seenBy?: PlayerId[] }
   | { kind: 'shuffle'; count: number }                 // discard pile shuffled into the deck
   | { kind: 'turn'; player: PlayerId; number: number }
   | { kind: 'say'; text: string; actor?: PlayerId; affects?: PlayerId[]; notice?: boolean }
@@ -49,8 +49,10 @@ type GameEvent = { seq: number } & (
   preview run produces have the same `seq` as the committed run, so clients de-duplicate by `seq`.
 - `say` events mirror every log line and carry `actor` where one is known (the effect's controller, the drawing or
   discarding player, the player who played the card). `LogEntry` gains the same optional `actor`.
-- `viewFor` redacts `card` to `null` on a move whose ends are both hidden from the viewer (a draw into another
-  player's hand without Nanny Cam). Everything else keeps the id; if either end is visible the card was visible anyway.
+- Who was allowed to see a card move is decided **when the move happens** and recorded as `seenBy` (missing = the
+  table saw it, because an end was a public zone); `viewFor` blanks `card` for anyone not listed. It cannot be worked
+  out at view time: who can see a hand changes mid-game (Nanny Cam), and a camera played now must not reveal the ids
+  of cards that moved between hidden hands before it existed — nor re-hide history a client already holds.
 - Every zone change goes through `Ctx.pluck` + a destination push; `pluck` now returns the source zone and each
   destination method emits the move. `game.ts` emits the `play`/`neigh` moves into `limbo`, the `turn` event from
   `nextTurn` (and game start), and `checkWin` emits `win`.

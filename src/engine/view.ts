@@ -1,4 +1,4 @@
-import type { GameEvent, GameState, InstanceId, PlayerId, Zone } from './types';
+import type { GameEvent, GameState, InstanceId, PlayerId } from './types';
 import { stableHas, unicornCount, vetoPlay, typeOf } from './queries';
 import { previewState } from './game';
 
@@ -17,11 +17,11 @@ export function viewFor(input: GameState, me: PlayerId): PlayerView {
   const { deck, players, rng, seed, events, ...rest } = state;
   void rng; void seed;
   const canSeeHand = (p: PlayerId) => p === me || stableHas(state, p, 'nanny-cam');
-  const hiddenZone = (z: Zone) => z.zone === 'deck' || (z.zone === 'hand' && !canSeeHand(z.player));
   return {
     ...structuredClone(rest),
-    // a card moving between two zones I cannot see (a draw into someone else's hand) stays anonymous
-    events: events.map((e): GameEvent => (e.kind === 'move' && e.card !== null && hiddenZone(e.from) && hiddenZone(e.to) ? { ...e, card: null } : e)),
+    // a card that moved where I could not see it (a draw into someone else's hand) stays anonymous.
+    // `seenBy` was decided when the move happened, so a Nanny Cam played later never reveals the past.
+    events: events.map((e): GameEvent => (e.kind === 'move' && e.card !== null && e.seenBy && !e.seenBy.includes(me) ? { ...e, card: null } : e)),
     me,
     deckCount: deck.length,
     players: players.map((p) => ({
