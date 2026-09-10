@@ -108,6 +108,14 @@ export function GameScreen({
     ? `${neighText.banner} · waiting on ${live.pending.awaiting.map((p) => live.players[p]!.name).join(', ')}`
     : null;
 
+  // The top bar shows the turn line, and flips to the live status (a Neigh window: how many Neighs are
+  // on the card, whether it stands, who we are waiting for) whenever there is one. It flips back on its
+  // own when the status clears. Tapping it overrides the choice until the status next appears or goes.
+  const [metaFace, setMetaFace] = useState<'turn' | 'status' | null>(null);
+  const hasStatus = stageBanner !== null;
+  useEffect(() => { setMetaFace(null); }, [hasStatus]);
+  const showStatus = hasStatus && (metaFace ?? 'status') === 'status';
+
   // notices: things that happened without a prompt ("no Magic cards in the discard pile") get a toast
   const [notice, setNotice] = useState<string | null>(null);
   useEffect(() => {
@@ -130,16 +138,24 @@ export function GameScreen({
     <div className={`tbl ${busy ? 'busy' : ''}`}>
       <header className="topbar" data-testid="topbar">
         <button type="button" className="ghost small" onClick={onQuit}>Quit</button>
-        <span className="topbar-meta">
-          Turn {view.turn.number} · first to {view.unicornsToWin}
-        </span>
+        <button
+          type="button"
+          className={`topbar-meta ${showStatus ? 'is-status' : ''}`}
+          data-testid="topbar-meta"
+          onClick={() => hasStatus && setMetaFace(showStatus ? 'turn' : 'status')}
+          aria-live="polite"
+          title={hasStatus ? 'Tap to switch between the turn and the current status' : undefined}
+        >
+          <span className="topbar-text">{showStatus ? stageBanner : `Turn ${view.turn.number} · first to ${view.unicornsToWin}`}</span>
+          {hasStatus && <i className="topbar-dot" aria-hidden="true" />}
+        </button>
         <button type="button" className="ghost small" onClick={() => setHistory(true)} data-testid="history-open" aria-label="Turn history">History</button>
       </header>
       {banner}
 
       <Seats view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} bubbles={stage.bubbles} hit={stage.hit} onOpen={setExpanded} data={data}
         dropOver={dragOver.target?.kind === 'seat' ? dragOver.target.player : null} />
-      <Centre view={view} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} stamps={stage.stamps} data={data} onOpenCard={openCard} neighBanner={stageBanner}
+      <Centre view={view} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} stamps={stage.stamps} data={data} onOpenCard={openCard}
         drop={dragOver.lifting ? (dragOver.target?.kind === 'table' ? 'over' : 'ready') : null} />
       <Mine
         view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} bubbles={stage.bubbles} hit={stage.hit}

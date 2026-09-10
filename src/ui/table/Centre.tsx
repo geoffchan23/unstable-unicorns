@@ -1,4 +1,5 @@
-// The middle of the table: the deck, the discard pile, the nursery, and the stage where a played card sits.
+// The middle of the table: the deck, the stage where a played card sits, and the discard/nursery piles
+// stacked in one column beside it.
 import type { CardData, InstanceId } from '../../engine/types';
 import type { PlayerView } from '../../engine/view';
 import { Anchors, cardKey, zoneKey } from '../stage/anchors';
@@ -6,9 +7,9 @@ import type { Stamp } from '../stage/useStage';
 import { CardBack, CardTile } from './CardFace';
 import { CardView } from '../Card';
 
-export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, neighBanner, drop }: {
+export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, drop }: {
   view: PlayerView; anchors: Anchors; hidden: ReadonlySet<InstanceId>; fx: ReadonlyMap<string, 'shake' | 'shield'>;
-  stamps: Stamp[]; data: (id: InstanceId) => CardData; onOpenCard: (id: InstanceId) => void; neighBanner: string | null;
+  stamps: Stamp[]; data: (id: InstanceId) => CardData; onOpenCard: (id: InstanceId) => void;
   /** 'ready' while a card is lifted, 'over' while it hovers the table */
   drop?: 'ready' | 'over' | null;
 }) {
@@ -19,12 +20,12 @@ export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, ne
   return (
     <section className={`centre ${drop ? `drop-${drop}` : ''}`} aria-label="Table">
       <div className="pile deck" aria-label={`Deck: ${view.deckCount} cards`}>
+        <span className="pile-name">Deck <b>({view.deckCount})</b></span>
         <div className="pile-stack" ref={anchors.ref(zoneKey({ zone: 'deck' }))}>
           {view.deckCount > 2 && <CardBack className="under under-2" />}
           {view.deckCount > 1 && <CardBack className="under under-1" />}
           {view.deckCount > 0 ? <CardBack /> : <div className="pile-empty" />}
         </div>
-        <span className="pile-count">{view.deckCount}</span>
       </div>
 
       <div className="stage" ref={anchors.ref(zoneKey({ zone: 'limbo' }))}>
@@ -42,7 +43,6 @@ export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, ne
                 ))}
               </div>
             )}
-            {neighBanner && <span className="stage-banner">{neighBanner}</span>}
           </div>
         ) : (
           <div className="stage-empty" aria-hidden="true">{drop && <span className="drop-hint">{drop === 'over' ? 'Let go to play' : 'Drop here to play'}</span>}</div>
@@ -50,22 +50,24 @@ export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, ne
         {stageStamps.map((s) => <span key={s.id} className="stamp">{s.text}</span>)}
       </div>
 
-      <div className="pile discard" aria-label={`Discard pile: ${view.discard.length} cards`}>
-        <div className="pile-stack" ref={anchors.ref(zoneKey({ zone: 'discard' }))}>
-          {discardTop !== null
-            ? <CardTile data={data(discardTop)} onClick={() => onOpenCard(discardTop)} anchorRef={anchors.ref(cardKey(discardTop))} hidden={hidden.has(discardTop)} fx={fx.get(cardKey(discardTop))} className="tile-lg" />
-            : <div className="pile-empty" />}
+      <div className="piles">
+        <div className="pile discard" aria-label={`Discard pile: ${view.discard.length} cards`}>
+          <span className="pile-name">Discard <b>({view.discard.length})</b></span>
+          <div className="pile-stack" ref={anchors.ref(zoneKey({ zone: 'discard' }))}>
+            {discardTop !== null
+              ? <CardTile data={data(discardTop)} onClick={() => onOpenCard(discardTop)} anchorRef={anchors.ref(cardKey(discardTop))} hidden={hidden.has(discardTop)} fx={fx.get(cardKey(discardTop))} className="tile-lg" />
+              : <div className="pile-empty" />}
+          </div>
         </div>
-        <span className="pile-count">{view.discard.length}</span>
-      </div>
 
-      <div className="pile nursery" aria-label={`Nursery: ${view.nursery.length} baby unicorns`}>
-        <div className="pile-stack" ref={anchors.ref(zoneKey({ zone: 'nursery' }))}>
-          {nurseryTop !== null
-            ? <CardTile data={data(nurseryTop)} onClick={() => onOpenCard(nurseryTop)} anchorRef={anchors.ref(cardKey(nurseryTop))} hidden={hidden.has(nurseryTop)} className="tile-lg" />
-            : <div className="pile-empty" />}
+        <div className="pile nursery" aria-label={`Nursery: ${view.nursery.length} baby unicorns`}>
+          <span className="pile-name">Nursery <b>({view.nursery.length})</b></span>
+          <div className="pile-stack" ref={anchors.ref(zoneKey({ zone: 'nursery' }))}>
+            {nurseryTop !== null
+              ? <CardTile data={data(nurseryTop)} onClick={() => onOpenCard(nurseryTop)} anchorRef={anchors.ref(cardKey(nurseryTop))} hidden={hidden.has(nurseryTop)} className="tile-lg" />
+              : <div className="pile-empty" />}
+          </div>
         </div>
-        <span className="pile-count">{view.nursery.length}</span>
       </div>
     </section>
   );

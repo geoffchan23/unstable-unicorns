@@ -4,11 +4,17 @@ import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
 export async function buildClient({ dev = false, serverUrl, outdir = 'dist/unicorns' } = {}) {
-  rmSync(outdir, { recursive: true, force: true });
+  // a dev rebuild only replaces the app bundle: wiping the folder while it is being served (and while a
+  // second rebuild copies art into it) left half the art missing
+  if (dev && existsSync(outdir)) { for (const f of readdirSync(outdir)) if (f.startsWith('app.')) rmSync(join(outdir, f), { force: true }); }
+  else rmSync(outdir, { recursive: true, force: true });
   mkdirSync(outdir, { recursive: true });
   const artDir = 'assets/art';
   const artIds = existsSync(artDir) ? readdirSync(artDir).filter((f) => f.endsWith('.webp')).map((f) => f.slice(0, -5)) : [];
-  if (artIds.length) { mkdirSync(join(outdir, 'art'), { recursive: true }); for (const id of artIds) cpSync(join(artDir, `${id}.webp`), join(outdir, 'art', `${id}.webp`)); }
+  if (artIds.length) {
+    mkdirSync(join(outdir, 'art'), { recursive: true });
+    for (const id of artIds) { const dest = join(outdir, 'art', `${id}.webp`); if (!dev || !existsSync(dest)) cpSync(join(artDir, `${id}.webp`), dest); }
+  }
   const result = await build({
     entryPoints: { app: 'src/ui/main.tsx' },
     bundle: true, minify: !dev, sourcemap: dev, format: 'iife', target: 'es2020',
