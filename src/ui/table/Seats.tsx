@@ -75,9 +75,11 @@ export function Seats({ view, seats, anchors, hidden, fx, bubbles, hit, onOpen, 
                 <span className="tseat-count" aria-hidden="true"><b>{view.unicornCounts[p]}</b><small>/{view.unicornsToWin}</small></span>
                 {seat.kind === 'human' && seat.connected === false ? <span className="ts-tag off">offline</span> : null}
               </span>
-              <span className="tseat-hand" ref={anchors.ref(zoneKey({ zone: 'hand', player: p }))} aria-hidden="true">
-                {Array.from({ length: backs }, (_, i) => <i key={i} style={{ '--i': i } as React.CSSProperties} />)}
-                {pl.handCount > 0 && <em>{pl.handCount}</em>}
+              <span className="tseat-hand" aria-hidden="true">
+                <span className="tseat-backs" ref={anchors.ref(zoneKey({ zone: 'hand', player: p }))}>
+                  {Array.from({ length: backs }, (_, i) => <i key={i} style={{ '--i': i } as React.CSSProperties} />)}
+                </span>
+                <em>{pl.handCount} card{pl.handCount === 1 ? '' : 's'}</em>
               </span>
             </button>
             <div className="tseat-stable" ref={anchors.ref(zoneKey({ zone: 'stable', player: p }))} style={{ '--n': pl.stable.length } as React.CSSProperties}>

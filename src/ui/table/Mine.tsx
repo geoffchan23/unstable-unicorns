@@ -79,17 +79,23 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  const [tall, setTall] = useState(() => (typeof window === 'undefined' ? 900 : window.innerHeight));
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const ro = new ResizeObserver(() => setWidth(el.clientWidth));
     ro.observe(el);
     setWidth(el.clientWidth);
-    return () => ro.disconnect();
+    // the fan is sized by the height it has as well as the width, and the row's own width does not
+    // change when the window only gets shorter
+    const onResize = () => setTall(window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => { ro.disconnect(); window.removeEventListener('resize', onResize); };
   }, []);
   const n = hand.length;
-  const tall = typeof window !== 'undefined' ? window.innerHeight : 900;
-  const cw = width >= 720 ? (tall >= 900 ? 168 : 148) : tall < 640 ? 112 : 136;
+  // the same breakpoint the stylesheet uses for a short screen (see the media query in table.css)
+  const short = tall <= 840;
+  const cw = width >= 720 ? (short ? 128 : tall >= 900 ? 168 : 148) : short ? 112 : 136;
   const maxStep = cw * 0.72;
   const step = n > 1 ? Math.min(maxStep, Math.max(24, (width - cw - 8) / (n - 1))) : 0;
   const mid = (n - 1) / 2;

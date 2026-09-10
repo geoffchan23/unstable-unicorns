@@ -41,6 +41,13 @@
   scroll-snap-type: x proximity; scroll-padding-left: 11px;
 }
 .tbl .seats::-webkit-scrollbar { display: none; }
+/*
+ * An explicit height, not `auto`. The row scrolls sideways, so its automatic minimum height is zero and
+ * the grid is free to squash it to a sliver of clipped avatars when the table is tight; `min-height:
+ * max-content` fixes that in Chromium but not in WebKit. The values are the row's own content height at
+ * each breakpoint (an e2e test asserts nothing is clipped at the sizes we play on).
+ */
+.tbl .seats { height: 184px; }
 .tseat { position: relative; flex: 0 0 var(--seat-w); width: var(--seat-w); display: grid; gap: 3px; justify-items: center; scroll-snap-align: start; }
 .tseat-btn { display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 0; cursor: pointer; color: inherit; width: 100%; font: inherit; }
 .tseat-name { display: flex; align-items: baseline; justify-content: center; gap: 5px; max-width: 100%; line-height: 1.2; }
@@ -49,14 +56,19 @@
 .ts-tag.off { background: var(--warn); color: #2a1a05; }
 .tseat-count { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 15px; line-height: 1; display: inline-flex; align-items: baseline; gap: 1px; flex: 0 0 auto; }
 .tseat-count small { font-size: 10px; color: var(--ink-2); font-family: Nunito, sans-serif; font-weight: 700; }
-.tseat-hand { position: relative; display: block; width: 64px; height: 20px; margin-top: 2px; }
-.tseat-hand i {
-  position: absolute; top: 0; width: 12px; height: 18px; border-radius: 2px;
+/* the little fan of card backs, with how many they are held beside it (both on one baseline) */
+.tseat-hand { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 2px; max-width: 100%; }
+.tseat-backs { position: relative; display: block; width: 42px; height: 20px; flex: 0 0 auto; }
+.tseat-backs i {
+  position: absolute; top: 1px; width: 12px; height: 18px; border-radius: 2px;
   background: linear-gradient(#2c2733, #1a171f); border: 1px solid #5a5264; box-shadow: 0 1px 2px rgba(0,0,0,.4);
-  left: calc(50% - 6px + (var(--i) - 3.5) * 6px); transform: rotate(calc((var(--i) - 3.5) * 5deg)); transform-origin: 50% 140%;
+  left: calc(50% - 6px + (var(--i) - 3.5) * 4px); transform: rotate(calc((var(--i) - 3.5) * 5deg)); transform-origin: 50% 140%;
 }
-.tseat-hand i::after { content: ""; position: absolute; left: 1px; right: 1px; bottom: 1px; height: 3px; border-radius: 1px; background: var(--rb); }
-.tseat-hand em { position: absolute; right: -6px; top: -4px; font-style: normal; font-size: 10px; font-weight: 800; color: var(--ink-2); background: var(--panel); border-radius: 999px; padding: 0 4px; border: 1px solid var(--line); }
+.tseat-backs i::after { content: ""; position: absolute; left: 1px; right: 1px; bottom: 1px; height: 3px; border-radius: 1px; background: var(--rb); }
+.tseat-hand em {
+  font-style: normal; font-size: 9.5px; font-weight: 800; color: var(--ink-2); white-space: nowrap;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 1px 6px 2px; min-width: 0;
+}
 .tseat-stable { --tw: 42px; --w: calc(var(--seat-w) - 8px); display: flex; flex-wrap: nowrap; justify-content: center; height: calc(var(--tw) * 1.52 + 4px); max-width: 100%; padding: 0 4px; }
 /* more tiles than fit: they overlap progressively instead of wrapping, so the row keeps its height */
 .tseat-stable .tile:not(:first-child) { margin-left: min(0px, calc((var(--w) - var(--n, 1) * var(--tw)) / max(1, var(--n, 1) - 1))); }
@@ -113,28 +125,41 @@
 
 /* ---------- the centre ---------- */
 .centre {
-  /* deck | stage | the two side piles stacked in one column */
-  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  /* deck | stage | the two side piles stacked in one column.
+     One explicit row of `minmax(0, 1fr)`: the panel's height comes from the table's layout, so its row
+     must fill that height rather than grow to whatever it holds. Everything inside then caps itself
+     against the row (`min(100%, ...)`, `max-height: 100%`) instead of pushing out through the border. */
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr); align-items: center; gap: 10px;
   padding: 8px 10px; border-radius: 22px; min-height: 150px;
   background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--btn) 16%, var(--ground-2)), var(--ground-2) 72%);
   border: 1px solid var(--line); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
 }
 /* Discard over Nursery. Stacking them frees the width the played card needs, and keeps a Neigh
    chain from running underneath the discard pile. */
-.piles { display: grid; gap: 6px; justify-items: center; align-content: center; }
-.pile { --pw: 46px; display: grid; justify-items: center; gap: 2px; }
+/*
+ * The piles are capped by the height the table panel actually has, not by their own natural size: on a
+ * short phone the centre row is squeezed and a fixed height pushed the nursery out through the bottom
+ * border. `--pw` is the size they would like to be; `min(100%, ...)` gives up whatever is not available
+ * and `aspect-ratio` keeps the card shape while they shrink.
+ */
+.piles { display: grid; grid-template-rows: 1fr 1fr; gap: 6px; justify-items: center; align-content: center; align-self: stretch; min-height: 0; }
+.pile { --pw: 46px; --ph: 1.52; display: grid; grid-template-rows: auto minmax(0, 1fr); justify-items: center; gap: 2px; min-height: 0; }
 .pile-name { font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 800; white-space: nowrap; }
 .pile-name b { font-variant-numeric: tabular-nums; font-weight: 800; }
-.pile-stack { position: relative; width: var(--pw); height: calc(var(--pw) * 1.71); display: grid; place-items: center; }
-.pile .tile-lg { --tw: var(--pw); }
+.pile-stack { position: relative; height: min(100%, calc(var(--pw) * var(--ph))); aspect-ratio: 1 / var(--ph); width: auto; display: grid; place-items: center; align-self: center; }
+.pile .tile-lg { --tw: var(--pw); width: 100%; height: 100%; grid-template-rows: 26% 1fr; }
+.pile .tile-lg .tile-art { height: 100%; }
 .pile-empty { position: absolute; inset: 0; border-radius: 8px; border: 2px dashed var(--line); }
-/* the deck keeps its taller stack; it is alone in its column */
-.pile.deck { --pw: 62px; }
+/* the deck keeps its taller stack (a card back, not a tile); it is alone in its column, and like `.piles`
+   it stretches to the row so its own `min(100%, ...)` cap has a real height to measure against */
+.pile.deck { --pw: 62px; --ph: 1.714; align-self: stretch; }
 
-.stage { position: relative; display: grid; place-items: center; min-height: 140px; min-width: 0; align-self: stretch; }
+/* no min-height: it would force the centre's grid row taller than the panel's own content box on a
+   short screen, and the panel's min-height already keeps the table from collapsing when nothing is staged */
+.stage { position: relative; display: grid; grid-template-rows: minmax(0, 1fr); place-items: center; min-height: 0; min-width: 0; align-self: stretch; }
 .stage-empty { width: 100%; height: 100%; }
 /* z-index keeps a Neigh chain drawn over the piles rather than sliding under them */
-.stage-cards { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; max-width: 100%; height: 100%; }
+.stage-cards { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; max-width: 100%; height: 100%; min-height: 0; }
 /* The card is capped by the height the panel actually has, so it scales down instead of being clipped.
    aspect-ratio keeps its shape while the height shrinks. */
 .stage-base { --z: 0.7; aspect-ratio: 168 / 288; height: calc(288px * var(--z)); max-height: 100%; width: auto; position: relative; }
@@ -233,7 +258,7 @@
 /* ---------- bigger screens ---------- */
 @media (min-width: 720px) {
   .tbl { padding: 0 16px; }
-  .tbl .seats { --seat-w: 150px; }
+  .tbl .seats { --seat-w: 150px; height: 218px; }
   .tseat-who { font-size: 15px; }
   .tseat-count { font-size: 18px; }
   .avatar-md { width: 66px; height: 66px; font-size: 36px; }
@@ -246,7 +271,6 @@
   .pile { --pw: 62px; }
   .pile.deck { --pw: 76px; }
   .pile-name { font-size: 11px; }
-  .stage { min-height: 0; }
   .stage-base { --z: 0.62; }
   .stage-neigh { --z: 0.45; }
   .stage-chain { width: calc(168px * 0.45 + 30px); height: calc(288px * 0.45 + 24px); }
@@ -258,7 +282,6 @@
 }
 @media (min-width: 720px) and (min-height: 1000px) {
   .centre { min-height: 250px; }
-  .stage { min-height: 220px; }
   .pile { --pw: 78px; }
   .pile.deck { --pw: 96px; }
   .stage-base { --z: 0.95; }
@@ -270,11 +293,6 @@
   .pile.deck { --pw: 112px; }
   .stage-base { --z: 1; }
   .centre { min-height: 290px; }
-}
-@media (max-height: 640px) {
-  .fan { --cw: 112px; }
-  .centre { min-height: 130px; }
-  .stage-base { --z: 0.5; }
 }
 
 /* ---------- reduced motion ---------- */
@@ -325,3 +343,23 @@
 }
 .overlay.handoff .overlay-box { position: relative; }
 @media (prefers-reduced-motion: reduce) { .turn-banner { animation: none; } }
+
+/*
+ * Short screens (an SE-sized phone, a laptop window): every band gives up a little so the table still
+ * fits on one screen. Kept last so it wins over the wide-screen block above, which a short laptop
+ * window also matches. The hand's card width is not here: Mine.tsx sets it inline, from the same
+ * breakpoint.
+ */
+@media (max-height: 840px) {
+  .centre { min-height: 120px; }
+  .stage-base { --z: 0.5; }
+  .tbl .seats { --seat-w: 92px; height: 168px; }
+  .avatar-md { width: 44px; height: 44px; font-size: 24px; }
+  .tseat-stable, .tseat-stable .tile { --tw: 34px; }
+  .tseat-backs { width: 34px; height: 16px; }
+  .tseat-backs i { top: 0; height: 15px; left: calc(50% - 6px + (var(--i) - 3.5) * 3px); }
+  .tile-md { --tw: 46px; }
+  .my-stable { min-height: 60px; }
+  .pile { --pw: 40px; }
+  .pile.deck { --pw: 52px; }
+}
