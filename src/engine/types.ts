@@ -126,7 +126,34 @@ export interface LogEntry {
   notice?: boolean;
   /** players on the receiving end of this line (their card was destroyed, their hand taken...) */
   affects?: PlayerId[];
+  /** the player who did this, when there is one (the UI puts the line in their speech bubble) */
+  actor?: PlayerId;
 }
+
+/** Where a card is. */
+export type Zone =
+  | { zone: 'hand'; player: PlayerId }
+  | { zone: 'stable'; player: PlayerId }
+  | { zone: 'deck' } | { zone: 'discard' } | { zone: 'nursery' } | { zone: 'limbo' };
+
+/** Why a card moved; the UI picks an animation by it. */
+export type MoveHow =
+  | 'draw' | 'play' | 'neigh' | 'resolve' | 'countered' | 'discard' | 'destroy' | 'sacrifice'
+  | 'return' | 'steal' | 'move' | 'bring' | 'search' | 'deckTop';
+
+/**
+ * What happened, in order, for a UI to stage. Every log line is mirrored as a `say`; every zone change
+ * (after the deal) is a `move`. `seq` is the index in `state.events`; effects replay deterministically, so a
+ * preview run and the committed run number the same events identically.
+ */
+export type GameEventBody =
+  | { kind: 'move'; card: InstanceId | null; from: Zone; to: Zone; how: MoveHow; actor?: PlayerId }
+  | { kind: 'shuffle'; count: number }
+  | { kind: 'turn'; player: PlayerId; number: number }
+  | { kind: 'say'; text: string; actor?: PlayerId; affects?: PlayerId[]; notice?: boolean }
+  | { kind: 'protected'; card: InstanceId; by: InstanceId | null }
+  | { kind: 'win'; player: PlayerId };
+export type GameEvent = { seq: number } & GameEventBody;
 
 export interface GameState {
   seed: number;
@@ -145,6 +172,8 @@ export interface GameState {
   effectQueue: PendingEffect[];
   nextPromptId: number;
   log: LogEntry[];
+  /** everything that happened, for the UI to animate; see GameEvent */
+  events: GameEvent[];
   winner: PlayerId | null;
   twoPlayerVariant: boolean;
 }

@@ -3,6 +3,7 @@ import { shuffleInPlace } from './rng';
 import { allCardData, hasDef } from './registry';
 import { Ctx, GameWon, runEffect, systemCtx } from './effects';
 import { cloneState } from './clone';
+import { emit, moved, say } from './events';
 import {
   defOf, effectsActive, hasNeighImmunity, isNeighCard, isUnicornType, nameOf, neighAllowed,
   others, typeOf, vetoPlay,
@@ -41,6 +42,7 @@ export function createGame(opts: GameOptions): GameState {
     effectQueue: [],
     nextPromptId: 1,
     log: [],
+    events: [],
     winner: null,
     twoPlayerVariant: twoPlayer,
   };
@@ -74,8 +76,9 @@ export function createGame(opts: GameOptions): GameState {
   }
   for (let i = 0; i < 5; i++) for (const p of state.players) p.hand.push(state.deck.pop()!);
 
-  state.log.push({ turn: 1, text: `Game start. ${n} players, first to ${state.unicornsToWin} Unicorns.` });
-  state.log.push({ turn: state.turn.number, text: `--- ${state.players[state.turn.player]!.name}'s turn ---` });
+  say(state, { text: `Game start. ${n} players, first to ${state.unicornsToWin} Unicorns.` });
+  say(state, { text: `--- ${state.players[state.turn.player]!.name}'s turn ---` });
+  emit(state, { kind: 'turn', player: state.turn.player, number: state.turn.number });
   run(state);
   return state;
 }
@@ -148,7 +151,7 @@ function nextTurn(state: GameState): void {
   const t = state.turn;
   if (t.extraTurns > 0) {
     t.extraTurns--;
-    state.log.push({ turn: t.number, text: `${state.players[t.player]!.name} takes another turn.` });
+    say(state, { text: `${state.players[t.player]!.name} takes another turn.`, actor: t.player });
   } else {
     t.player = (t.player + 1) % state.players.length;
   }
@@ -158,7 +161,8 @@ function nextTurn(state: GameState): void {
   t.beginDone = [];
   t.endDiscardQueued = false;
   t.playsRemaining = 1;
-  state.log.push({ turn: t.number, text: `--- ${state.players[t.player]!.name}'s turn ---` });
+  say(state, { text: `--- ${state.players[t.player]!.name}'s turn ---` });
+  emit(state, { kind: 'turn', player: t.player, number: t.number });
 }
 
 // ---------- the Neigh stack ----------
@@ -185,13 +189,13 @@ function resolveStack(state: GameState): void {
   const ctx = systemCtx(state, state.turn.player);
 
   // all Neighs go to the discard pile
-  for (let i = n - 1; i >= 1; i--) ctx.toDiscard(items[i]!.card);
+  for (let i = n - 1; i >= 1; i--) ctx.toDiscard(items[i]!.card, 'resolve');
 
   const base = items[0]!;
   state.stack = [];
   if (!live[0]) {
-    ctx.toDiscard(base.card);
-    state.log.push({ turn: state.turn.number, text: `${nameOf(state, base.card)} is Neigh'd!` });
+    say(state, { text: `${nameOf(state, base.card)} is Neigh'd!` });
+    ctx.toDiscard(base.card, 'countered');
     return;
   }
   resolvePlayedCard(state, ctx, base);
@@ -340,7 +344,7 @@ export function applyAction(input: GameState, action: Action): GameState {
         t.beginDone.push(...pend.options);
       } else {
         if (!pend.options.includes(action.card)) throw new IllegalAction('that card has no beginning-of-turn effect to use now');
-        state.log.push({ turn: t.number, text: `${state.players[action.player]!.name} uses ${nameOf(state, action.card)}.` });
+        say(state, { text: `${state.players[action.player]!.name} uses ${nameOf(state, action.card)}.`, actor: action.player });
         use(action.card);
         t.beginDone.push(action.card);
       }
@@ -358,7 +362,8 @@ export function applyAction(input: GameState, action: Action): GameState {
       state.limbo.push(action.card);
       const answering = pend.stackIndex;
       state.stack.push({ card: action.card, player: action.player, answering });
-      state.log.push({ turn: state.turn.number, text: `${state.players[action.player]!.name} plays ${nameOf(state, action.card)}!` });
+      say(state, { text: `${state.players[action.player]!.name} plays ${nameOf(state, action.card)}!`, actor: action.player });
+      moved(state, action.card, { zone: 'hand', player: action.player }, { zone: 'limbo' }, 'neigh', action.player);
       openNeighWindow(state, state.stack.length - 1);
       break;
     }
@@ -388,8 +393,9 @@ export function applyAction(input: GameState, action: Action): GameState {
       {
         const who = state.players[action.player]!.name;
         const onto = targetPlayer === undefined ? '' : targetPlayer === action.player ? ' on themselves' : ` on ${state.players[targetPlayer]!.name}`;
-        state.log.push({ turn: state.turn.number, text: `${who} plays ${nameOf(state, action.card)}${onto}.`, ...(targetPlayer !== undefined && targetPlayer !== action.player ? { affects: [targetPlayer] } : {}) });
+        say(state, { text: `${who} plays ${nameOf(state, action.card)}${onto}.`, actor: action.player, ...(targetPlayer !== undefined && targetPlayer !== action.player ? { affects: [targetPlayer] } : {}) });
       }
+      moved(state, action.card, { zone: 'hand', player: action.player }, { zone: 'limbo' }, 'play', action.player);
       openNeighWindow(state, 0);
       break;
     }

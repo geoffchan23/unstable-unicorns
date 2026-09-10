@@ -1,6 +1,7 @@
 import type {
-  Answer, EffectHandlerName, GameState, InstanceId, PendingEffect, PlayerId, Prompt, RemovalEvent, RemovalKind,
+  Answer, EffectHandlerName, GameState, InstanceId, MoveHow, PendingEffect, PlayerId, Prompt, RemovalEvent, RemovalKind, Zone,
 } from './types';
+import { emit, moved, say } from './events';
 import { shuffleInPlace, randomInt } from './rng';
 import { cloneState } from './clone';
 import {
@@ -61,7 +62,7 @@ export class Ctx {
   private nothingToChoose(player: PlayerId, empty?: string): void {
     const src = this.source();
     const who = `${this.state.players[player]!.name}'s ${src !== undefined ? nameOf(this.state, src) : 'effect'}`;
-    this.state.log.push({ turn: this.state.turn.number, text: `${who}: ${empty ?? 'nothing to choose from.'}`, notice: true });
+    say(this.state, { text: `${who}: ${empty ?? 'nothing to choose from.'}`, notice: true, actor: player });
   }
 
   chooseCard(
@@ -110,8 +111,13 @@ export class Ctx {
 
   // ---------- logging ----------
 
-  log(text: string, affects?: PlayerId[]): void {
-    this.state.log.push({ turn: this.state.turn.number, text, ...(affects && affects.length ? { affects } : {}) });
+  /** a log line, spoken by `actor` (the effect's controller unless told otherwise). */
+  log(text: string, affects?: PlayerId[], actor: PlayerId = this.controller): void {
+    say(this.state, { text, affects, actor });
+  }
+
+  private moved(card: InstanceId, from: Zone, to: Zone, how: MoveHow, actor: PlayerId = this.controller): void {
+    moved(this.state, card, from, to, how, actor);
   }
 
   name(card: InstanceId): string {
@@ -138,17 +144,19 @@ export class Ctx {
 
   // ---------- zones ----------
 
-  private pluck(card: InstanceId): void {
+  /** take the card out of whatever zone holds it; returns that zone. */
+  private pluck(card: InstanceId): Zone {
     const s = this.state;
     for (const p of s.players) {
       let i = p.hand.indexOf(card);
-      if (i >= 0) { p.hand.splice(i, 1); return; }
+      if (i >= 0) { p.hand.splice(i, 1); return { zone: 'hand', player: p.id }; }
       i = p.stable.indexOf(card);
-      if (i >= 0) { p.stable.splice(i, 1); return; }
+      if (i >= 0) { p.stable.splice(i, 1); return { zone: 'stable', player: p.id }; }
     }
-    for (const zone of [s.deck, s.discard, s.nursery, s.limbo]) {
+    const piles = [['deck', s.deck], ['discard', s.discard], ['nursery', s.nursery], ['limbo', s.limbo]] as const;
+    for (const [name, zone] of piles) {
       const i = zone.indexOf(card);
-      if (i >= 0) { zone.splice(i, 1); return; }
+      if (i >= 0) { zone.splice(i, 1); return { zone: name }; }
     }
     throw new Error(`pluck: card ${card} not found`);
   }
@@ -245,20 +253,45 @@ export class Ctx {
       this.state.players[player]!.hand.push(c);
       drawn.push(c);
     }
-    if (drawn.length) this.log(`${this.playerName(player)} draws ${drawn.length} card${drawn.length === 1 ? '' : 's'}.`);
+    if (drawn.length) this.log(`${this.playerName(player)} draws ${drawn.length} card${drawn.length === 1 ? '' : 's'}.`, undefined, player);
+    for (const c of drawn) this.moved(c, { zone: 'deck' }, { zone: 'hand', player }, 'draw', player);
     return drawn;
   }
 
   reshuffleDiscardIntoDeck(): void {
     if (this.state.discard.length === 0) return;
+    const count = this.state.discard.length;
     this.state.deck.push(...this.state.discard);
     this.state.discard = [];
     shuffleInPlace(this.state, this.state.deck);
     this.log('The discard pile is shuffled into the deck.');
+    emit(this.state, { kind: 'shuffle', count });
   }
 
   shuffleDeck(): void {
     shuffleInPlace(this.state, this.state.deck);
+  }
+
+  /** two players trade hands (Unfair Bargain). */
+  swapHands(a: PlayerId, b: PlayerId): void {
+    const pa = this.state.players[a]!; const pb = this.state.players[b]!;
+    const ha = pa.hand; const hb = pb.hand;
+    pa.hand = hb; pb.hand = ha;
+    for (const c of ha) this.moved(c, { zone: 'hand', player: a }, { zone: 'hand', player: b }, 'move');
+    for (const c of hb) this.moved(c, { zone: 'hand', player: b }, { zone: 'hand', player: a }, 'move');
+  }
+
+  /** a player's whole hand and the discard pile go into the deck, which is then shuffled (Shake Up). */
+  shuffleHandAndDiscardIntoDeck(player: PlayerId): void {
+    const s = this.state;
+    const hand = s.players[player]!.hand;
+    for (const c of hand) this.moved(c, { zone: 'hand', player }, { zone: 'deck' }, 'deckTop', player);
+    s.deck.push(...hand);
+    s.players[player]!.hand = [];
+    const count = s.discard.length;
+    s.deck.push(...s.discard);
+    s.discard = [];
+    if (count) emit(s, { kind: 'shuffle', count });
   }
 
   /** move a specific card from a hand to the discard pile. */
@@ -267,7 +300,8 @@ export class Ctx {
     if (i < 0) throw new Error('discardCard: not in hand');
     this.hand(player).splice(i, 1);
     this.state.discard.push(card);
-    this.log(`${this.playerName(player)} discards ${this.name(card)}.`);
+    this.log(`${this.playerName(player)} discards ${this.name(card)}.`, undefined, player);
+    this.moved(card, { zone: 'hand', player }, { zone: 'discard' }, 'discard', player);
   }
 
   /** player chooses and discards up to n cards (as many as they hold). Returns the count. */
@@ -290,24 +324,29 @@ export class Ctx {
     return hand[randomInt(this.state, hand.length)]!;
   }
 
-  addToHand(card: InstanceId, player: PlayerId): void {
-    this.pluck(card);
+  /** put a card into a hand from anywhere (a search, a return, a take). */
+  addToHand(card: InstanceId, player: PlayerId, how?: MoveHow): void {
+    const from = this.pluck(card);
     this.hand(player).push(card);
+    this.moved(card, from, { zone: 'hand', player }, how ?? (from.zone === 'deck' ? 'search' : from.zone === 'hand' ? 'move' : 'return'));
   }
 
-  toDiscard(card: InstanceId): void {
-    this.pluck(card);
+  toDiscard(card: InstanceId, how?: MoveHow): void {
+    const from = this.pluck(card);
     this.state.discard.push(card);
+    this.moved(card, from, { zone: 'discard' }, how ?? (from.zone === 'limbo' ? 'resolve' : 'discard'));
   }
 
   toDeckTop(card: InstanceId): void {
-    this.pluck(card);
+    const from = this.pluck(card);
     this.state.deck.push(card);
+    this.moved(card, from, { zone: 'deck' }, 'deckTop');
   }
 
   toNursery(card: InstanceId): void {
-    this.pluck(card);
+    const from = this.pluck(card);
     this.state.nursery.push(card);
+    this.moved(card, from, { zone: 'nursery' }, 'return');
   }
 
   /** search the deck for a card matching pred; player picks one; it goes to hand; deck shuffled. */
@@ -315,8 +354,8 @@ export class Ctx {
     const options = this.state.deck.filter(pred);
     const pick = this.chooseCard(player, options, message, { optional: true });
     if (pick !== null) {
-      this.addToHand(pick, player);
-      this.log(`${this.playerName(player)} takes ${this.name(pick)} from the deck.`);
+      this.log(`${this.playerName(player)} takes ${this.name(pick)} from the deck.`, undefined, player);
+      this.addToHand(pick, player, 'search');
     }
     this.shuffleDeck();
     return pick;
@@ -340,7 +379,7 @@ export class Ctx {
       // leaving the old stable (steal/move)
       this.fireLeaveTriggers(card, fromOwner, false);
     }
-    this.pluck(card);
+    const fromZone = this.pluck(card);
     this.stable(player).push(card);
     if (reason === 'steal' && fromOwner !== null && fromOwner !== player) {
       this.log(`${this.playerName(player)} steals ${this.name(card)} from ${this.playerName(fromOwner)}${this.source() !== undefined ? ` with ${this.name(this.source()!)}` : ''}.`, [fromOwner]);
@@ -349,8 +388,9 @@ export class Ctx {
       this.log(`${this.playerName(this.controller)} plays ${this.name(card)} into ${this.playerName(player)}'s stable.`, [player]);
     } else {
       const verb = reason === 'play' ? 'plays' : 'brings';
-      this.log(`${this.playerName(player)} ${verb} ${this.name(card)} into their stable.`);
+      this.log(`${this.playerName(player)} ${verb} ${this.name(card)} into their stable.`, undefined, reason === 'play' ? this.controller : player);
     }
+    this.moved(card, fromZone, { zone: 'stable', player }, reason === 'play' ? 'resolve' : reason);
 
     // the card's own on-enter trigger
     const def = defOf(this.state, card);
@@ -404,6 +444,7 @@ export class Ctx {
     // 1. immunities (pure)
     if (selfActive && selfDef.immuneTo?.(this.state, ev)) {
       this.log(`${this.name(card)} cannot be ${verbOf(kind)}.`);
+      emit(this.state, { kind: 'protected', card, by: null });
       return false;
     }
     for (const c of this.stable(owner)) {
@@ -411,6 +452,7 @@ export class Ctx {
       const d = defOf(this.state, c);
       if (d.protectsOthers && effectsActive(this.state, c) && d.protectsOthers(this.state, ev)) {
         this.log(`${this.name(card)} is protected by ${this.name(c)}.`);
+        emit(this.state, { kind: 'protected', card, by: c });
         return false;
       }
     }
@@ -429,10 +471,11 @@ export class Ctx {
     this.state.discard.push(card);
     if (ev.actor !== owner) {
       const by = ev.source !== undefined ? `${this.playerName(ev.actor)}'s ${this.name(ev.source)}` : this.playerName(ev.actor);
-      this.log(`${by} ${kind === 'destroy' ? 'destroys' : 'sacrifices'} ${this.playerName(owner)}'s ${this.name(card)}.`, [owner]);
+      this.log(`${by} ${kind === 'destroy' ? 'destroys' : 'sacrifices'} ${this.playerName(owner)}'s ${this.name(card)}.`, [owner], ev.actor);
     } else {
-      this.log(`${this.playerName(owner)} ${kind === 'destroy' ? 'destroys' : 'sacrifices'} their ${this.name(card)}.`);
+      this.log(`${this.playerName(owner)} ${kind === 'destroy' ? 'destroys' : 'sacrifices'} their ${this.name(card)}.`, undefined, owner);
     }
+    this.moved(card, { zone: 'stable', player: owner }, { zone: 'discard' }, kind === 'returnToHand' ? 'return' : kind, ev.actor);
     checkWin(this.state);
     return true;
   }
@@ -456,9 +499,11 @@ export class Ctx {
     if (dest === 'hand') {
       this.hand(owner).push(card);
       this.log(by ? `${by}${this.playerName(owner)}'s ${this.name(card)} to their hand.` : `${this.name(card)} returns to ${this.playerName(owner)}'s hand.`, hit);
+      this.moved(card, { zone: 'stable', player: owner }, { zone: 'hand', player: owner }, 'return');
     } else {
       this.state.nursery.push(card);
       this.log(by ? `${by}${this.playerName(owner)}'s ${this.name(card)} to the Nursery.` : `${this.name(card)} returns to the Nursery.`, hit);
+      this.moved(card, { zone: 'stable', player: owner }, { zone: 'nursery' }, 'return');
     }
     checkWin(this.state);
   }
@@ -515,7 +560,8 @@ export function checkWin(state: GameState): void {
   for (const p of playersFrom(state, state.turn.player)) {
     if (unicornCount(state, p) >= state.unicornsToWin) {
       state.winner = p;
-      state.log.push({ turn: state.turn.number, text: `${state.players[p]!.name} wins with ${unicornCount(state, p)} Unicorns!` });
+      say(state, { text: `${state.players[p]!.name} wins with ${unicornCount(state, p)} Unicorns!`, actor: p });
+      emit(state, { kind: 'win', player: p });
       throw new GameWon(p);
     }
   }

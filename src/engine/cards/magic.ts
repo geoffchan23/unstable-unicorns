@@ -70,10 +70,8 @@ defineCard('unfair-bargain', {
     const me = ctx.controller;
     const p = ctx.choosePlayer(me, ctx.others(), 'Unfair Bargain: trade hands with which player?');
     if (p === null) return;
-    const a = ctx.state.players[me]!;
-    const b = ctx.state.players[p]!;
-    [a.hand, b.hand] = [b.hand, a.hand];
     ctx.log(`${ctx.playerName(me)} trades hands with ${ctx.playerName(p)} (Unfair Bargain).`, [p]);
+    ctx.swapHands(me, p);
   },
 });
 
@@ -118,13 +116,10 @@ defineCard('good-deal', {
 defineCard('shake-up', {
   onPlayMagic(ctx) {
     const me = ctx.controller;
-    const s = ctx.state;
-    s.deck.push(...s.players[me]!.hand, ...s.discard);
-    s.players[me]!.hand = [];
-    s.discard = [];
+    ctx.log(`${ctx.playerName(me)} shuffles their hand, the discard pile, and Shake Up into the deck.`);
+    ctx.shuffleHandAndDiscardIntoDeck(me);
     ctx.toDeckTop(ctx.self);
     ctx.shuffleDeck();
-    ctx.log(`${ctx.playerName(me)} shuffles their hand, the discard pile, and Shake Up into the deck.`);
     ctx.draw(me, 5);
   },
 });

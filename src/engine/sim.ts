@@ -2,7 +2,7 @@ import './cards';
 import { createGame, applyAction } from './game';
 import { playersToAct, randomBotAction } from './bot';
 import { totalInstances, unicornCount, typeOf } from './queries';
-import type { GameState } from './types';
+import type { GameEvent, GameState, InstanceId, Zone } from './types';
 
 export interface SimResult {
   seed: number;
@@ -48,6 +48,43 @@ export function checkInvariants(state: GameState, expectedTotal: number): void {
   }
 }
 
+/**
+ * The event stream must explain every zone change: replaying the fresh `move`/`shuffle` events onto the
+ * zones of `prev` has to reproduce the zones of `next` (deck compared as a set: shuffles reorder it).
+ */
+export function checkEventsExplain(prev: GameState, next: GameState): void {
+  const zones = (s: GameState) => ({
+    deck: [...s.deck], discard: [...s.discard], nursery: [...s.nursery], limbo: [...s.limbo],
+    hand: s.players.map((p) => [...p.hand]), stable: s.players.map((p) => [...p.stable]),
+  });
+  const model = zones(prev);
+  const pile = (z: Zone): InstanceId[] => z.zone === 'hand' ? model.hand[z.player]! : z.zone === 'stable' ? model.stable[z.player]! : model[z.zone];
+  const fresh = next.events.slice(prev.events.length);
+  fresh.forEach((e: GameEvent, i) => {
+    if (e.seq !== prev.events.length + i) throw new Error(`event seq ${e.seq} out of order`);
+    if (e.kind === 'shuffle') {
+      if (model.discard.length !== e.count) throw new Error(`shuffle count ${e.count} != discard ${model.discard.length}`);
+      model.deck.push(...model.discard); model.discard = [];
+    }
+    if (e.kind !== 'move') return;
+    if (e.card === null) throw new Error('engine events never hide the card');
+    const from = pile(e.from);
+    const i0 = from.indexOf(e.card);
+    if (i0 < 0) throw new Error(`event ${e.seq}: card ${e.card} (${next.cards[e.card]!.def}) is not in ${JSON.stringify(e.from)} (${e.how})`);
+    from.splice(i0, 1);
+    pile(e.to).push(e.card);
+  });
+  const want = zones(next);
+  const same = (a: InstanceId[], b: InstanceId[]) => a.length === b.length && a.every((x, i) => x === b[i]);
+  const sorted = (a: InstanceId[]) => [...a].sort((x, y) => x - y);
+  if (!same(sorted(model.deck), sorted(want.deck))) throw new Error('events do not explain the deck');
+  for (const z of ['discard', 'nursery', 'limbo'] as const) if (!same(model[z], want[z])) throw new Error(`events do not explain ${z}: ${model[z]} vs ${want[z]}`);
+  next.players.forEach((p) => {
+    if (!same(model.hand[p.id]!, want.hand[p.id]!)) throw new Error(`events do not explain hand of ${p.name}: ${model.hand[p.id]} vs ${want.hand[p.id]}`);
+    if (!same(model.stable[p.id]!, want.stable[p.id]!)) throw new Error(`events do not explain stable of ${p.name}: ${model.stable[p.id]} vs ${want.stable[p.id]}`);
+  });
+}
+
 export function simulate(seed: number, players = 3, maxActions = 5000): SimResult {
   const names = Array.from({ length: players }, (_, i) => `P${i + 1}`);
   let state = createGame({ players: names, seed });
@@ -61,7 +98,9 @@ export function simulate(seed: number, players = 3, maxActions = 5000): SimResul
     const who = actors[Math.floor(rand() * actors.length)]!;
     const action = randomBotAction(state, who, rand);
     if (!action) throw new Error(`stuck: no legal action for ${who}`);
-    state = applyAction(state, action);
+    const next = applyAction(state, action);
+    checkEventsExplain(state, next);
+    state = next;
     actions++;
     checkInvariants(state, expectedTotal);
     if (actions > maxActions) throw new Error(`game did not finish in ${maxActions} actions`);
