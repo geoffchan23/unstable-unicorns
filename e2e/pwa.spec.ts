@@ -21,7 +21,7 @@ test('manifest, service worker, offline shell', async ({ page, context }) => {
   await page.reload();
   await expect(page.getByRole('button', { name: 'Play on this device' })).toBeVisible();
   await page.getByRole('button', { name: 'Play on this device' }).click();
-  await page.getByRole('button', { name: 'Deal me in' }).click();
+  await page.getByRole('button', { name: 'Start Game' }).click();
   await expect(page.getByTestId('topbar')).toBeVisible();
   await context.setOffline(false);
 });

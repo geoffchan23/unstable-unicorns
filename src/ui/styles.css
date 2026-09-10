@@ -178,7 +178,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .lede { margin: 0; color: var(--ink-2); max-width: 60ch; }
 .home { min-height: 100dvh; align-content: center; justify-items: center; text-align: center; padding-top: 40px; }
 .home .brand { justify-items: center; }
-.home .big-choices { display: grid; gap: 12px; width: 100%; max-width: 380px; }
+.home .big-choices { display: grid; grid-template-columns: 1fr; justify-content: stretch; gap: 12px; width: 100%; max-width: 380px; }
 .home .big-choices .choice, .home .big-choices .ghost { width: 100%; text-align: center; font-size: 18px; padding: 16px 22px 17px; }
 .home .big-choices .choice:not(.primary) { background: var(--panel); border: 2px solid var(--line); box-shadow: var(--lift); }
 .home .big-choices .choice:not(.primary):hover { border-color: var(--ink-2); }
@@ -202,7 +202,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .toggle button { background: transparent; border: 0; padding: 7px 12px; cursor: pointer; color: var(--ink-2); font-weight: 700; }
 .toggle button.on { background: var(--btn); color: #fff; font-weight: 800; }
 .add { justify-self: start; }
-.setup-foot { display: grid; gap: 12px; justify-items: start; }
+.setup-foot { display: grid; gap: 12px; justify-items: center; text-align: center; }
 .seed { display: flex; gap: 8px; align-items: center; color: var(--ink-2); font-weight: 700; }
 .seed input { width: 140px; }
 .hint { margin: 0; color: var(--ink-2); font-size: 14px; }
@@ -223,7 +223,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .sheet h2 { font-size: 22px; line-height: 1.1; }
 .sheet-sub { margin: 0; color: var(--ink-2); font-size: 14px; font-weight: 700; }
 .sheet .row.wrap { gap: 8px; }
-.choices { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .choice { background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 10px 16px; cursor: pointer; font-weight: 800; color: var(--ink); }
 .choice:not(:disabled):hover { border-color: var(--ink-2); }
 .choice.neigh { --b: var(--neigh); --e: var(--neigh-edge); background: var(--b); color: #fff; border-color: transparent; box-shadow: 0 4px 0 var(--e); text-transform: uppercase; font-family: Fredoka, sans-serif; font-weight: 700; font-stretch: 85%; font-variation-settings: "wdth" 85; font-size: 17px; padding: 10px 20px 11px; }
@@ -293,7 +293,7 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .begin-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .begin-list li { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; padding: 10px; background: var(--ground-2); border-radius: 12px; }
 .begin-text { grid-column: 1 / -1; font-size: 13px; font-weight: 700; font-style: italic; color: var(--ink-2); }
-.begin-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; justify-self: end; }
+.begin-actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; justify-self: center; }
 .must { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--warn); }
 .sheet-wrap.above { z-index: 14; }
 

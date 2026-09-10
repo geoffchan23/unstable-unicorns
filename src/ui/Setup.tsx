@@ -47,7 +47,7 @@ export function Setup({ onStart, onBack }: { onStart: (seats: Seat[], seed: numb
       <section className="setup-foot">
         <p className="hint">{seats.length === 2 ? 'Two players: the official 2-player deck is used (32 cards removed, one Neigh each to start).' : `${seats.length} players, ${humans} human.`}{seed && ` Seed ${seed}.`}</p>
         <button type="button" className="primary big go" onClick={() => onStart(seats, seed ? Number(seed) : Math.floor(Math.random() * 1e9))}>
-          Deal me in
+          Start Game
         </button>
       </section>
     </main>

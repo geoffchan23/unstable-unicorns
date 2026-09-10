@@ -119,6 +119,13 @@ export function GameScreen({
 
   const winner = !busy ? live.winner : null;
 
+  // an error toast (often a stale tap after the game moved on) clears itself
+  useEffect(() => {
+    if (!error) return;
+    const id = setTimeout(onDismissError, 3500);
+    return () => clearTimeout(id);
+  }, [error, onDismissError]);
+
   return (
     <div className={`tbl ${busy ? 'busy' : ''}`}>
       <header className="topbar" data-testid="topbar">

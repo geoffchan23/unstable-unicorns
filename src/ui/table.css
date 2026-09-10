@@ -203,15 +203,15 @@
   .tile-md { --tw: 76px; }
   .my-stable { min-height: 96px; }
   .tseat-stable { min-height: 90px; gap: 5px; }
-  .centre { min-height: 0; padding: 14px 20px; gap: 18px; }
-  .pile-stack { width: 96px; height: 165px; }
-  .pile .tile-lg { --tw: 96px; }
+  .centre { min-height: 160px; padding: 12px 20px; gap: 18px; }
+  .pile-stack { width: 76px; height: 130px; }
+  .pile .tile-lg { --tw: 76px; }
   .pile-count { font-size: 14px; }
   .pile .pile-stack::before { font-size: 11px; top: -18px; }
   .stage { min-height: 0; }
-  .stage-base { --z: 0.95; }
-  .stage-neigh { --z: 0.6; }
-  .stage-chain { width: calc(168px * 0.6 + 36px); height: calc(288px * 0.6 + 30px); }
+  .stage-base { --z: 0.62; }
+  .stage-neigh { --z: 0.45; }
+  .stage-chain { width: calc(168px * 0.45 + 30px); height: calc(288px * 0.45 + 24px); }
   .stage-neigh { left: calc(var(--i) * 14px); top: calc(var(--i) * 14px); }
   .stamp { font-size: 64px; }
   .bubble { font-size: 14px; max-width: 240px; }
@@ -221,6 +221,11 @@
 @media (min-width: 720px) and (min-height: 1000px) {
   .centre { min-height: 250px; }
   .stage { min-height: 220px; }
+  .pile-stack { width: 96px; height: 165px; }
+  .pile .tile-lg { --tw: 96px; }
+  .stage-base { --z: 0.95; }
+  .stage-neigh { --z: 0.6; }
+  .stage-chain { width: calc(168px * 0.6 + 36px); height: calc(288px * 0.6 + 30px); }
 }
 @media (min-width: 1000px) and (min-height: 1000px) {
   .pile-stack { width: 112px; height: 192px; }
