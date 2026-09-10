@@ -117,3 +117,39 @@ test('dragging a card onto the table plays it, and a cancelled pointer does not'
   expect(played.ok).toBe(true);
   await expect.poll(handNames, { timeout: 5000 }).not.toContain(played.name);
 });
+
+test('a touch drag plays the card too (the browser hands the gesture over differently than a mouse)', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'raw touch events are dispatched through CDP');
+  await page.goto('./?seed=4&motion=off');
+  await page.getByRole('button', { name: 'Play on this device' }).click();
+  await page.getByRole('button', { name: 'Start Game' }).click();
+  await expect(page.getByTestId('draw')).toBeVisible();
+
+  const spot = await page.evaluate(() => {
+    const slot = [...document.querySelectorAll('[data-testid=hand] .fan-slot.can')].pop() as HTMLElement;
+    const r = slot.getBoundingClientRect();
+    const centre = document.querySelector('.centre')!.getBoundingClientRect();
+    return {
+      card: slot.querySelector('button')!.getAttribute('aria-label')!,
+      from: { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + 40) },
+      to: { x: Math.round(centre.left + centre.width / 2), y: Math.round(centre.top + centre.height / 2) },
+    };
+  });
+
+  // a real finger, not a mouse: touch gives the element implicit pointer capture, which the drag must survive
+  const cdp = await page.context().newCDPSession(page);
+  const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', x: number, y: number) =>
+    cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
+
+  await touch('touchStart', spot.from.x, spot.from.y);
+  for (let i = 1; i <= 12; i++) {
+    await touch('touchMove', spot.from.x + ((spot.to.x - spot.from.x) * i) / 12, spot.from.y + ((spot.to.y - spot.from.y) * i) / 12);
+    await page.waitForTimeout(16);
+  }
+  await expect(page.locator('.fan-slot.lifted')).toHaveCount(1);
+  await expect(page.locator('.centre.drop-over')).toHaveCount(1);
+
+  await touch('touchEnd', spot.to.x, spot.to.y);
+  await expect.poll(() => page.getByTestId('hand').locator('button.card').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label'))), { timeout: 5000 })
+    .not.toContain(spot.card);
+});

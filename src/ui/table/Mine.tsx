@@ -166,6 +166,17 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
     dragOverRef.current(null, false);
     setDrag(null);
   };
+  /**
+   * There is deliberately no `lostpointercapture` handler. Touch input gives the element implicit
+   * pointer capture at pointerdown, so `setPointerCapture` below *transfers* it and fires
+   * `lostpointercapture` as a matter of course; treating that as "the pointer was taken away" aborted
+   * every touch drag. A pointer genuinely taken away arrives as `pointercancel` or a window blur.
+   */
+  // a card that leaves my hand mid-drag (stolen, discarded by someone's effect) takes the gesture with it
+  useEffect(() => {
+    if (drag && !hand.includes(drag.card)) endDrag();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hand, drag]);
   // the window may take the pointer away without telling this element (a blur, a gesture takeover)
   useEffect(() => {
     const onCancel = () => endDrag();
@@ -197,7 +208,6 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={endDrag}
-            onLostPointerCapture={() => { if (press.current?.mode === 'lift') endDrag(); }}
             onDragStart={(e) => e.preventDefault()}
             onClickCapture={(e) => { if (suppressClick.current) { e.stopPropagation(); e.preventDefault(); } }}
           >
