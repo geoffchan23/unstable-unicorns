@@ -6,3 +6,4 @@ assets/art/
 test-results/
 playwright-report/
 screens/
+.playwright-mcp/
