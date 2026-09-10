@@ -90,7 +90,7 @@ export function LocalGame({ seats, seed, resume, onQuit }: { seats: Seat[]; seed
     <GameScreen view={view} legal={legal} seats={seatInfos} onAction={dispatch} onQuit={quit} seed={seed} report={report}
       error={error} onDismissError={() => setError(null)} youLabel={humans.length > 1 ? '' : ' (you)'}>
       {handoffTo !== null && (
-        <div className="overlay">
+        <div className="overlay handoff">
           <div className="overlay-box">
             <h2>Pass the device to {state.players[handoffTo]!.name}</h2>
             <p>{state.players[handoffTo]!.name} has a decision to make. Tap when only they can see the screen.</p>

@@ -1,5 +1,5 @@
 // My side of the table: avatar + stable thumbnails on one row, the hand as a fan below, the draw button.
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CardData, InstanceId } from '../../engine/types';
 import type { PlayerView } from '../../engine/view';
 import type { SeatInfo } from '../seats';
@@ -150,6 +150,19 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
     setDrag(null);
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* already released */ }
   };
+  // if the pointer is lost mid-drag (the window blurs, a native drag or gesture takes over), drop the drag
+  const cancelDrag = () => {
+    if (!press.current && !drag) return;
+    press.current = null;
+    onDragOver(null, false);
+    setDrag(null);
+  };
+  useEffect(() => {
+    window.addEventListener('blur', cancelDrag);
+    window.addEventListener('pointercancel', cancelDrag);
+    return () => { window.removeEventListener('blur', cancelDrag); window.removeEventListener('pointercancel', cancelDrag); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drag]);
 
   return (
     <div className={`fan ${n > 0 ? '' : 'empty'}`} data-testid="hand" ref={(el) => { (ref as React.MutableRefObject<HTMLDivElement | null>).current = el; anchors.ref(zoneKey({ zone: 'hand', player: me }))(el); }} style={{ '--cw': `${cw}px` } as React.CSSProperties}>
@@ -173,6 +186,8 @@ function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, d
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
+            onLostPointerCapture={() => { if (press.current?.mode === 'lift') cancelDrag(); }}
+            onDragStart={(e) => e.preventDefault()}
             onClickCapture={(e) => { if (suppressClick.current) { e.stopPropagation(); e.preventDefault(); } }}
           >
             <div className="scaled"><CardView data={data(c)} onClick={() => onOpenCard(c)} playable={can} dim={!can} /></div>

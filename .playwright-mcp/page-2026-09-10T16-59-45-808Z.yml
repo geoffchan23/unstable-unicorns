@@ -1,0 +1,92 @@
+- generic [ref=f6e3]:
+  - banner [ref=f6e4]:
+    - button "Quit" [ref=f6e5] [cursor=pointer]
+    - generic [ref=f6e6]: Turn 3 · first to 7
+    - button "Turn history" [ref=f6e7] [cursor=pointer]: History
+  - region "Other players" [ref=f6e8]:
+    - generic [ref=f6e9]:
+      - 'button "Sprinkles: 2 unicorns, 5 cards in hand. Open stable" [ref=f6e10] [cursor=pointer]':
+        - generic [ref=f6e12]: 🦄
+        - generic [ref=f6e13]:
+          - generic [ref=f6e14]: Sprinkles
+          - generic [aria-hidden] [ref=f6e15]:
+            - generic [ref=f6e16]: "2"
+            - generic [ref=f6e17]: /7
+        - emphasis [ref=f6e24]: "5"
+      - generic [ref=f6e25]:
+        - button "Baby Unicorn (Yellow)" [ref=f6e26] [cursor=pointer]
+        - button "Broken Stable" [ref=f6e28] [cursor=pointer]
+        - button "Classy Narwhal" [ref=f6e30] [cursor=pointer]
+    - generic [ref=f6e32]:
+      - 'button "Glitterhoof: 1 unicorns, 5 cards in hand. Open stable" [ref=f6e33] [cursor=pointer]':
+        - generic [ref=f6e35]: 🌈
+        - generic [ref=f6e36]:
+          - generic [ref=f6e37]: Glitterhoof
+          - generic [aria-hidden] [ref=f6e38]:
+            - generic [ref=f6e39]: "1"
+            - generic [ref=f6e40]: /7
+        - emphasis [ref=f6e47]: "5"
+      - button "Baby Unicorn (Orange)" [ref=f6e49] [cursor=pointer]
+  - region "Table" [ref=f6e51]:
+    - 'generic "Deck: 95 cards" [ref=f6e52]':
+      - generic [ref=f6e53]: deck
+      - generic [ref=f6e57]: "95"
+    - generic [ref=f6e59]:
+      - button "Necromancer Unicorn" [ref=f6e62] [cursor=pointer]:
+        - generic [ref=f6e69]:
+          - generic [ref=f6e70]: "Card Type: Unicorn (Magical)"
+          - generic [ref=f6e71]: When this card enters your Stable, you may DISCARD 2 Unicorn cards, then bring a Unicorn card from the discard pile into your Stable.
+      - button "Neigh" [ref=f6e75] [cursor=pointer]:
+        - generic [ref=f6e83]:
+          - generic [ref=f6e84]: "Card Type: Instant"
+          - generic [ref=f6e85]: Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile.
+      - generic [ref=f6e86]: 1 Neigh on it · it's Neigh'd so far · waiting on Player
+    - 'generic "Discard pile: 0 cards" [ref=f6e87]':
+      - generic [ref=f6e88]: discard
+      - generic [ref=f6e90]: "0"
+    - 'generic "Nursery: 10 baby unicorns" [ref=f6e91]':
+      - generic [ref=f6e92]:
+        - text: nursery
+        - button "Baby Unicorn (Red)" [ref=f6e93] [cursor=pointer]
+      - generic [ref=f6e95]: "10"
+  - region "You" [ref=f6e96]:
+    - generic [ref=f6e97]:
+      - button "Open your stable" [ref=f6e98] [cursor=pointer]:
+        - generic [ref=f6e100]: ⚡
+        - generic [ref=f6e101]: Player (you)
+        - generic [ref=f6e102]:
+          - generic [ref=f6e103]: "1"
+          - generic [ref=f6e104]: /7
+      - button "Baby Narwhal" [ref=f6e106] [cursor=pointer]
+    - generic [ref=f6e108]: 5 in hand
+    - generic [ref=f6e110]:
+      - button "Nanny Cam" [ref=f6e113] [cursor=pointer]:
+        - generic [ref=f6e119]:
+          - generic [ref=f6e120]: "Card Type: Downgrade"
+          - generic [ref=f6e121]: Your hand must be visible to all players.
+      - button "Pandamonium" [ref=f6e124] [cursor=pointer]:
+        - generic [ref=f6e130]:
+          - generic [ref=f6e131]: "Card Type: Downgrade"
+          - generic [ref=f6e132]: All of your Unicorns are considered Pandas. Cards that affect Unicorn cards do not affect your Pandas.
+      - button "Unicorn Poison" [ref=f6e135] [cursor=pointer]:
+        - generic [ref=f6e141]:
+          - generic [ref=f6e142]: "Card Type: Magic"
+          - generic [ref=f6e143]: DESTROY a Unicorn card.
+      - button "Chainsaw Unicorn" [ref=f6e146] [cursor=pointer]:
+        - generic [ref=f6e153]:
+          - generic [ref=f6e154]: "Card Type: Unicorn (Magical)"
+          - generic [ref=f6e155]: When this card enters your Stable, you may DESTROY an Upgrade card or SACRIFICE a Downgrade card.
+      - button "Greedy Flying Unicorn" [ref=f6e158] [cursor=pointer]:
+        - generic [ref=f6e165]:
+          - generic [ref=f6e166]: "Card Type: Unicorn (Magical)"
+          - generic [ref=f6e167]: When this card enters your Stable, DRAW a card. If this card is sacrificed or destroyed, return it to your hand.
+  - dialog "Sprinkles played Neigh on Necromancer Unicorn":
+    - generic [ref=f6e168]:
+      - generic [ref=f6e169]:
+        - heading "Sprinkles played Neigh on Necromancer Unicorn" [level=2] [ref=f6e170]
+        - button "Hide for now" [ref=f6e171] [cursor=pointer]: ×
+      - paragraph [ref=f6e172]: If nobody responds, Glitterhoof's Necromancer Unicorn is Neigh'd and goes to the discard pile.
+      - generic [ref=f6e173]:
+        - button "Necromancer Unicorn" [ref=f6e174] [cursor=pointer]
+        - button "Neigh" [ref=f6e180] [cursor=pointer]
+      - button "OK" [ref=f6e187] [cursor=pointer]

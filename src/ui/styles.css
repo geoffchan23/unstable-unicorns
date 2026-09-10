@@ -140,6 +140,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
   flex: 1; text-align: center; font-family: Fredoka, sans-serif; font-weight: 700; font-stretch: 80%; font-variation-settings: "wdth" 80;
   text-transform: uppercase; font-size: 13px; line-height: 1.05; letter-spacing: 0.01em; padding-right: 24px; /* balance the badge */
 }
+.card img { -webkit-user-drag: none; user-drag: none; pointer-events: none; }
 .card .art { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; display: block; background: #f1eef5; border: 1px solid rgba(0,0,0,0.06); }
 .card .art.placeholder { display: grid; place-items: center; font-family: Fredoka, sans-serif; font-size: 30px; font-weight: 700; color: var(--type); background: color-mix(in srgb, var(--type) 16%, #fff); }
 .card-body { display: grid; gap: 3px; padding-bottom: 2px; flex: 1; min-height: 0; align-content: start; }
@@ -222,7 +223,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .sheet h2 { font-size: 22px; line-height: 1.1; }
 .sheet-sub { margin: 0; color: var(--ink-2); font-size: 14px; font-weight: 700; }
 .sheet .row.wrap { gap: 8px; }
-.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .choice { background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 10px 16px; cursor: pointer; font-weight: 800; color: var(--ink); }
 .choice:not(:disabled):hover { border-color: var(--ink-2); }
 .choice.neigh { --b: var(--neigh); --e: var(--neigh-edge); background: var(--b); color: #fff; border-color: transparent; box-shadow: 0 4px 0 var(--e); text-transform: uppercase; font-family: Fredoka, sans-serif; font-weight: 700; font-stretch: 85%; font-variation-settings: "wdth" 85; font-size: 17px; padding: 10px 20px 11px; }

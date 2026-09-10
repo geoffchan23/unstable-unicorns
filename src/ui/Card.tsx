@@ -81,7 +81,7 @@ export function CardView({
   const inner = compact ? (
     <>
       <span className="type-badge" aria-hidden="true"><TypeGlyph type={data.type} /></span>
-      {art && <img className="thumb" src={art} alt="" />}
+      {art && <img className="thumb" src={art} alt="" draggable={false} />}
       <span className="name">{data.name}</span>
     </>
   ) : (
@@ -91,7 +91,7 @@ export function CardView({
         <span className="name">{data.name}</span>
       </span>
       {art
-        ? <img className="art" src={art} alt="" />
+        ? <img className="art" src={art} alt="" draggable={false} />
         : <span className="art placeholder" aria-hidden="true">{data.name.split(' ').map((w) => w[0]).join('').slice(0, 3)}</span>}
       <span className="card-body">
         <span className="ctype">Card Type: {TYPE_LINE[data.type]}</span>

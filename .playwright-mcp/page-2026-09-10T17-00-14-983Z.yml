@@ -1,0 +1,78 @@
+- generic [ref=f7e60]:
+  - banner [ref=f7e61]:
+    - button "Quit" [ref=f7e62] [cursor=pointer]
+    - generic [ref=f7e63]: Turn 2 · first to 7
+    - button "Turn history" [ref=f7e64] [cursor=pointer]: History
+  - region "Other players" [ref=f7e65]:
+    - generic [ref=f7e66]:
+      - 'button "Sprinkles: 1 unicorns, 6 cards in hand. Open stable" [ref=f7e226] [cursor=pointer]':
+        - generic [ref=f7e69]: 🐱
+        - generic [ref=f7e70]:
+          - generic [ref=f7e71]: Sprinkles
+          - generic [aria-hidden] [ref=f7e72]:
+            - generic [ref=f7e73]: "1"
+            - generic [ref=f7e74]: /7
+        - emphasis [ref=f7e81]: "6"
+      - button "Baby Narwhal" [ref=f7e83] [cursor=pointer]
+      - status: Sprinkles draws 1 card.
+    - generic [ref=f7e85]:
+      - 'button "Glitterhoof: 1 unicorns, 5 cards in hand. Open stable" [ref=f7e86] [cursor=pointer]':
+        - generic [ref=f7e88]: 🌈
+        - generic [ref=f7e89]:
+          - generic [ref=f7e90]: Glitterhoof
+          - generic [aria-hidden] [ref=f7e91]:
+            - generic [ref=f7e92]: "1"
+            - generic [ref=f7e93]: /7
+        - emphasis [ref=f7e100]: "5"
+      - button "Baby Unicorn (Rainbow)" [ref=f7e102] [cursor=pointer]
+  - region "Table" [ref=f7e104]:
+    - 'generic "Deck: 96 cards" [ref=f7e228]':
+      - generic [ref=f7e106]: deck
+      - generic [ref=f7e110]: "96"
+    - 'generic "Discard pile: 0 cards" [ref=f7e113]':
+      - generic [ref=f7e114]: discard
+      - generic [ref=f7e116]: "0"
+    - 'generic "Nursery: 10 baby unicorns" [ref=f7e117]':
+      - generic [ref=f7e118]:
+        - text: nursery
+        - button "Baby Unicorn (Purple)" [ref=f7e119] [cursor=pointer]
+      - generic [ref=f7e121]: "10"
+  - region "You" [ref=f7e122]:
+    - generic [ref=f7e123]:
+      - button "Open your stable" [ref=f7e124] [cursor=pointer]:
+        - generic [ref=f7e126]: ⚡
+        - generic [ref=f7e127]: Player
+        - generic [ref=f7e128]:
+          - generic [ref=f7e129]: "1"
+          - generic [ref=f7e130]: /7
+      - button "Baby Unicorn (Red)" [ref=f7e132] [cursor=pointer]
+    - generic [ref=f7e134]: 7 in hand
+    - generic [ref=f7e137]:
+      - button "Neigh" [ref=f7e140] [cursor=pointer]:
+        - generic [ref=f7e148]:
+          - generic [ref=f7e149]: "Card Type: Instant"
+          - generic [ref=f7e150]: Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile.
+      - button "Black Knight Unicorn" [ref=f7e153] [cursor=pointer]:
+        - generic [ref=f7e160]:
+          - generic [ref=f7e161]: "Card Type: Unicorn (Magical)"
+          - generic [ref=f7e162]: If a Unicorn card in your Stable would be destroyed, you may SACRIFICE this card instead.
+      - button "Stable Artillery" [ref=f7e165] [cursor=pointer]:
+        - generic [ref=f7e171]:
+          - generic [ref=f7e172]: "Card Type: Upgrade"
+          - generic [ref=f7e173]: If this card is in your Stable at the beginning of your turn, you may DISCARD 2 cards, then DESTROY a Unicorn card.
+      - button "Neigh" [ref=f7e176] [cursor=pointer]:
+        - generic [ref=f7e184]:
+          - generic [ref=f7e185]: "Card Type: Instant"
+          - generic [ref=f7e186]: Play this card when another player tries to play a card. Stop their card from being played and send it to the discard pile.
+      - button "Basic Unicorn (Indigo)" [ref=f7e189] [cursor=pointer]:
+        - generic [ref=f7e196]: "Card Type: Unicorn (Basic)"
+      - button "Yay" [ref=f7e200] [cursor=pointer]:
+        - generic [ref=f7e206]:
+          - generic [ref=f7e207]: "Card Type: Upgrade"
+          - generic [ref=f7e208]: Cards you play cannot be Neigh'd.
+      - button "Basic Unicorn (Yellow)" [ref=f7e212] [cursor=pointer]:
+        - generic [ref=f7e219]: "Card Type: Unicorn (Basic)"
+  - generic [ref=f7e222]:
+    - heading "Pass the device to Sprinkles" [level=2] [ref=f7e223]
+    - paragraph [ref=f7e224]: Sprinkles has a decision to make. Tap when only they can see the screen.
+    - button "I'm Sprinkles" [ref=f7e225] [cursor=pointer]

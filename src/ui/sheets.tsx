@@ -214,7 +214,7 @@ export function NeighSheet({ text, view, legal, onAction, onOpenCard, data }: {
         ))}
       </div>
       <div className="choices">
-        {legal.filter((a) => a.type === 'neigh').map((a) => (
+        {[...new Map(legal.filter((a) => a.type === 'neigh').map((a) => [data((a as { card: number }).card).id, a] as const)).values()].map((a) => (
           <button type="button" key={(a as { card: number }).card} className="choice neigh" onClick={() => onAction(a)}>
             {data((a as { card: number }).card).name}!
           </button>
