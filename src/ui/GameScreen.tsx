@@ -11,7 +11,7 @@ import { useStage } from './stage/useStage';
 import { Flyer } from './stage/Flyer';
 import { Seats } from './table/Seats';
 import { Centre } from './table/Centre';
-import { Mine } from './table/Mine';
+import { Mine, type DropTarget } from './table/Mine';
 import { TurnBanner } from './table/TurnBanner';
 import { BeginSheet, CardDetailSheet, HistorySheet, NeighSheet, PromptSheet, StableSheet } from './sheets';
 import { WinOverlay } from './table/WinOverlay';
@@ -81,6 +81,15 @@ export function GameScreen({
     return () => window.removeEventListener('beforeunload', warn);
   }, [live.winner]);
 
+  // dragging a card out of the hand onto the table (or a seat, for Upgrades and Downgrades)
+  const [dragOver, setDragOver] = useState<{ target: DropTarget | null; lifting: boolean }>({ target: null, lifting: false });
+  const dropCard = (card: InstanceId, target: DropTarget) => {
+    if (!myTurn || !playable.has(card)) return;
+    const needsTarget = data(card).type === 'upgrade' || data(card).type === 'downgrade';
+    if (needsTarget && target.kind === 'table') { openHandCard(card); return; }
+    onAction({ type: 'play', player: live.me, card, ...(needsTarget && target.kind === 'seat' ? { targetPlayer: target.player } : {}) });
+  };
+
   const inHand = (id: InstanceId) => (live.players[live.me]!.hand ?? []).includes(id);
   const playDetail = (target?: PlayerId) => {
     if (!detail || detail.id === null) return;
@@ -121,12 +130,15 @@ export function GameScreen({
       </header>
       {banner}
 
-      <Seats view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} bubbles={stage.bubbles} hit={stage.hit} onOpen={setExpanded} data={data} />
-      <Centre view={view} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} stamps={stage.stamps} data={data} onOpenCard={openCard} neighBanner={stageBanner} />
+      <Seats view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} bubbles={stage.bubbles} hit={stage.hit} onOpen={setExpanded} data={data}
+        dropOver={dragOver.target?.kind === 'seat' ? dragOver.target.player : null} />
+      <Centre view={view} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} stamps={stage.stamps} data={data} onOpenCard={openCard} neighBanner={stageBanner}
+        drop={dragOver.lifting ? (dragOver.target?.kind === 'table' ? 'over' : 'ready') : null} />
       <Mine
         view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} bubbles={stage.bubbles} hit={stage.hit}
         myTurn={myTurn} playable={playable} canDraw={canDraw} data={data} youLabel={youLabel ?? ' (you)'} hand={hand} onReorder={setHandOrder}
         onDraw={() => onAction({ type: 'draw', player: live.me })} onOpenCard={openCard} onOpenHandCard={openHandCard} onOpenStable={() => setExpanded(live.me)}
+        onDrop={dropCard} onDragOver={(target, lifting) => setDragOver({ target, lifting })} lifting={dragOver.lifting}
       />
 
       <TurnBanner banner={stage.banner} view={view} seats={seats} />

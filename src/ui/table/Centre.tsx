@@ -6,16 +6,18 @@ import type { Stamp } from '../stage/useStage';
 import { CardBack, CardTile } from './CardFace';
 import { CardView } from '../Card';
 
-export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, neighBanner }: {
+export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, neighBanner, drop }: {
   view: PlayerView; anchors: Anchors; hidden: ReadonlySet<InstanceId>; fx: ReadonlyMap<string, 'shake' | 'shield'>;
   stamps: Stamp[]; data: (id: InstanceId) => CardData; onOpenCard: (id: InstanceId) => void; neighBanner: string | null;
+  /** 'ready' while a card is lifted, 'over' while it hovers the table */
+  drop?: 'ready' | 'over' | null;
 }) {
   const discardTop = view.discard.length ? view.discard[view.discard.length - 1]! : null;
   const nurseryTop = view.nursery.length ? view.nursery[view.nursery.length - 1]! : null;
   const [base, ...rest] = view.limbo;
   const stageStamps = stamps.filter((s) => s.key === zoneKey({ zone: 'limbo' }));
   return (
-    <section className="centre" aria-label="Table">
+    <section className={`centre ${drop ? `drop-${drop}` : ''}`} aria-label="Table">
       <div className="pile deck" aria-label={`Deck: ${view.deckCount} cards`}>
         <div className="pile-stack" ref={anchors.ref(zoneKey({ zone: 'deck' }))}>
           {view.deckCount > 2 && <CardBack className="under under-2" />}
@@ -43,7 +45,7 @@ export function Centre({ view, anchors, hidden, fx, stamps, data, onOpenCard, ne
             {neighBanner && <span className="stage-banner">{neighBanner}</span>}
           </div>
         ) : (
-          <div className="stage-empty" aria-hidden="true" />
+          <div className="stage-empty" aria-hidden="true">{drop && <span className="drop-hint">{drop === 'over' ? 'Let go to play' : 'Drop here to play'}</span>}</div>
         )}
         {stageStamps.map((s) => <span key={s.id} className="stamp">{s.text}</span>)}
       </div>

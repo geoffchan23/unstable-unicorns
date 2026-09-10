@@ -33,7 +33,7 @@
 }
 .tseat-hand i::after { content: ""; position: absolute; left: 1px; right: 1px; bottom: 1px; height: 3px; border-radius: 1px; background: var(--rb); }
 .tseat-hand em { position: absolute; right: -6px; top: -4px; font-style: normal; font-size: 10px; font-weight: 800; color: var(--ink-2); background: var(--panel); border-radius: 999px; padding: 0 4px; border: 1px solid var(--line); }
-.tseat-stable { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; min-height: 52px; max-width: 100%; }
+.tseat-stable { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; min-height: 64px; max-width: 100%; }
 .tseat.active .tseat-who { color: var(--btn); }
 
 /* ---------- avatars ---------- */
@@ -56,19 +56,20 @@
 /* ---------- card tiles, backs, scaled cards ---------- */
 /* a "name + picture" card: the name on a paper strip, the square art, the type colour underneath */
 .tile {
-  --tw: 36px; --type: var(--t-magical);
-  position: relative; width: var(--tw); height: calc(var(--tw) * 1.42); border-radius: calc(var(--tw) * 0.12); overflow: hidden;
-  display: grid; grid-template-rows: calc(var(--tw) * 0.3) calc(var(--tw) * 1); align-content: start;
+  --tw: 42px; --type: var(--t-magical);
+  position: relative; width: var(--tw); height: calc(var(--tw) * 1.52); border-radius: calc(var(--tw) * 0.12); overflow: hidden;
+  display: grid; grid-template-rows: calc(var(--tw) * 0.4) calc(var(--tw) * 1); align-content: start;
   background: var(--paper); color: var(--paper-ink); border: 0; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,.28); flex: 0 0 auto; cursor: pointer;
   border-bottom: calc(var(--tw) * 0.12) solid var(--type); font-family: Nunito, sans-serif;
 }
 .tile-name {
-  display: block; padding: 0 calc(var(--tw) * 0.06); font-size: calc(var(--tw) * 0.17); line-height: calc(var(--tw) * 0.3); font-weight: 800;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; letter-spacing: -0.01em;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+  padding: calc(var(--tw) * 0.03) calc(var(--tw) * 0.05) 0; font-size: calc(var(--tw) * 0.145); line-height: calc(var(--tw) * 0.175); font-weight: 800;
+  text-align: center; letter-spacing: -0.01em; word-break: break-word; hyphens: auto;
 }
 .tile-art { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #f1eef5; }
 .tile-ph { display: grid; place-items: center; font-family: Fredoka, sans-serif; font-weight: 700; color: var(--type); background: color-mix(in srgb, var(--type) 18%, #fff); font-size: calc(var(--tw) * 0.4); }
-.tile-md { --tw: 52px; }
+.tile-md { --tw: 58px; }
 .tile-lg { --tw: 62px; }
 .tile.fx-shake, .fan-slot.fx-shake, .stage-base.fx-shake { animation: shake 0.4s ease-in-out infinite; }
 .tile.fx-shield { box-shadow: 0 0 0 3px var(--btn), 0 0 18px var(--btn); animation: pulse 0.6s ease-in-out; }
@@ -126,7 +127,7 @@
 .my-name { font-weight: 800; font-size: 13px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .my-count { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 22px; line-height: 1; display: flex; align-items: baseline; }
 .my-count small { font-size: 11px; color: var(--ink-2); font-family: Nunito, sans-serif; font-weight: 700; }
-.my-stable { display: flex; gap: 5px; overflow-x: auto; flex: 1; min-height: 60px; align-items: center; padding: 2px; scrollbar-width: none; }
+.my-stable { display: flex; gap: 5px; overflow-x: auto; flex: 1; min-height: 72px; align-items: center; padding: 2px; scrollbar-width: none; }
 .my-stable::-webkit-scrollbar { display: none; }
 .my-empty { font-size: 12px; color: var(--ink-2); font-weight: 700; }
 .hand-bar { display: flex; justify-content: space-between; align-items: center; min-height: 40px; gap: 8px; padding: 0 4px; }
@@ -197,10 +198,10 @@
   .tseat-who { font-size: 15px; }
   .tseat-count { font-size: 18px; }
   .avatar-md { width: 66px; height: 66px; font-size: 36px; }
-  .tile { --tw: 54px; }
-  .tile-md { --tw: 72px; }
-  .my-stable { min-height: 80px; }
-  .tseat-stable { min-height: 80px; gap: 5px; }
+  .tile { --tw: 58px; }
+  .tile-md { --tw: 76px; }
+  .my-stable { min-height: 96px; }
+  .tseat-stable { min-height: 90px; gap: 5px; }
   .centre { min-height: 0; padding: 14px 20px; gap: 18px; }
   .pile-stack { width: 96px; height: 165px; }
   .pile .tile-lg { --tw: 96px; }
@@ -257,3 +258,14 @@
 .hand-nav-count { font-weight: 800; font-size: 13px; color: var(--ink-2); }
 .detail { touch-action: pan-y; }
 .report-line { margin: 0; font-size: 12.5px; color: var(--ink-2); }
+
+/* ---------- dragging a card out of the hand to play it ---------- */
+.fan-slot.lifted { pointer-events: none; transition: none; }
+.fan-slot.lifted .card { box-shadow: var(--lift-2), 0 0 0 3px var(--btn); }
+.centre.drop-ready { outline: 3px dashed color-mix(in srgb, var(--btn) 55%, transparent); outline-offset: -6px; }
+.centre.drop-over { outline: 4px solid var(--btn); outline-offset: -6px; background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--btn) 30%, var(--ground-2)), var(--ground-2) 72%); }
+.drop-hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-family: Fredoka, sans-serif; font-weight: 700; font-size: 20px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--btn); white-space: nowrap; pointer-events: none; }
+.stage-empty { position: relative; }
+.tseat.drop-over .avatar { box-shadow: 0 0 0 4px var(--btn), var(--lift-2); transform: scale(1.12); }
+.tseat.drop-over .tseat-who { color: var(--btn); }
+.my-row.drop-over { border-color: var(--btn); }
