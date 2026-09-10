@@ -24,7 +24,7 @@ export async function step(page: Page): Promise<boolean> {
   const draw = page.getByTestId('draw');
   if (await draw.isVisible()) { await draw.click(); return true; }
   const card = page.getByTestId('hand').locator('button.card.playable').last();
-  if (await card.count()) { await card.click(); return true; }
+  if (await card.count()) { await card.click({ force: true }); return true; }
   return false;
 }
 

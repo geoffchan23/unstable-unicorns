@@ -59,13 +59,15 @@ async function play(page: Page, force: boolean): Promise<boolean> {
   const unicorn = hand.locator(
     'button.card.playable.t-baby_unicorn, button.card.playable.t-basic_unicorn, button.card.playable.t-magical_unicorn',
   ).first();
+  // hand cards overlap in the fan by design (a tap on a covered card is confirmed in the detail sheet),
+  // so they are always clicked with force
   if (await unicorn.count()) {
-    await unicorn.click(opts);
+    await unicorn.click({ force: true });
     return true;
   }
   const card = hand.locator('button.card.playable').last();
   if (await card.count()) {
-    await card.click(opts);
+    await card.click({ force: true });
     return true;
   }
   const draw = page.getByTestId('draw');
