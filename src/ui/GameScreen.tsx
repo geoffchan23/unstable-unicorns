@@ -56,11 +56,30 @@ export function GameScreen({
   const playable = new Set(legal.filter((a) => a.type === 'play').map((a) => (a as { card: InstanceId }).card));
   const canDraw = legal.some((a) => a.type === 'draw');
 
-  const [detail, setDetail] = useState<{ id: InstanceId | null; data: CardData } | null>(null);
+  const [detail, setDetail] = useState<{ id: InstanceId | null; data: CardData; fromHand?: boolean } | null>(null);
   const [history, setHistory] = useState(false);
   const [expanded, setExpanded] = useState<PlayerId | null>(null);
   const openCard = (id: InstanceId) => setDetail({ id, data: data(id) });
+  const openHandCard = (id: InstanceId) => setDetail({ id, data: data(id), fromHand: true });
   const openDef = (d: CardData) => setDetail({ id: null, data: d });
+
+  // the hand in the order the player arranged it (dragging in the fan); new cards join at the end
+  const [handOrder, setHandOrder] = useState<InstanceId[]>([]);
+  const rawHand = view.players[view.me]!.hand ?? [];
+  const hand = [...handOrder.filter((c) => rawHand.includes(c)), ...rawHand.filter((c) => !handOrder.includes(c))];
+  const liveHand = live.players[live.me]!.hand ?? [];
+  const browse = detail?.fromHand && detail.id !== null && liveHand.includes(detail.id)
+    ? [...handOrder.filter((c) => liveHand.includes(c)), ...liveHand.filter((c) => !handOrder.includes(c))]
+    : null;
+  const browseIndex = browse && detail?.id !== null && detail ? browse.indexOf(detail.id!) : -1;
+
+  // an accidental reload or swipe-back should not throw the game away
+  useEffect(() => {
+    if (live.winner !== null || navigator.webdriver) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [live.winner]);
 
   const inHand = (id: InstanceId) => (live.players[live.me]!.hand ?? []).includes(id);
   const playDetail = (target?: PlayerId) => {
@@ -97,7 +116,6 @@ export function GameScreen({
         <button type="button" className="ghost small" onClick={onQuit}>Quit</button>
         <span className="topbar-meta">
           Turn {view.turn.number} · first to {view.unicornsToWin}
-          {seed !== undefined && <> · <button type="button" className="link seedlink" onClick={copyReport} title="Copy a report of this game for bug fixing" data-testid="report">seed {seed}</button></>}
         </span>
         <button type="button" className="ghost small" onClick={() => setHistory(true)} data-testid="history-open" aria-label="Turn history">History</button>
       </header>
@@ -107,15 +125,15 @@ export function GameScreen({
       <Centre view={view} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} stamps={stage.stamps} data={data} onOpenCard={openCard} neighBanner={stageBanner} />
       <Mine
         view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} bubbles={stage.bubbles} hit={stage.hit}
-        myTurn={myTurn} playable={playable} canDraw={canDraw} data={data} youLabel={youLabel ?? ' (you)'}
-        onDraw={() => onAction({ type: 'draw', player: live.me })} onOpenCard={openCard} onOpenStable={() => setExpanded(live.me)}
+        myTurn={myTurn} playable={playable} canDraw={canDraw} data={data} youLabel={youLabel ?? ' (you)'} hand={hand} onReorder={setHandOrder}
+        onDraw={() => onAction({ type: 'draw', player: live.me })} onOpenCard={openCard} onOpenHandCard={openHandCard} onOpenStable={() => setExpanded(live.me)}
       />
 
       <TurnBanner banner={stage.banner} view={view} seats={seats} />
       {stage.flyers.map((f) => <Flyer key={f.id} spec={f} />)}
 
       {/* ---------- sheets ---------- */}
-      {history && <HistorySheet log={live.log} start={null} onClose={() => setHistory(false)} onOpenDef={openDef} />}
+      {history && <HistorySheet log={live.log} start={null} onClose={() => setHistory(false)} onOpenDef={openDef} seed={seed} onCopyReport={report ? copyReport : undefined} />}
       {expanded !== null && <StableSheet player={expanded} view={live} isMe={expanded === live.me} onClose={() => setExpanded(null)} onOpenCard={openCard} data={data} />}
       {neighWindow && neighText && <NeighSheet text={neighText} view={live} legal={legal} onAction={onAction} onOpenCard={openCard} data={data} />}
       {prompt && <PromptSheet prompt={prompt} view={live} onAnswer={(answer) => onAction({ type: 'respond', player: live.me, promptId: prompt.id, answer })} />}
@@ -131,6 +149,10 @@ export function GameScreen({
           players={live.players.map((p) => ({ id: p.id, name: p.id === live.me ? `${p.name} (me)` : p.name }))}
           onPlay={playDetail}
           onClose={() => setDetail(null)}
+          nav={browse && browseIndex >= 0 ? {
+            index: browseIndex, total: browse.length,
+            go: (i) => { const id = browse[(i + browse.length) % browse.length]!; setDetail({ id, data: data(id), fromHand: true }); },
+          } : null}
         />
       )}
 

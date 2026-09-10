@@ -1,0 +1,81 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - button "Quit" [ref=f3e5] [cursor=pointer]
+    - generic [ref=f3e6]: Turn 2 · first to 7
+    - button "Turn history" [ref=f3e7] [cursor=pointer]: History
+  - region "Other players" [ref=f3e8]:
+    - generic [ref=f3e9]:
+      - 'button "Sprinkles: 1 unicorns, 5 cards in hand. Open stable" [ref=f3e10] [cursor=pointer]':
+        - generic [ref=f3e12]: 🦄
+        - generic [ref=f3e13]:
+          - generic [ref=f3e14]: Sprinkles
+          - generic [aria-hidden] [ref=f3e15]:
+            - generic [ref=f3e16]: "1"
+            - generic [ref=f3e17]: /7
+        - emphasis [ref=f3e24]: "5"
+      - generic [ref=f3e25]:
+        - button "Baby Narwhal" [ref=f3e26] [cursor=pointer]
+        - button "Stable Artillery" [ref=f3e28] [cursor=pointer]
+    - generic [ref=f3e30]:
+      - 'button "Glitterhoof: 1 unicorns, 5 cards in hand. Open stable" [ref=f3e31] [cursor=pointer]':
+        - generic [ref=f3e33]: 🌈
+        - generic [ref=f3e34]:
+          - generic [ref=f3e35]: Glitterhoof
+          - generic [aria-hidden] [ref=f3e36]:
+            - generic [ref=f3e37]: "1"
+            - generic [ref=f3e38]: /7
+        - emphasis [ref=f3e45]: "5"
+      - button "Baby Unicorn (Death)" [ref=f3e47] [cursor=pointer]
+  - region "Table" [ref=f3e49]:
+    - 'generic "Deck: 97 cards" [ref=f3e50]':
+      - generic [ref=f3e51]: deck
+      - generic [ref=f3e55]: "97"
+    - generic [ref=f3e57]:
+      - button "Seductive Unicorn" [ref=f3e60] [cursor=pointer]:
+        - generic [ref=f3e67]:
+          - generic [ref=f3e68]: "Card Type: Unicorn (Magical)"
+          - generic [ref=f3e69]: When this card enters your Stable, you may DISCARD a card, then STEAL a Unicorn card.
+      - generic [ref=f3e70]: waiting for Neighs · waiting on Player
+    - 'generic "Discard pile: 0 cards" [ref=f3e71]':
+      - generic [ref=f3e72]: discard
+      - generic [ref=f3e74]: "0"
+    - 'generic "Nursery: 10 baby unicorns" [ref=f3e75]':
+      - generic [ref=f3e76]:
+        - text: nursery
+        - button "Baby Unicorn (Blue)" [ref=f3e77] [cursor=pointer]
+      - generic [ref=f3e79]: "10"
+  - region "You" [ref=f3e80]:
+    - generic [ref=f3e81]:
+      - button "Open your stable" [ref=f3e82] [cursor=pointer]:
+        - generic [ref=f3e84]: ⚡
+        - generic [ref=f3e85]: Player (you)
+        - generic [ref=f3e86]:
+          - generic [ref=f3e87]: "1"
+          - generic [ref=f3e88]: /7
+      - button "Baby Unicorn (Purple)" [ref=f3e90] [cursor=pointer]
+    - generic [ref=f3e92]: 5 in hand
+    - generic [ref=f3e94]:
+      - button "The Great Narwhal" [ref=f3e97] [cursor=pointer]:
+        - generic [ref=f3e104]:
+          - generic [ref=f3e105]: "Card Type: Unicorn (Magical)"
+          - generic [ref=f3e106]: When this card enters your Stable, you may search the deck for a card with "Narwhal" in its name and add it to your hand, then shuffle the deck.
+      - button "Basic Unicorn (Indigo)" [ref=f3e109] [cursor=pointer]:
+        - generic [ref=f3e116]: "Card Type: Unicorn (Basic)"
+      - button "Shabby the Narwhal" [ref=f3e120] [cursor=pointer]:
+        - generic [ref=f3e127]:
+          - generic [ref=f3e128]: "Card Type: Unicorn (Magical)"
+          - generic [ref=f3e129]: When this card enters your Stable, you may search the deck for a Downgrade card and add it to your hand, then shuffle the deck.
+      - button "Basic Unicorn (Blue)" [ref=f3e132] [cursor=pointer]:
+        - generic [ref=f3e139]: "Card Type: Unicorn (Basic)"
+      - button "Claw Machine" [ref=f3e143] [cursor=pointer]:
+        - generic [ref=f3e149]:
+          - generic [ref=f3e150]: "Card Type: Upgrade"
+          - generic [ref=f3e151]: If this card is in your Stable at the beginning of your turn, you may DISCARD a card, then DRAW a card.
+  - dialog "Sprinkles played Seductive Unicorn":
+    - generic [ref=f3e152]:
+      - generic [ref=f3e153]:
+        - heading "Sprinkles played Seductive Unicorn" [level=2] [ref=f3e154]
+        - button "Hide for now" [ref=f3e155] [cursor=pointer]: ×
+      - paragraph [ref=f3e156]: If nobody responds, Sprinkles' Seductive Unicorn goes ahead.
+      - button "Seductive Unicorn" [ref=f3e158] [cursor=pointer]
+      - button "OK" [ref=f3e165] [cursor=pointer]

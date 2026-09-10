@@ -10,17 +10,19 @@ import { Avatar } from './Avatar';
 import { CardTile } from './CardFace';
 import { CardView } from '../Card';
 
-export function Mine({ view, seats, anchors, hidden, fx, bubbles, hit, myTurn, playable, canDraw, onDraw, onOpenCard, onOpenStable, data, youLabel }: {
+export function Mine({ view, seats, anchors, hidden, fx, bubbles, hit, myTurn, playable, canDraw, hand, onReorder, onDraw, onOpenCard, onOpenHandCard, onOpenStable, data, youLabel }: {
   view: PlayerView; seats: SeatInfo[]; anchors: Anchors; hidden: ReadonlySet<InstanceId>; fx: ReadonlyMap<string, 'shake' | 'shield'>;
   bubbles: Bubble[]; hit: ReadonlySet<number>; myTurn: boolean; playable: Set<InstanceId>; canDraw: boolean;
-  onDraw: () => void; onOpenCard: (id: InstanceId) => void; onOpenStable: () => void; data: (id: InstanceId) => CardData; youLabel: string;
+  /** my hand in the order I arranged it */
+  hand: InstanceId[]; onReorder: (order: InstanceId[]) => void;
+  onDraw: () => void; onOpenCard: (id: InstanceId) => void; onOpenHandCard: (id: InstanceId) => void; onOpenStable: () => void;
+  data: (id: InstanceId) => CardData; youLabel: string;
 }) {
   const me = view.players[view.me]!;
   const seat = seats[view.me] ?? { name: me.name, kind: 'human' as const, connected: true };
   const av = avatarFor(seat, view.me);
   const active = view.turn.player === view.me && view.winner === null;
   const bubble = bubbles.find((b) => b.player === view.me);
-  const hand = me.hand ?? [];
   return (
     <section className="mine" aria-label="You">
       <div className={`my-row ${active ? 'active' : ''}`}>
@@ -45,13 +47,16 @@ export function Mine({ view, seats, anchors, hidden, fx, bubbles, hit, myTurn, p
         {myTurn && canDraw && <button type="button" className="primary draw-btn" data-testid="draw" onClick={onDraw}>Draw a card</button>}
       </div>
 
-      <Fan hand={hand} anchors={anchors} hidden={hidden} playable={playable} myTurn={myTurn} onOpenCard={onOpenCard} data={data} me={view.me} />
+      <Fan hand={hand} onReorder={onReorder} anchors={anchors} hidden={hidden} playable={playable} myTurn={myTurn} onOpenCard={onOpenHandCard} data={data} me={view.me} />
     </section>
   );
 }
 
-function Fan({ hand, anchors, hidden, playable, myTurn, onOpenCard, data, me }: {
-  hand: InstanceId[]; anchors: Anchors; hidden: ReadonlySet<InstanceId>; playable: Set<InstanceId>; myTurn: boolean;
+const CARD_W = 168;
+
+/** The hand, fanned. Tap a card to open it; drag a card sideways to move it. */
+function Fan({ hand, onReorder, anchors, hidden, playable, myTurn, onOpenCard, data, me }: {
+  hand: InstanceId[]; onReorder: (order: InstanceId[]) => void; anchors: Anchors; hidden: ReadonlySet<InstanceId>; playable: Set<InstanceId>; myTurn: boolean;
   onOpenCard: (id: InstanceId) => void; data: (id: InstanceId) => CardData; me: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -71,20 +76,65 @@ function Fan({ hand, anchors, hidden, playable, myTurn, onOpenCard, data, me }: 
   const step = n > 1 ? Math.min(maxStep, Math.max(24, (width - cw - 8) / (n - 1))) : 0;
   const mid = (n - 1) / 2;
   const spread = Math.min(1, step / maxStep); // squeezed fans rotate less
+
+  // dragging: which card and where the pointer is (relative to the fan's centre)
+  const [drag, setDrag] = useState<{ card: InstanceId; x: number } | null>(null);
+  const press = useRef<{ card: InstanceId; startX: number; moved: boolean } | null>(null);
+  const suppressClick = useRef(false);
+  const centreX = () => { const r = ref.current?.getBoundingClientRect(); return r ? r.left + r.width / 2 : 0; };
+
+  const onPointerDown = (card: InstanceId) => (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || n < 2) return;
+    // no pointer capture yet: capturing here would redirect the click away from the card button
+    press.current = { card, startX: e.clientX, moved: false };
+  };
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const p = press.current;
+    if (!p) return;
+    const dx = e.clientX - p.startX;
+    if (!p.moved && Math.abs(dx) < 8) return;
+    if (!p.moved) { try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* synthetic pointer */ } }
+    p.moved = true;
+    const x = e.clientX - centreX();
+    setDrag({ card: p.card, x });
+    // the card moves to the slot under the pointer
+    const target = Math.max(0, Math.min(n - 1, Math.round(x / (step || 1) + mid)));
+    const cur = hand.indexOf(p.card);
+    if (target !== cur) {
+      const next = hand.filter((c) => c !== p.card);
+      next.splice(target, 0, p.card);
+      onReorder(next);
+    }
+  };
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const p = press.current;
+    press.current = null;
+    if (p?.moved) { suppressClick.current = true; setTimeout(() => { suppressClick.current = false; }, 0); }
+    setDrag(null);
+    try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+  };
+
   return (
     <div className={`fan ${n > 0 ? '' : 'empty'}`} data-testid="hand" ref={(el) => { (ref as React.MutableRefObject<HTMLDivElement | null>).current = el; anchors.ref(zoneKey({ zone: 'hand', player: me }))(el); }} style={{ '--cw': `${cw}px` } as React.CSSProperties}>
       {hand.map((c, i) => {
         const k = i - mid;
-        const x = k * step;
-        const rot = k * 3 * spread;
-        const y = Math.abs(k) * 4 * spread;
         const can = myTurn && playable.has(c);
+        const dragging = drag?.card === c;
+        // rotate around the card's centre so every card shows the same sliver; a gentle curve lifts the ends
+        const x = dragging ? drag.x : k * step;
+        const rot = dragging ? 0 : k * 2.2 * spread;
+        const y = dragging ? -18 : Math.abs(k) * Math.abs(k) * 1.6 * spread - (can ? 14 : 0);
         return (
           <div
             key={c}
-            className={`fan-slot ${hidden.has(c) ? 'is-hidden' : ''} ${can ? 'can' : ''}`}
-            style={{ transform: `translateX(${x}px) translateY(${y - (can ? 14 : 0)}px) rotate(${rot}deg)`, zIndex: (can ? 100 : 0) + i + 1, '--z': cw / 168 } as React.CSSProperties}
+            className={`fan-slot ${hidden.has(c) ? 'is-hidden' : ''} ${can ? 'can' : ''} ${dragging ? 'dragging' : ''}`}
+            style={{ transform: `translateX(${x}px) translateY(${y}px) rotate(${rot}deg)${dragging ? ' scale(1.06)' : ''}`, zIndex: dragging ? 500 : (can ? 100 : 0) + i + 1, '--z': cw / CARD_W } as React.CSSProperties}
             ref={anchors.ref(cardKey(c))}
+            onPointerDown={onPointerDown(c)}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onClickCapture={(e) => { if (suppressClick.current) { e.stopPropagation(); e.preventDefault(); } }}
           >
             <div className="scaled"><CardView data={data(c)} onClick={() => onOpenCard(c)} playable={can} dim={!can} /></div>
           </div>

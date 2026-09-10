@@ -1,7 +1,7 @@
 // Card renderings for the table: a full face, a back, and a small card-shaped tile (art + type strip).
 import type { CardData } from '../../engine/types';
 import { artFor } from '../art';
-import { CardView, TypeGlyph } from '../Card';
+import { CardView } from '../Card';
 
 export function CardFace({ data }: { data: CardData }) {
   return <CardView data={data} />;
@@ -16,9 +16,9 @@ export function CardBack({ className = '' }: { className?: string }) {
   );
 }
 
-/** A small card-shaped tile: the art fills it, the type colour underlines it. */
-export function CardTile({ data, onClick, label, anchorRef, hidden, fx, className = '', testId }: {
-  data: CardData; onClick?: () => void; label?: string; anchorRef?: (el: HTMLElement | null) => void;
+/** A small "name + picture" card: the name on top, the square art below, the type colour underlining it. */
+export function CardTile({ data, onClick, anchorRef, hidden, fx, className = '', testId }: {
+  data: CardData; onClick?: () => void; anchorRef?: (el: HTMLElement | null) => void;
   hidden?: boolean; fx?: 'shake' | 'shield' | undefined; className?: string; testId?: string;
 }) {
   const art = artFor(data.id);
@@ -26,9 +26,8 @@ export function CardTile({ data, onClick, label, anchorRef, hidden, fx, classNam
   const style = hidden ? { visibility: 'hidden' as const } : undefined;
   const inner = (
     <>
-      {art ? <img src={art} alt="" draggable={false} /> : <span className="tile-ph" aria-hidden="true">{data.name.split(' ').map((w) => w[0]).join('').slice(0, 2)}</span>}
-      <span className="tile-badge" aria-hidden="true"><TypeGlyph type={data.type} /></span>
-      {label && <span className="tile-label">{label}</span>}
+      <span className="tile-name">{data.name}</span>
+      {art ? <img className="tile-art" src={art} alt="" draggable={false} /> : <span className="tile-art tile-ph" aria-hidden="true">{data.name.split(' ').map((w) => w[0]).join('').slice(0, 2)}</span>}
     </>
   );
   if (onClick) {

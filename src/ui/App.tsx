@@ -8,13 +8,17 @@ import { OnlineGame } from './OnlineGame';
 import { useClient } from './net/useClient';
 import { applyUpdate } from './pwa/register';
 import type { Seat } from './seats';
+import type { Action } from '../engine/types';
+import { loadLocalGame } from './localSave';
 
 type Mode = 'home' | 'local-setup' | 'local-game' | 'online';
 
 export function App() {
   const { client, snap } = useClient();
-  const [mode, setMode] = useState<Mode>(() => (client.session() || new URLSearchParams(location.search).get('join') ? 'online' : 'home'));
-  const [game, setGame] = useState<{ seats: Seat[]; seed: number } | null>(null);
+  // a saved local game (an accidental reload mid-game) resumes straight away
+  const saved = useState(() => loadLocalGame())[0];
+  const [mode, setMode] = useState<Mode>(() => (client.session() || new URLSearchParams(location.search).get('join') ? 'online' : saved ? 'local-game' : 'home'));
+  const [game, setGame] = useState<{ seats: Seat[]; seed: number; resume?: Action[] } | null>(() => (saved ? { seats: saved.seats, seed: saved.seed, resume: saved.actions } : null));
   const [updateReady, setUpdateReady] = useState(false);
   useEffect(() => {
     if (mode === 'online') client.connect();
@@ -43,7 +47,7 @@ export function App() {
       case 'local-setup':
         return <Setup onBack={() => setMode('home')} onStart={(seats, seed) => { setGame({ seats, seed }); setMode('local-game'); }} />;
       case 'local-game':
-        return <LocalGame key={game!.seed} seats={game!.seats} seed={game!.seed} onQuit={() => setMode('local-setup')} />;
+        return <LocalGame key={game!.seed} seats={game!.seats} seed={game!.seed} resume={game!.resume} onQuit={() => setMode('local-setup')} />;
       case 'online':
         // Rendering on `snap.joined && snap.state` (rather than gating on lobby status === 'playing')
         // keeps the win overlay (and its `renderWin`) up while a finished game's lobby message is

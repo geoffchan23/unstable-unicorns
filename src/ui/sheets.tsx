@@ -1,5 +1,5 @@
 // Bottom sheets: prompts, the Neigh window, the beginning of a turn, a card's detail, a stable, the history.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cardData } from '../engine/registry';
 import type { Action, Answer, BeginTurnWindow, CardData, InstanceId, LogEntry, PlayerId, Prompt } from '../engine/types';
 import type { PlayerView } from '../engine/view';
@@ -10,15 +10,46 @@ import type { NeighWindowText } from './neighText';
 import { groupTurns, tokenizeLine } from './turnLog';
 
 /** The opened-up card: big art, full text, and whatever you can do with it right now. */
-export function CardDetailSheet({ data, inHand, canPlay, myTurn, blockedBy, players, onPlay, onClose }: {
+export interface DetailNav { index: number; total: number; go: (index: number) => void }
+
+export function CardDetailSheet({ data, inHand, canPlay, myTurn, blockedBy, players, onPlay, onClose, nav }: {
   data: CardData; inHand: boolean; canPlay: boolean; myTurn: boolean; blockedBy: string | null;
   players: { id: PlayerId; name: string }[]; onPlay: (target?: PlayerId) => void; onClose: () => void;
+  /** when opened from the hand: where we are in it, and how to move (swipe, arrows, keys) */
+  nav?: DetailNav | null;
 }) {
   const art = artFor(data.id);
   const needsTarget = data.type === 'upgrade' || data.type === 'downgrade';
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    if (!nav) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') nav.go(nav.index - 1);
+      if (e.key === 'ArrowRight') nav.go(nav.index + 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [nav]);
+  const onPointerDown = (e: React.PointerEvent) => { swipe.current = { x: e.clientX, y: e.clientY }; };
+  const onPointerUp = (e: React.PointerEvent) => {
+    const s = swipe.current; swipe.current = null;
+    if (!s || !nav) return;
+    const dx = e.clientX - s.x; const dy = e.clientY - s.y;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) nav.go(nav.index + (dx < 0 ? 1 : -1));
+  };
   return (
-    <Sheet title={data.name} onClose={onClose} testId="detail" className="above">
-      <div className={`detail t-${data.type}`}>
+    <Sheet title={data.name} onClose={onClose} testId="detail" className="above" above={nav && nav.total > 1 ? (
+      <div className="hand-nav" data-testid="hand-nav">
+        <button type="button" className="hand-nav-btn" onClick={() => nav.go(nav.index - 1)} aria-label="Previous card">‹</button>
+        <span className="hand-nav-dots" aria-label={`Card ${nav.index + 1} of ${nav.total} in your hand`}>
+          {nav.total <= 12
+            ? Array.from({ length: nav.total }, (_, i) => <i key={i} className={i === nav.index ? 'on' : ''} />)
+            : <span className="hand-nav-count">{nav.index + 1} / {nav.total}</span>}
+        </span>
+        <button type="button" className="hand-nav-btn" onClick={() => nav.go(nav.index + 1)} aria-label="Next card">›</button>
+      </div>
+    ) : null}>
+      <div className={`detail t-${data.type}`} onPointerDown={onPointerDown} onPointerUp={onPointerUp}>
         {art
           ? <img className="detail-art" src={art} alt="" />
           : <div className="detail-art placeholder" aria-hidden="true">{data.name.split(' ').map((w) => w[0]).join('').slice(0, 3)}</div>}
@@ -56,7 +87,11 @@ export function CardDetailSheet({ data, inHand, canPlay, myTurn, blockedBy, play
  * game is waiting on) a backdrop tap only tucks it away so you can look at the table; a pill
  * brings it back.
  */
-export function Sheet({ title, children, onClose, testId, className, closeTestId }: { title: string; children: React.ReactNode; onClose?: () => void; testId?: string; className?: string; closeTestId?: string }) {
+export function Sheet({ title, children, onClose, testId, className, closeTestId, above }: {
+  title: string; children: React.ReactNode; onClose?: () => void; testId?: string; className?: string; closeTestId?: string;
+  /** something to float just above the sheet (the hand position indicator) */
+  above?: React.ReactNode;
+}) {
   const [tucked, setTucked] = useState(false);
   useEffect(() => setTucked(false), [title]);
   if (tucked) {
@@ -71,12 +106,15 @@ export function Sheet({ title, children, onClose, testId, className, closeTestId
   return (
     <div className={`sheet-wrap ${className ?? ''}`} role="dialog" aria-modal="true" aria-label={title} data-testid={testId}
       onClick={(e) => { if (e.target === e.currentTarget) (onClose ? onClose() : setTucked(true)); }}>
+      <div className="sheet-col">
+      {above}
       <div className="sheet">
         <div className="sheet-head">
           <h2>{title}</h2>
           <button type="button" className="sheet-x" onClick={() => (onClose ? onClose() : setTucked(true))} aria-label={onClose ? 'Close' : 'Hide for now'} data-testid={closeTestId}>×</button>
         </div>
         {children}
+      </div>
       </div>
     </div>
   );
@@ -244,7 +282,9 @@ export function StableSheet({ player, view, onClose, onOpenCard, data, isMe }: {
 }
 
 /** The full story, one turn per page. */
-export function HistorySheet({ log, start, onClose, onOpenDef }: { log: LogEntry[]; start: number | null; onClose: () => void; onOpenDef: (d: CardData) => void }) {
+export function HistorySheet({ log, start, onClose, onOpenDef, seed, onCopyReport }: {
+  log: LogEntry[]; start: number | null; onClose: () => void; onOpenDef: (d: CardData) => void; seed?: number; onCopyReport?: () => void;
+}) {
   const turns = useMemo(() => groupTurns(log), [log]);
   const [page, setPage] = useState(start ?? turns.length - 1);
   const byName = useMemo(() => new Map([...cardData.values()].map((d) => [d.name, d] as const)), []);
@@ -268,6 +308,9 @@ export function HistorySheet({ log, start, onClose, onOpenDef }: { log: LogEntry
         ))}
         {cur.lines.length === 0 && <li className="empty">Nothing happened yet this turn.</li>}
       </ol>
+      {onCopyReport && (
+        <p className="fine report-line">Something went wrong? <button type="button" className="link" onClick={onCopyReport} data-testid="report">Copy a game report</button>{seed !== undefined ? ` (seed ${seed})` : ''} and send it along.</p>
+      )}
     </Sheet>
   );
 }

@@ -4,7 +4,7 @@
    ===================================================================== */
 .tbl {
   position: relative; height: 100dvh; max-width: 1100px; margin: 0 auto;
-  display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 6px;
+  display: grid; grid-template-rows: auto auto minmax(140px, 1fr) auto; gap: 6px;
   padding: 0 10px; overflow: hidden auto; scrollbar-width: none;
 }
 .tbl > * { grid-column: 1; grid-area: auto; min-width: 0; }
@@ -19,10 +19,11 @@
 .seats { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: flex-start; padding: 4px 2px 6px; position: relative; z-index: 3; }
 .tseat { position: relative; flex: 1 1 0; min-width: 92px; max-width: 190px; display: grid; gap: 3px; justify-items: center; }
 .tseat-btn { display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 0; cursor: pointer; color: inherit; width: 100%; font: inherit; }
-.tseat-name { font-weight: 800; font-size: 12.5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 1.2; }
+.tseat-name { display: flex; align-items: baseline; justify-content: center; gap: 5px; max-width: 100%; line-height: 1.2; }
+.tseat-who { font-weight: 800; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .ts-tag { font-size: 9px; background: var(--ground-2); border-radius: 6px; padding: 1px 5px; margin-left: 4px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-2); vertical-align: middle; }
 .ts-tag.off { background: var(--warn); color: #2a1a05; }
-.tseat-count { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 18px; line-height: 1; display: flex; align-items: baseline; gap: 1px; }
+.tseat-count { font-family: Fredoka, sans-serif; font-weight: 700; font-size: 15px; line-height: 1; display: inline-flex; align-items: baseline; gap: 1px; flex: 0 0 auto; }
 .tseat-count small { font-size: 10px; color: var(--ink-2); font-family: Nunito, sans-serif; font-weight: 700; }
 .tseat-hand { position: relative; display: block; width: 64px; height: 20px; margin-top: 2px; }
 .tseat-hand i {
@@ -33,7 +34,7 @@
 .tseat-hand i::after { content: ""; position: absolute; left: 1px; right: 1px; bottom: 1px; height: 3px; border-radius: 1px; background: var(--rb); }
 .tseat-hand em { position: absolute; right: -6px; top: -4px; font-style: normal; font-size: 10px; font-weight: 800; color: var(--ink-2); background: var(--panel); border-radius: 999px; padding: 0 4px; border: 1px solid var(--line); }
 .tseat-stable { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; min-height: 52px; max-width: 100%; }
-.tseat.active .tseat-name { color: var(--btn); }
+.tseat.active .tseat-who { color: var(--btn); }
 
 /* ---------- avatars ---------- */
 .avatar {
@@ -53,18 +54,21 @@
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px) rotate(-3deg); } 40% { transform: translateX(6px) rotate(3deg); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
 
 /* ---------- card tiles, backs, scaled cards ---------- */
+/* a "name + picture" card: the name on a paper strip, the square art, the type colour underneath */
 .tile {
-  --tw: 30px; --type: var(--t-magical);
-  position: relative; width: var(--tw); height: calc(var(--tw) * 12 / 7); border-radius: calc(var(--tw) * 0.14); overflow: hidden;
-  background: #f1eef5; border: 0; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,.28); flex: 0 0 auto; cursor: pointer; color: #fff; display: block;
+  --tw: 36px; --type: var(--t-magical);
+  position: relative; width: var(--tw); height: calc(var(--tw) * 1.42); border-radius: calc(var(--tw) * 0.12); overflow: hidden;
+  display: grid; grid-template-rows: calc(var(--tw) * 0.3) calc(var(--tw) * 1); align-content: start;
+  background: var(--paper); color: var(--paper-ink); border: 0; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,.28); flex: 0 0 auto; cursor: pointer;
+  border-bottom: calc(var(--tw) * 0.12) solid var(--type); font-family: Nunito, sans-serif;
 }
-.tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tile-ph { position: absolute; inset: 0; display: grid; place-items: center; font-family: Fredoka, sans-serif; font-weight: 700; color: var(--type); background: color-mix(in srgb, var(--type) 18%, #fff); font-size: calc(var(--tw) * 0.4); }
-.tile::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 16%; background: var(--type); }
-.tile-badge { position: absolute; left: 6%; bottom: 2%; width: 26%; aspect-ratio: 1; display: grid; place-items: center; z-index: 1; }
-.tile-badge svg { width: 100%; height: 100%; display: block; }
-.tile-label { position: absolute; left: 0; right: 0; bottom: 18%; font-size: 9px; font-weight: 800; background: rgba(0,0,0,.55); color: #fff; padding: 1px 3px; text-align: center; }
-.tile-md { --tw: 50px; }
+.tile-name {
+  display: block; padding: 0 calc(var(--tw) * 0.06); font-size: calc(var(--tw) * 0.17); line-height: calc(var(--tw) * 0.3); font-weight: 800;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; letter-spacing: -0.01em;
+}
+.tile-art { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #f1eef5; }
+.tile-ph { display: grid; place-items: center; font-family: Fredoka, sans-serif; font-weight: 700; color: var(--type); background: color-mix(in srgb, var(--type) 18%, #fff); font-size: calc(var(--tw) * 0.4); }
+.tile-md { --tw: 52px; }
 .tile-lg { --tw: 62px; }
 .tile.fx-shake, .fan-slot.fx-shake, .stage-base.fx-shake { animation: shake 0.4s ease-in-out infinite; }
 .tile.fx-shield { box-shadow: 0 0 0 3px var(--btn), 0 0 18px var(--btn); animation: pulse 0.6s ease-in-out; }
@@ -87,8 +91,8 @@
   border: 1px solid var(--line); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35);
 }
 .pile { display: grid; justify-items: center; gap: 4px; }
-.pile-stack { position: relative; width: 62px; height: 106px; }
-.pile .tile-lg { --tw: 62px; position: absolute; inset: 0; }
+.pile-stack { position: relative; width: 62px; height: 106px; display: grid; place-items: center; }
+.pile .tile-lg { --tw: 62px; }
 .pile-empty { position: absolute; inset: 0; border-radius: 8px; border: 2px dashed var(--line); }
 .pile-count { font-size: 12px; font-weight: 800; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .pile.nursery .pile-stack::before { content: "nursery"; position: absolute; left: 50%; top: -14px; transform: translateX(-50%); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 800; }
@@ -134,8 +138,10 @@
 .fan.empty::after { content: "No cards in hand"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-2); font-weight: 700; font-size: 13px; }
 .fan-slot {
   position: absolute; left: 50%; top: 18px; margin-left: calc(var(--cw) * -0.5); width: var(--cw); height: calc(var(--cw) * 288 / 168);
-  transform-origin: 50% 120%; transition: transform 320ms cubic-bezier(.22,.8,.3,1);
+  transform-origin: 50% 50%; transition: transform 320ms cubic-bezier(.22,.8,.3,1); touch-action: none;
 }
+.fan-slot.dragging { transition: none; }
+.fan-slot.dragging .card { box-shadow: var(--lift-2); cursor: grabbing; }
 .fan-slot .scaled .card { width: 168px; height: 288px; }
 .fan-slot .card.tappable:not(:disabled):hover { transform: translateY(-8px) rotate(0deg); }
 
@@ -187,15 +193,38 @@
 /* ---------- bigger screens ---------- */
 @media (min-width: 720px) {
   .tbl { padding: 0 16px; }
-  .tseat { min-width: 120px; }
-  .tile { --tw: 38px; }
-  .tile-md { --tw: 58px; }
-  .centre { min-height: 190px; }
-  .stage-base { --z: 0.8; }
-  .stage-neigh { --z: 0.5; }
-  .stage-chain { width: calc(168px * 0.5 + 30px); height: calc(288px * 0.5 + 24px); }
+  .tseat { min-width: 150px; max-width: 260px; }
+  .tseat-who { font-size: 15px; }
+  .tseat-count { font-size: 18px; }
+  .avatar-md { width: 66px; height: 66px; font-size: 36px; }
+  .tile { --tw: 54px; }
+  .tile-md { --tw: 72px; }
+  .my-stable { min-height: 80px; }
+  .tseat-stable { min-height: 80px; gap: 5px; }
+  .centre { min-height: 0; padding: 14px 20px; gap: 18px; }
+  .pile-stack { width: 96px; height: 165px; }
+  .pile .tile-lg { --tw: 96px; }
+  .pile-count { font-size: 14px; }
+  .pile .pile-stack::before { font-size: 11px; top: -18px; }
+  .stage { min-height: 0; }
+  .stage-base { --z: 0.95; }
+  .stage-neigh { --z: 0.6; }
+  .stage-chain { width: calc(168px * 0.6 + 36px); height: calc(288px * 0.6 + 30px); }
+  .stage-neigh { left: calc(var(--i) * 14px); top: calc(var(--i) * 14px); }
+  .stamp { font-size: 64px; }
+  .bubble { font-size: 14px; max-width: 240px; }
   .fan { --cw: 168px; }
   .turn-banner-text { font-size: 40px; }
+}
+@media (min-width: 720px) and (min-height: 1000px) {
+  .centre { min-height: 250px; }
+  .stage { min-height: 220px; }
+}
+@media (min-width: 1000px) and (min-height: 1000px) {
+  .pile-stack { width: 112px; height: 192px; }
+  .pile .tile-lg { --tw: 112px; }
+  .stage-base { --z: 1; }
+  .centre { min-height: 290px; }
 }
 @media (max-height: 640px) {
   .fan { --cw: 112px; }
@@ -216,3 +245,15 @@
 .sheet-wrap.light { background: transparent; backdrop-filter: none; pointer-events: none; }
 .sheet-wrap.light .sheet { pointer-events: auto; box-shadow: 0 -8px 40px rgba(0,0,0,.25); }
 .neigh-sheet .sheet { gap: 10px; }
+
+/* ---------- the hand indicator above the card sheet ---------- */
+.sheet-col { display: grid; gap: 8px; justify-items: center; width: 100%; max-width: 720px; }
+.sheet-col .sheet { width: 100%; max-width: none; }
+.hand-nav { display: flex; align-items: center; gap: 10px; pointer-events: auto; }
+.hand-nav-btn { width: 38px; height: 38px; border-radius: 999px; border: 0; background: var(--panel); color: var(--ink); font-size: 26px; line-height: 1; cursor: pointer; box-shadow: var(--lift); display: grid; place-items: center; padding-bottom: 3px; }
+.hand-nav-dots { display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 999px; background: var(--panel); box-shadow: var(--lift); }
+.hand-nav-dots i { width: 8px; height: 8px; border-radius: 999px; background: var(--line); display: block; transition: transform 160ms ease, background 160ms ease; }
+.hand-nav-dots i.on { background: var(--btn); transform: scale(1.4); }
+.hand-nav-count { font-weight: 800; font-size: 13px; color: var(--ink-2); }
+.detail { touch-action: pan-y; }
+.report-line { margin: 0; font-size: 12.5px; color: var(--ink-2); }

@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom';
 import { cardData } from '../../engine/registry';
 import type { GameEvent, InstanceId, PlayerId, Zone } from '../../engine/types';
 import type { PlayerView } from '../../engine/view';
-import { Anchors, cardKey, zoneKey } from './anchors';
+import { Anchors, cardKey, zoneKey, type Rect } from './anchors';
 import type { FlyerSpec } from './Flyer';
 import { stageBusy } from './busy';
 import { BUBBLE_MS, PROTECT_MS, SAY_GAP_MS, SHUFFLE_MS, TURN_BANNER_MS, flightMs, holdMs, nextFrame, reducedMotion, wait, windupMs } from './motion';
@@ -207,11 +207,11 @@ export function useStage(view: PlayerView): Stage {
       setFx((m) => { const n = new Map(m); n.delete(cardKey(card)); return n; });
     }
 
-    const from = anchors.rectFor(ev.from, faceFrom ? card : null);
+    const from = cardShaped(anchors.rectFor(ev.from, faceFrom ? card : null));
     if (card !== null && faceTo) setHidden((h) => new Set(h).add(card));
     commit(next);
     await nextFrame();
-    const to = anchors.rectFor(ev.to, faceTo ? card : null);
+    const to = cardShaped(anchors.rectFor(ev.to, faceTo ? card : null));
     const unhide = () => { if (card !== null) setHidden((h) => { const n = new Set(h); n.delete(card); return n; }); };
     if (!from || !to) { unhide(); return; }
 
@@ -233,6 +233,13 @@ export function useStage(view: PlayerView): Stage {
   }
 
   return { shown, busy, anchors, hidden, fx, flyers, bubbles, banner, stamps, hit, notice };
+}
+
+/** a rect with the card's 7:12 shape, centred on the anchor (tiles and piles are not card-shaped) */
+function cardShaped(r: Rect | null): Rect | null {
+  if (!r) return r;
+  const h = r.w * 288 / 168;
+  return { x: r.x, y: r.y + (r.h - h) / 2, w: r.w, h };
 }
 
 /** the zone a card is displayed in, for a view (used by the table to pick anchors) */

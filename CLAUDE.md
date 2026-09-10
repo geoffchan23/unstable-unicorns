@@ -24,6 +24,7 @@ src/ui/stage/           staged playback: playback.ts (rewind/apply a view throug
 src/ui/table/           Seats (avatars), Centre (deck/stage/piles), Mine (stable row + hand fan), TurnBanner, WinOverlay
 src/ui/sheets.tsx       bottom sheets: prompt, Neigh, begin-turn, card detail, stable, history
 src/ui/table.css        the table; styles.css keeps menus, cards, sheets
+src/ui/localSave.ts     the local game is saved after every action (seed, seats, actions) and resumed on reload
 src/ui/net/             GameClient: reconnecting websocket, typed send/subscribe (src/ui/net/client.ts)
 src/ui/pwa/             manifest, service worker, icons, wake lock (copied into dist/unicorns by scripts/build.mjs)
 e2e/                    Playwright specs (local, online, pwa) against the dev and production builds
@@ -54,8 +55,9 @@ scripts/deploy-web.sh     # publish the client to geoffreychan.com/unicorns/
 
 ## Reproducing a game from a bug report
 
-The seed input is hidden; `?seed=123` on the URL fixes the shuffle and the bots' choices. In a local game the top bar
-shows `seed N`; tapping it copies a JSON game report (seed, seats, every action) to the clipboard. Replay one with
+The seed input is hidden; `?seed=123` on the URL fixes the shuffle and the bots' choices. In a local game the History
+sheet ends with "Copy a game report" (seed, seats, every action, as JSON, to the clipboard); nothing about seeds is
+shown to players elsewhere. Replay one with
 `npx tsx scripts/replay.ts report.json --verbose` to see each action, the log lines it produced, and the first illegal
 action if the report no longer matches the engine. Themes: light, dark, barf (toggle on the home screen, stored as `uu.theme`).
 `?motion=off` (or the OS reduced-motion setting) plays events instantly; the e2e specs use it, except animations.spec.ts.

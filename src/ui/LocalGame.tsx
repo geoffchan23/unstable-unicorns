@@ -6,6 +6,7 @@ import type { Action, GameState, PlayerId } from '../engine/types';
 import { GameScreen } from './GameScreen';
 import type { Seat, SeatInfo } from './seats';
 import { stageBusy } from './stage/busy';
+import { clearLocalGame, saveLocalGame } from './localSave';
 
 function mulberry(seed: number) {
   let a = seed >>> 0;
@@ -17,8 +18,18 @@ function mulberry(seed: number) {
   };
 }
 
-export function LocalGame({ seats, seed, onQuit }: { seats: Seat[]; seed: number; onQuit: () => void }) {
-  const [state, setState] = useState<GameState>(() => createGame({ players: seats.map((s) => s.name), seed }));
+/** rebuild a game from a saved action list; stops at the first action the engine refuses */
+function rebuild(seats: Seat[], seed: number, actions: Action[]): { state: GameState; applied: Action[] } {
+  let state = createGame({ players: seats.map((s) => s.name), seed });
+  const applied: Action[] = [];
+  for (const a of actions) {
+    try { state = applyAction(state, a); applied.push(a); } catch { break; }
+  }
+  return { state, applied };
+}
+
+export function LocalGame({ seats, seed, resume, onQuit }: { seats: Seat[]; seed: number; resume?: Action[]; onQuit: () => void }) {
+  const [state, setState] = useState<GameState>(() => rebuild(seats, seed, resume ?? []).state);
   const rand = useMemo(() => mulberry(seed ^ 0x51ed), [seed]);
   const isHuman = useCallback((p: PlayerId) => seats[p]!.kind === 'human', [seats]);
   const humans = useMemo(() => seats.map((s, i) => (s.kind === 'human' ? i : -1)).filter((i) => i >= 0), [seats]);
@@ -36,19 +47,24 @@ export function LocalGame({ seats, seed, onQuit }: { seats: Seat[]; seed: number
 
   const [error, setError] = useState<string | null>(null);
   // every action applied, in order: with the seed and seats this replays the whole game (scripts/replay.ts)
-  const history = useRef<Action[]>([]);
+  const history = useRef<Action[]>(resume ? rebuild(seats, seed, resume).applied : []);
   const dispatch = useCallback((a: Action) => {
     setState((s) => {
       try {
         const next = applyAction(s, a);
         history.current.push(a);
+        if (next.winner === null) saveLocalGame({ seed, seats, actions: history.current });
+        else clearLocalGame();
         return next;
       } catch (e) {
         if (e instanceof IllegalAction) { setError(e.message); return s; }
         throw e;
       }
     });
-  }, []);
+  }, [seed, seats]);
+  const quit = useCallback(() => { clearLocalGame(); onQuit(); }, [onQuit]);
+  // a fresh game is saved right away so a reload during the first turn still resumes it
+  useEffect(() => { if (state.winner === null) saveLocalGame({ seed, seats, actions: history.current }); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const report = useCallback(() => JSON.stringify({ kind: 'unstable-unicorns-game', seed, seats, actions: history.current }), [seed, seats]);
 
   // bots think in the background, but only once the table has finished showing what happened
@@ -71,7 +87,7 @@ export function LocalGame({ seats, seed, onQuit }: { seats: Seat[]; seed: number
   const legal = useMemo(() => legalActions(state, viewer), [state, viewer]);
   const seatInfos: SeatInfo[] = seats.map((s) => ({ ...s, connected: true }));
   return (
-    <GameScreen view={view} legal={legal} seats={seatInfos} onAction={dispatch} onQuit={onQuit} seed={seed} report={report}
+    <GameScreen view={view} legal={legal} seats={seatInfos} onAction={dispatch} onQuit={quit} seed={seed} report={report}
       error={error} onDismissError={() => setError(null)} youLabel={humans.length > 1 ? '' : ' (you)'}>
       {handoffTo !== null && (
         <div className="overlay">

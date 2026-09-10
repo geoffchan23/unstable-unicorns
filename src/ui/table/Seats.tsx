@@ -25,8 +25,11 @@ export function Seats({ view, seats, anchors, hidden, fx, bubbles, hit, onOpen, 
           <div className={`tseat ${active ? 'active' : ''}`} key={p.id}>
             <button type="button" className="tseat-btn" onClick={() => onOpen(p.id)} aria-label={`${p.name}: ${view.unicornCounts[p.id]} unicorns, ${p.handCount} cards in hand. Open stable`}>
               <Avatar avatar={av} active={active} hit={hit.has(p.id)} offline={seat.kind === 'human' && seat.connected === false} anchorRef={anchors.ref(`avatar:${p.id}`)} />
-              <span className="tseat-name">{p.name}{seat.kind === 'bot' ? <span className="ts-tag">bot</span> : null}{seat.kind === 'human' && seat.connected === false ? <span className="ts-tag off">offline</span> : null}</span>
-              <span className="tseat-count" aria-hidden="true"><b>{view.unicornCounts[p.id]}</b><small>/{view.unicornsToWin}</small></span>
+              <span className="tseat-name">
+                <span className="tseat-who">{p.name}</span>
+                <span className="tseat-count" aria-hidden="true"><b>{view.unicornCounts[p.id]}</b><small>/{view.unicornsToWin}</small></span>
+                {seat.kind === 'human' && seat.connected === false ? <span className="ts-tag off">offline</span> : null}
+              </span>
               <span className="tseat-hand" ref={anchors.ref(zoneKey({ zone: 'hand', player: p.id }))} aria-hidden="true">
                 {Array.from({ length: backs }, (_, i) => <i key={i} style={{ '--i': i } as React.CSSProperties} />)}
                 {p.handCount > 0 && <em>{p.handCount}</em>}
