@@ -8,6 +8,7 @@ const NAMES = ['Ann', 'Ben', 'Cat'];
 const names = (s: GameState) => ({
   player: (p: PlayerId) => NAMES[p]!,
   card: (id: number) => cardData.get(s.cards[id]!.def)!.name,
+  isMagic: (id: number) => cardData.get(s.cards[id]!.def)!.type === 'magic',
 });
 const text = (h: Harness, me: PlayerId) => describeNeighWindow(h.state.stack, me, names(h.state));
 
@@ -99,6 +100,14 @@ describe('Neigh window wording, driven by the real engine', () => {
     h.passAll();
     h.play(0, 'stable-artillery', 0, { autoPass: false });
     expect(text(h, 2).title).toBe('Ann plays Stable Artillery on themselves');
+  });
+
+  it('a Magic card explains that its target is chosen only when it resolves', () => {
+    const h = new Harness({ players: 3, hands: [['re-target'], [], []], stables: [['nanny-cam'], [], []], plays: 9 });
+    h.play(0, 're-target', undefined, { autoPass: false });
+    const t = text(h, 1);
+    expect(t.title).toBe('Ann plays Re-Target');
+    expect(t.sub).toMatch(/^Ann will pick who it hits only if it goes ahead: Magic cards choose their targets when they resolve\. If nobody responds/);
   });
 
   it('never says "Neighs Neigh"', () => {

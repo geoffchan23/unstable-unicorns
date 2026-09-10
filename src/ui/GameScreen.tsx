@@ -70,7 +70,7 @@ export function GameScreen({
   const canNeigh = legal.some((a) => a.type === 'neigh');
   const mandatoryBegin = view.pending?.kind === 'beginTurn' ? view.pending.mandatory : [];
   const neighText = view.stack.length && view.pending?.kind === 'neighWindow'
-    ? describeNeighWindow(view.stack, view.me, { player: (p) => view.players[p]!.name, card: (id) => data(id).name }, canNeigh)
+    ? describeNeighWindow(view.stack, view.me, { player: (p) => view.players[p]!.name, card: (id) => data(id).name, isMagic: (id) => data(id).type === 'magic' }, canNeigh)
     : null;
 
   const recent = view.log.slice(-40);

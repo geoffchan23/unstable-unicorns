@@ -7,6 +7,8 @@ import type { InstanceId, PlayerId, StackItem } from '../engine/types';
 export interface NeighNames {
   player(p: PlayerId): string;
   card(id: InstanceId): string;
+  /** true for Magic cards, which choose their targets only when they resolve */
+  isMagic?(id: InstanceId): boolean;
 }
 
 export interface NeighWindowText {
@@ -61,7 +63,10 @@ export function describeNeighWindow(stack: StackItem[], me: PlayerId, n: NeighNa
   const outcomeIfNeigh = standsIfPassed
     ? `Neigh it and ${baseName} is cancelled instead.`
     : `Neigh back and ${baseName} goes ahead after all.`;
-  const sub = canNeigh ? `${outcomeNow} ${outcomeIfNeigh}` : outcomeNow;
+  const targetsLater = n.isMagic?.(base.card) && base.targetPlayer === undefined
+    ? `${mine ? 'You' : n.player(base.player)} will pick who it hits only if it goes ahead: Magic cards choose their targets when they resolve. `
+    : '';
+  const sub = `${targetsLater}${canNeigh ? `${outcomeNow} ${outcomeIfNeigh}` : outcomeNow}`;
 
   const banner = neighCount === 0
     ? 'waiting for Neighs'
