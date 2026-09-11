@@ -63,3 +63,42 @@ test('nothing overflows the table panel, at any size we play on', async ({ page 
   await expect(page.locator('.stage-cards')).toBeVisible();
   await checkSizes(page, 'with a card on the stage');
 });
+
+test('a full stable scrolls instead of pushing the table off the screen', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto('./?seed=5&motion=off');
+  await page.evaluate(() => localStorage.removeItem('uu.local'));
+  await page.goto('./?seed=5&motion=off');
+  await page.getByRole('button', { name: 'Play on this device' }).click();
+  await page.getByRole('button', { name: 'Start Game' }).click();
+  await expect(page.getByTestId('draw')).toBeVisible();
+
+  // more cards than could fit at any of these widths, so the row has to deal with the overflow somehow
+  await page.evaluate(() => {
+    const stable = document.querySelector('.my-stable')!;
+    const tile = stable.querySelector('.tile')!;
+    for (let i = 0; i < 25; i++) stable.appendChild(tile.cloneNode(true));
+  });
+
+  for (const size of SIZES) {
+    await page.setViewportSize({ width: size.width, height: size.height });
+    await page.waitForTimeout(150);
+    const out = await page.evaluate(() => {
+      const box = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      const stable = document.querySelector('.my-stable')!;
+      const draw = document.querySelector('[data-testid=draw]')!.getBoundingClientRect();
+      const row = box('.my-row');
+      const tbl = box('.tbl');
+      return {
+        rowSpill: Math.round(Math.max(0, row.right - tbl.right, tbl.left - row.left)),
+        scrolls: stable.scrollWidth > stable.clientWidth,
+        drawOnScreen: draw.right <= window.innerWidth + 1 && draw.left >= -1,
+        sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+      };
+    });
+    expect(out.rowSpill, `${size.name}: your stable pushes the table off the screen`).toBe(0);
+    expect(out.scrolls, `${size.name}: your stable should scroll once it is full`).toBe(true);
+    expect(out.drawOnScreen, `${size.name}: the Draw button is off screen`).toBe(true);
+    expect(out.sideways, `${size.name}: the page scrolls sideways`).toBe(false);
+  }
+});
