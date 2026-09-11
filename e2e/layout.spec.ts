@@ -25,7 +25,9 @@ async function checkSizes(page: import('@playwright/test').Page, when: string) {
       return {
         deck: spill('.pile.deck'),
         piles: spill('.piles'),
-        staged: spill('.stage-cards'),
+        // the card itself, not the box around it: it is drawn with a transform, so the two can disagree
+        staged: spill('.stage-base .card'),
+        stagedNeigh: spill('.stage-neigh .card'),
         seatRowScrolls: (() => { const r = document.querySelector('.tbl .seats')!; return r.scrollHeight <= r.clientHeight + 1; })(),
         sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       };
@@ -33,6 +35,7 @@ async function checkSizes(page: import('@playwright/test').Page, when: string) {
     expect(out.deck, `${size.name} ${when}: the deck spills out of the table`).toBe(0);
     expect(out.piles, `${size.name} ${when}: the discard/nursery column spills out of the table`).toBe(0);
     expect(out.staged, `${size.name} ${when}: the played card spills out of the table`).toBe(0);
+    expect(out.stagedNeigh, `${size.name} ${when}: a Neigh on the stage spills out of the table`).toBe(0);
     expect(out.seatRowScrolls, `${size.name} ${when}: the seat row grew a second line`).toBe(true);
     expect(out.sideways, `${size.name} ${when}: the page scrolls sideways`).toBe(false);
   }
