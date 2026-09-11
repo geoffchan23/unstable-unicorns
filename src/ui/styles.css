@@ -199,7 +199,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 }
 .seat input:focus-visible, .seed input:focus-visible, .field input:focus-visible { outline: none; border-color: var(--focus); }
 .toggle { display: flex; border: 2px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--panel); }
-.toggle button { background: transparent; border: 0; padding: 7px 12px; cursor: pointer; color: var(--ink-2); font-weight: 700; }
+.toggle button { flex: 1 1 0; background: transparent; border: 0; padding: 8px 12px; cursor: pointer; color: var(--ink-2); font-weight: 700; white-space: nowrap; }
 .toggle button.on { background: var(--btn); color: #fff; font-weight: 800; }
 .add { justify-self: start; }
 .setup-foot { display: grid; gap: 12px; justify-items: center; text-align: center; }
@@ -225,9 +225,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 .sheet-sub { margin: 0; color: var(--ink-2); font-size: 14px; font-weight: 700; }
 .sheet .row.wrap { gap: 8px; }
 .choices { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.choice { background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 10px 16px; cursor: pointer; font-weight: 800; color: var(--ink); }
+.choice { background: var(--panel); border: 2px solid var(--line); border-radius: 999px; padding: 13px 22px 14px; font-size: 16px; cursor: pointer; font-weight: 800; color: var(--ink); }
 .choice:not(:disabled):hover { border-color: var(--ink-2); }
-.choice.neigh { --b: var(--neigh); --e: var(--neigh-edge); background: var(--b); color: #fff; border-color: transparent; box-shadow: 0 4px 0 var(--e); text-transform: uppercase; font-family: Fredoka, sans-serif; font-weight: 700; font-stretch: 85%; font-variation-settings: "wdth" 85; font-size: 17px; padding: 10px 20px 11px; }
+.choice.neigh { --b: var(--neigh); --e: var(--neigh-edge); background: var(--b); color: #fff; border-color: transparent; box-shadow: 0 4px 0 var(--e); text-transform: uppercase; font-family: Fredoka, sans-serif; font-weight: 700; font-stretch: 85%; font-variation-settings: "wdth" 85; font-size: 19px; padding: 13px 26px 14px; }
 .choice.neigh:not(:disabled):active { transform: translateY(3px); box-shadow: 0 1px 0 var(--e); }
 .choice.ghost { font-weight: 700; color: var(--ink-2); }
 .choice:disabled { opacity: 0.45; cursor: default; }
@@ -265,6 +265,17 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .sheet-wrap.tucked { background: transparent; pointer-events: none; align-items: flex-end; justify-content: center; }
 .sheet-pill { pointer-events: auto; margin-bottom: calc(10px + env(safe-area-inset-bottom)); display: flex; gap: 10px; align-items: center; max-width: 92vw; padding: 10px 16px 11px; border: 0; border-radius: 999px; background: var(--btn); color: #fff; font-weight: 800; box-shadow: 0 4px 0 var(--btn-edge), var(--lift-2); cursor: pointer; }
 .sheet-pill-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* the cards to choose from, grouped under whose they are: it has to be obvious what you are about to
+   destroy or steal, and from whom */
+.pick-groups { display: grid; gap: 14px; }
+.pick-owner {
+  display: flex; align-items: baseline; gap: 8px; margin: 0 0 6px;
+  font-family: "Bebas Neue", Fredoka, sans-serif; font-size: 16px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2);
+}
+.pick-owner b { font-family: Fredoka, Nunito, sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 0.01em; color: var(--ink); text-transform: none; }
+.pick-owner.mine b { color: var(--btn); }
+.pick-owner::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: var(--line); }
 
 /* fluid card grid inside sheets: fills the width, cards keep a 2:3 face */
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; justify-items: stretch; }

@@ -8,6 +8,7 @@ import { artFor } from './art';
 import { describePrompt } from './promptText';
 import type { NeighWindowText } from './neighText';
 import { groupTurns, tokenizeLine } from './turnLog';
+import { groupByOwner } from './pickGroups';
 
 /** The opened-up card: big art, full text, and whatever you can do with it right now. */
 export interface DetailNav { index: number; total: number; go: (index: number) => void }
@@ -125,7 +126,6 @@ export function PromptSheet({ prompt, view, onAnswer }: { prompt: Prompt; view: 
   useEffect(() => setPicked([]), [prompt.id]);
   const data = (id: number) => cardData.get(view.cards[id]!.def)!;
   const t = describePrompt(prompt, { player: (p) => view.players[p]!.name, card: (id) => data(id).name, cardText: (id) => data(id).text });
-  const ownerOf = (id: number) => view.players.find((p) => p.stable.includes(id) || (p.hand ?? []).includes(id));
 
   let body: React.ReactNode;
   switch (prompt.kind) {
@@ -158,24 +158,24 @@ export function PromptSheet({ prompt, view, onAnswer }: { prompt: Prompt; view: 
       break;
     case 'chooseCard': {
       const multi = (prompt.count ?? 1) > 1;
+      const groups = groupByOwner(prompt.options as number[], view);
+      const pick = (id: number) => {
+        if (!multi) onAnswer(id);
+        else setPicked((ps) => (ps.includes(id) ? ps.filter((x) => x !== id) : [...ps, id]));
+      };
       body = (
         <>
-          <div className="card-grid">
-            {(prompt.options as number[]).map((id) => {
-              const owner = ownerOf(id);
-              const where = owner
-                ? (owner.stable.includes(id) ? `${owner.id === view.me ? 'my' : owner.name + "'s"} stable` : `${owner.id === view.me ? 'my' : owner.name + "'s"} hand`)
-                : view.discard.includes(id) ? 'discard' : view.nursery.includes(id) ? 'nursery' : 'deck';
-              return (
-                <CardView
-                  key={id} data={data(id)} badge={where || undefined} selected={picked.includes(id)}
-                  onClick={() => {
-                    if (!multi) onAnswer(id);
-                    else setPicked((ps) => (ps.includes(id) ? ps.filter((x) => x !== id) : [...ps, id]));
-                  }}
-                />
-              );
-            })}
+          <div className="pick-groups">
+            {groups.map((g) => (
+              <section key={g.key}>
+                <h3 className={`pick-owner ${g.mine ? 'mine' : ''}`}><b>{g.label}</b></h3>
+                <div className="card-grid">
+                  {g.ids.map((id) => (
+                    <CardView key={id} data={data(id)} selected={picked.includes(id)} onClick={() => pick(id)} />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
           <div className="choices">
             {multi && <button type="button" className="choice primary" disabled={picked.length !== prompt.count} onClick={() => onAnswer(picked)}>Confirm {picked.length}/{prompt.count}</button>}
