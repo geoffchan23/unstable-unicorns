@@ -100,6 +100,17 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
 - Prompts with a single option auto-resolve (no prompt is raised), which affects test scripting.
 - Commit art files never; `assets/art/` and `.cache/` are gitignored.
 
+## Versioning and branches
+
+- `main` is protected on GitHub: changes go through a pull request. Repository admins (the owner) may still
+  push straight to `main`; everyone else cannot. Force pushes and branch deletion are blocked for everyone.
+- **Bump the minor version on every merge that changes the game in a way a player would notice** — a feature,
+  a visible redesign, a rules-affecting fix: `v1.0` → `v1.1` → `v1.2`. Tag the merge commit
+  (`git tag -a v1.1 -m "<what changed>" && git push origin refs/tags/v1.1`), set the same number in
+  `package.json`, and cut a GitHub release (`gh release create v1.1 --notes "..."`). Patch bumps (`v1.1.1`)
+  are for fixes shipped on their own; typo fixes, tests, refactors and tooling need no bump at all.
+- Releases so far: `v0.5` the text-first UI (branch and tag), `v1.0` the animated table.
+
 ## Status and next steps
 
 Done: online multiplayer PWA (spec: `docs/superpowers/specs/2026-09-08-online-pwa-design.md`). Deploy
