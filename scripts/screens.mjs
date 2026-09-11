@@ -60,7 +60,7 @@ for (const [tag, device] of [['pixel', devices['Pixel 7']], ['ipad', devices['iP
     await page.waitForTimeout(300); await shot('5-win');
     // online lobby
     await page.goto(BASE); await page.getByRole('button', { name: 'Play online' }).click(); await page.waitForTimeout(400); await shot('6-online-form');
-    await page.getByTestId('name').fill('Geoff'); await page.getByTestId('passphrase').fill('dev'); await page.getByTestId('create').click();
+    await page.getByTestId('name').fill('Geoff'); await page.getByTestId('create').click();
     await page.getByTestId('roomcode').waitFor(); await page.getByRole('button', { name: '+ Add a bot' }).click(); await page.waitForTimeout(300); await shot('7-lobby');
     await page.evaluate(() => localStorage.clear());
     await ctx.close();

@@ -81,9 +81,11 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
   (the sim fails if the events do not explain the zones). The UI never reads the log for animation, only events.
 - The table stays React + DOM (no game engine); animation is the Web Animations API + CSS, no animation library.
   Decisions wait for the staged playback (`stage.busy`); bots wait for it too.
-- A family passphrase gates room creation only; joining an existing room needs only its 4-letter code.
-  It is one server-wide secret (`UNICORNS_PASSPHRASE`, `dev` under `npm run dev`), not a per-room password
-  the host chooses; the lobby says so under the field.
+- No passphrase: anyone the origin check admits may create a room, and joining needs only the 4-letter code.
+  A shared family passphrase was tried and dropped (2026-09-11) as friction that bought nothing the caps in
+  `server.ts` do not already give: origin allowlist, one new room a minute per IP, 50 rooms, 200 connections,
+  rooms reaped when empty. The earlier design docs under `docs/superpowers/` still describe it; they are a
+  record of that work, not the current behaviour.
 - Rooms live in server memory only — a server restart drops all games; clients get NO_ROOM and clear
   their session back to Home.
 - Card art is published on purpose (into the public `geoffchan23.github.io` site repo), unlike the

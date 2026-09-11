@@ -54,11 +54,11 @@ describe('GameClient', () => {
     const storage = mem();
     const c = make(storage);
     c.connect();
-    c.create('Geoff', 'moo');
+    c.create('Geoff');
     const ws = FakeWS.instances[0]!;
     expect(ws.sent).toHaveLength(0);
     ws.open();
-    expect(JSON.parse(ws.sent[0]!)).toEqual({ type: 'create', name: 'Geoff', passphrase: 'moo' });
+    expect(JSON.parse(ws.sent[0]!)).toEqual({ type: 'create', name: 'Geoff' });
     ws.receive({ type: 'joined', code: 'ABCD', seat: 0, token: 't1' });
     expect(JSON.parse(storage.getItem(SESSION_KEY)!)).toEqual({ code: 'ABCD', token: 't1' });
     expect(c.snapshot().joined?.code).toBe('ABCD');

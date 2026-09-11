@@ -87,14 +87,16 @@ request to the domain.
 
 ## 4. Server env
 
-Create `~/unicorns/.env` on the VM (not committed anywhere — this is the only place the
-passphrase lives outside your head):
+Create `~/unicorns/.env` on the VM (not committed anywhere):
 
 ```
-UNICORNS_PASSPHRASE=<choose a family passphrase>
 PORT=8787
 ALLOWED_ORIGINS=https://geoffreychan.com
 ```
+
+There is no passphrase. Anyone the origin check lets in may create a room; what keeps this
+server ours is that origin allowlist plus the caps in `src/server/server.ts` (one new room a
+minute per address, 50 rooms, 200 connections, and rooms that reap themselves when empty).
 
 Optional: `HOST` overrides the bind address (defaults to `127.0.0.1` in production, since
 Caddy proxies to localhost — the default is right for this deployment; leave it unset). The
@@ -108,7 +110,7 @@ reboot; `pm2 save` (run automatically by the deploy script) persists the process
 pm2's environment for the `unicorns` process comes from `deploy-server.sh` sourcing
 `~/unicorns/.env` before calling `pm2 startOrRestart ... --update-env`. Always restart via
 that script — a bare `pm2 restart unicorns --update-env` run directly on the VM does not
-re-source `.env` and will drop `UNICORNS_PASSPHRASE` (and any other env var) from the running
+re-source `.env` and will drop `ALLOWED_ORIGINS` (and any other env var) from the running
 process.
 
 ## 5. Deploy
@@ -142,7 +144,7 @@ ssh -i ~/.ssh/oci_wordle_key ubuntu@140.238.145.208 'pm2 logs unicorns'
 ## 6. Smoke test
 
 1. Open `https://geoffreychan.com/unicorns/`.
-2. Tap "Play online", create a room with the family passphrase.
+2. Tap "Play online" and create a room.
 3. Join the same room from a phone using the 4-letter room code (or the share link).
 4. Start the game and play a turn from each device to confirm both directions of the
    websocket connection work through Caddy.

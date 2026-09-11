@@ -18,7 +18,6 @@ export interface Limits {
 export interface ServerOptions {
   port?: number;
   host?: string;
-  passphrase?: string | null;
   allowedOrigins?: string[];
   dev?: boolean;
   hostGrace?: number;
@@ -26,13 +25,6 @@ export interface ServerOptions {
   limits?: Partial<Limits>;
 }
 interface Conn { id: string; ws: WebSocket; room: Room | null; misses: number; tokens: number; lastRefill: number; ip: string }
-
-const sha = (s: string) => createHash('sha256').update(s).digest();
-const sameSecret = (a: string, b: string) => {
-  const ha = sha(a);
-  const hb = sha(b);
-  return timingSafeEqual(ha, hb);
-};
 
 const LAN_ORIGIN =
   /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/;
@@ -43,7 +35,6 @@ const KNOWN_TYPES = new Set<string>(CLIENT_MESSAGE_TYPES);
 
 export async function startServer(opts: ServerOptions = {}) {
   const dev = opts.dev ?? false;
-  const passphrase = opts.passphrase ?? null;
   const origins = new Set(opts.allowedOrigins ?? ['https://geoffreychan.com']);
   const limits: Limits = { ...DEFAULT_LIMITS, ...opts.limits };
   const host = opts.host ?? process.env.HOST ?? (dev ? '0.0.0.0' : '127.0.0.1');
@@ -136,12 +127,10 @@ export async function startServer(opts: ServerOptions = {}) {
       if (!KNOWN_TYPES.has(msg.type)) { reply({ type: 'error', message: 'Unknown message type' }); return; }
       try {
         if (msg.type === 'create') {
+          // Anyone on the site may start a game. What keeps this server from being someone else's is the
+          // origin check above, plus the caps below: one new room a minute per address, 50 rooms, 200
+          // connections, and rooms that reap themselves once they empty out.
           if (c.room) throw new RoomError('Leave your current room first');
-          if (typeof passphrase === 'string') {
-            if (!sameSecret(String(msg.passphrase ?? ''), passphrase)) throw new RoomError("That is not the family passphrase. It is the one set on this server, not a password you choose.", 'PASSPHRASE');
-          } else if (!dev) {
-            throw new RoomError('Room creation is disabled', 'PASSPHRASE');
-          }
           if (!dev) {
             const t = lastCreate.get(c.ip) ?? 0;
             if (Date.now() - t < CREATE_RATE_MS) throw new RoomError('Slow down: one new room per minute', 'RATE');

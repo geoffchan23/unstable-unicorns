@@ -118,7 +118,6 @@ test('two players create, join, play to a winner, rejoin after reload, host tran
   test.setTimeout(150_000);
   const a = await open(browser, 'Ann');
   const b = await open(browser, 'Ben');
-  await a.page.getByTestId('passphrase').fill('dev');
   await a.page.getByTestId('create').click();
   const code = (await a.page.getByTestId('roomcode').textContent())!.trim();
   expect(code).toMatch(/^[A-Z]{4}$/);

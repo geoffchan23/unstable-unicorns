@@ -21,15 +21,11 @@ const ls = {
 
 export function Lobby({ client, snap, onBack }: { client: GameClient; snap: Snapshot; onBack(): void }) {
   const [name, setName] = useState(() => ls.get('uu.name'));
-  const [pass, setPass] = useState(() => ls.get('uu.passphrase'));
   const [code, setCode] = useState(() => new URLSearchParams(location.search).get('join') ?? '');
   const [tab, setTab] = useState<'join' | 'create'>(code ? 'join' : 'create');
   useEffect(() => {
     ls.set('uu.name', name);
   }, [name]);
-  useEffect(() => {
-    ls.set('uu.passphrase', pass);
-  }, [pass]);
 
   if (!snap.joined || !snap.lobby) {
     const busy = snap.status !== 'open';
@@ -49,14 +45,8 @@ export function Lobby({ client, snap, onBack }: { client: GameClient; snap: Snap
           <button type="button" className={tab === 'join' ? 'on' : ''} onClick={() => setTab('join')}>Join a room</button>
         </div>
         {tab === 'create' ? (
-          <form onSubmit={(e) => { e.preventDefault(); client.create(name, pass); }}>
-            <label className="field">Family passphrase
-              <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} data-testid="passphrase" />
-            </label>
-            <p className="hint field-hint">
-              The one passphrase for our server, the same every time. It is not a password you pick here, and it is
-              not needed to join: anyone with the room code can walk in.
-            </p>
+          <form onSubmit={(e) => { e.preventDefault(); client.create(name); }}>
+            <p className="hint field-hint">You will get a four-letter code to send to everyone else.</p>
             <button type="submit" className="primary big" disabled={busy} data-testid="create">Create room</button>
           </form>
         ) : (

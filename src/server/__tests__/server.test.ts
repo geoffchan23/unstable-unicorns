@@ -25,7 +25,7 @@ describe('ws server', () => {
   // a whole-game correctness test that legitimately fires many `action` messages back-to-back
   // (each awaited round trip on localhost easily beats the production default of 20/s burst 40).
   // The throttle itself is exercised against its own dedicated, tightly-limited server instance.
-  beforeAll(async () => { srv = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true, limits: { msgPerSec: 10_000, burst: 10_000 } }); });
+  beforeAll(async () => { srv = await startServer({ port: 0, allowedOrigins: ['http://localhost:5173'], dev: true, limits: { msgPerSec: 10_000, burst: 10_000 } }); });
   afterAll(() => srv.close());
 
   it('rejects bad origins', async () => {
@@ -36,12 +36,10 @@ describe('ws server', () => {
     const r = await fetch(`http://127.0.0.1:${srv.port}/healthz`);
     expect(await r.text()).toBe('ok');
   });
-  it('requires the passphrase to create, not to join; two clients play a whole game', async () => {
+  it('anyone allowed to connect may create a room; two clients play a whole game', async () => {
     const a = new Client(srv.port); const b = new Client(srv.port);
     await a.open(); await b.open();
-    a.send({ type: 'create', name: 'A', passphrase: 'wrong' });
-    expect((await a.next('error')).code).toBe('PASSPHRASE');
-    a.send({ type: 'create', name: 'A', passphrase: 'moo' });
+    a.send({ type: 'create', name: 'A' });
     const joined = await a.next('joined');
     b.send({ type: 'join', code: joined.code.toLowerCase(), name: 'B' });
     const jb = await b.next('joined'); expect(jb.seat).toBe(1);
@@ -71,7 +69,7 @@ describe('ws server', () => {
   }, 60_000);
   it('rejoin with a token after the socket drops', async () => {
     const a = new Client(srv.port); await a.open();
-    a.send({ type: 'create', name: 'A', passphrase: 'moo' });
+    a.send({ type: 'create', name: 'A' });
     const j = await a.next('joined');
     a.ws.close();
     const a2 = new Client(srv.port); await a2.open();
@@ -82,20 +80,20 @@ describe('ws server', () => {
     a2.ws.close();
   });
   it('rate-limits room creation per IP', async () => {
-    const s2 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: false });
+    const s2 = await startServer({ port: 0, allowedOrigins: ['http://localhost:5173'], dev: false });
     const c = new Client(s2.port); await c.open();
-    c.send({ type: 'create', name: 'A', passphrase: 'moo' }); await c.next('joined');
+    c.send({ type: 'create', name: 'A' }); await c.next('joined');
     c.send({ type: 'leave' });
-    c.send({ type: 'create', name: 'A', passphrase: 'moo' });
+    c.send({ type: 'create', name: 'A' });
     expect((await c.next('error')).code).toBe('RATE');
     c.ws.close(); await s2.close();
   });
   it('rejoining a different room disconnects the socket from its old room first', async () => {
     const a = new Client(srv.port); const b = new Client(srv.port);
     await a.open(); await b.open();
-    a.send({ type: 'create', name: 'A', passphrase: 'moo' });
+    a.send({ type: 'create', name: 'A' });
     const joinedA = await a.next('joined');
-    b.send({ type: 'create', name: 'B', passphrase: 'moo' });
+    b.send({ type: 'create', name: 'B' });
     const joinedB = await b.next('joined');
     a.send({ type: 'rejoin', code: joinedB.code, token: joinedB.token });
     expect((await a.next('joined')).seat).toBe(0);
@@ -110,7 +108,7 @@ describe('ws server', () => {
     c.ws.close();
   });
   it('throttles a connection sending too many messages, closing the socket with 1008', async () => {
-    const s5 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true, limits: { msgPerSec: 5, burst: 5 } });
+    const s5 = await startServer({ port: 0, allowedOrigins: ['http://localhost:5173'], dev: true, limits: { msgPerSec: 5, burst: 5 } });
     const c = new Client(s5.port); await c.open();
     const closed = new Promise<number>((res) => c.ws.once('close', (code) => res(code)));
     for (let i = 0; i < 100; i++) c.send({ type: 'leave' });
@@ -118,7 +116,7 @@ describe('ws server', () => {
     await s5.close();
   });
   it('rate-limits repeated failed join/rejoin attempts per IP', async () => {
-    const s4 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: false, limits: { joinFailures: 3 } });
+    const s4 = await startServer({ port: 0, allowedOrigins: ['http://localhost:5173'], dev: false, limits: { joinFailures: 3 } });
     const c = new Client(s4.port); await c.open();
     for (let i = 0; i < 3; i++) {
       c.send({ type: 'join', code: 'ZZZZ', name: 'X' });
@@ -129,9 +127,9 @@ describe('ws server', () => {
     c.ws.close(); await s4.close();
   });
   it('close() destroys every room, not just the sockets', async () => {
-    const s3 = await startServer({ port: 0, passphrase: 'moo', allowedOrigins: ['http://localhost:5173'], dev: true });
+    const s3 = await startServer({ port: 0, allowedOrigins: ['http://localhost:5173'], dev: true });
     const c = new Client(s3.port); await c.open();
-    c.send({ type: 'create', name: 'A', passphrase: 'moo' });
+    c.send({ type: 'create', name: 'A' });
     await c.next('joined');
     expect(s3.registry.rooms.size).toBe(1);
     c.ws.close();

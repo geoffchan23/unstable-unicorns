@@ -165,10 +165,10 @@ export class GameClient {
     else this.queue.push(m);
   }
 
-  create(name: string, passphrase: string) {
+  create(name: string) {
     this.rejoining = false;
     this.saveSession(null);
-    this.send({ type: 'create', name, passphrase });
+    this.send({ type: 'create', name });
   }
 
   join(code: string, name: string) {

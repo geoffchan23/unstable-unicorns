@@ -20,7 +20,7 @@ watch('src', { recursive: true }, (_, f) => { if (f && !f.includes('__tests__'))
 const children = [];
 children.push(spawn(process.execPath, ['scripts/static.mjs', 'dist/dev', '5173'], { stdio: 'inherit' }));
 if (existsSync('src/server/index.ts')) {
-  children.push(spawn('npx', ['tsx', 'watch', 'src/server/index.ts'], { stdio: 'inherit', env: { ...process.env, NODE_ENV: 'development', PORT: '8787', HOST_GRACE_MS: '3000', UNICORNS_PASSPHRASE: 'dev' } }));
+  children.push(spawn('npx', ['tsx', 'watch', 'src/server/index.ts'], { stdio: 'inherit', env: { ...process.env, NODE_ENV: 'development', PORT: '8787', HOST_GRACE_MS: '3000' } }));
 }
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { children.forEach((c) => c.kill()); process.exit(0); });
 console.log('client: http://localhost:5173/unicorns/');
