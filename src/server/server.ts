@@ -138,7 +138,7 @@ export async function startServer(opts: ServerOptions = {}) {
         if (msg.type === 'create') {
           if (c.room) throw new RoomError('Leave your current room first');
           if (typeof passphrase === 'string') {
-            if (!sameSecret(String(msg.passphrase ?? ''), passphrase)) throw new RoomError('Wrong passphrase', 'PASSPHRASE');
+            if (!sameSecret(String(msg.passphrase ?? ''), passphrase)) throw new RoomError("That is not the family passphrase. It is the one set on this server, not a password you choose.", 'PASSPHRASE');
           } else if (!dev) {
             throw new RoomError('Room creation is disabled', 'PASSPHRASE');
           }

@@ -21,7 +21,8 @@ src/server/             ws game server: Room/RoomRegistry, protocol, startServer
 src/ui/                 React app: Home/Setup/Lobby, GameScreen (the table) + LocalGame/OnlineGame drivers
 src/ui/stage/           staged playback: playback.ts (rewind/apply a view through events, pure), useStage (queue +
                         flyers/bubbles/banner), anchors (DOM rects per card/zone), busy (bots wait for the stage)
-src/ui/table/           Seats (avatars), Centre (deck/stage/piles), Mine (stable row + hand fan), TurnBanner, WinOverlay
+src/ui/table/           Seats (avatars), Centre (deck/stage/piles), Mine (stable row + hand fan), Bubbles
+                        (speech, in a layer over the table), TurnBanner, WinOverlay
 src/ui/sheets.tsx       bottom sheets: prompt, Neigh, begin-turn, card detail, stable, history
 src/ui/table.css        the table; styles.css keeps menus, cards, sheets
 src/ui/localSave.ts     the local game is saved after every action (seed, seats, actions) and resumed on reload
@@ -81,6 +82,8 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
 - The table stays React + DOM (no game engine); animation is the Web Animations API + CSS, no animation library.
   Decisions wait for the staged playback (`stage.busy`); bots wait for it too.
 - A family passphrase gates room creation only; joining an existing room needs only its 4-letter code.
+  It is one server-wide secret (`UNICORNS_PASSPHRASE`, `dev` under `npm run dev`), not a per-room password
+  the host chooses; the lobby says so under the field.
 - Rooms live in server memory only — a server restart drops all games; clients get NO_ROOM and clear
   their session back to Home.
 - Card art is published on purpose (into the public `geoffchan23.github.io` site repo), unlike the

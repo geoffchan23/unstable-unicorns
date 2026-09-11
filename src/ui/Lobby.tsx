@@ -53,6 +53,10 @@ export function Lobby({ client, snap, onBack }: { client: GameClient; snap: Snap
             <label className="field">Family passphrase
               <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} data-testid="passphrase" />
             </label>
+            <p className="hint field-hint">
+              The one passphrase for our server, the same every time. It is not a password you pick here, and it is
+              not needed to join: anyone with the room code can walk in.
+            </p>
             <button type="submit" className="primary big" disabled={busy} data-testid="create">Create room</button>
           </form>
         ) : (

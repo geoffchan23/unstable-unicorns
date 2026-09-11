@@ -10,6 +10,7 @@ import type { SeatInfo } from './seats';
 import { useStage } from './stage/useStage';
 import { Flyer } from './stage/Flyer';
 import { Seats } from './table/Seats';
+import { Bubbles } from './table/Bubbles';
 import { Centre } from './table/Centre';
 import { Mine, type DropTarget } from './table/Mine';
 import { TurnBanner } from './table/TurnBanner';
@@ -156,7 +157,7 @@ export function GameScreen({
       </header>
       {banner}
 
-      <Seats view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} bubbles={stage.bubbles} hit={stage.hit} onOpen={setExpanded} data={data}
+      <Seats view={view} seats={seats} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} hit={stage.hit} onOpen={setExpanded} data={data}
         dropOver={dragOver.target?.kind === 'seat' ? dragOver.target.player : null} />
       <Centre view={view} anchors={stage.anchors} hidden={stage.hidden} fx={stage.fx} stamps={stage.stamps} data={data} onOpenCard={openCard}
         drop={dragOver.lifting ? (dragOver.target?.kind === 'table' ? 'over' : 'ready') : null} />
@@ -167,6 +168,7 @@ export function GameScreen({
         onDrop={dropCard} onDragOver={(target, lifting) => setDragOver({ target, lifting })} lifting={dragOver.lifting}
       />
 
+      <Bubbles bubbles={stage.bubbles} anchors={stage.anchors} exclude={view.me} />
       <TurnBanner banner={stage.banner} view={view} seats={seats} />
       {stage.flyers.map((f) => <Flyer key={f.id} spec={f} />)}
 

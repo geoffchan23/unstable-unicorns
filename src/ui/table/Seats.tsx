@@ -8,7 +8,6 @@ import { avatarFor } from '../avatars';
 import { Avatar } from './Avatar';
 import { CardTile } from './CardFace';
 import { Anchors, cardKey, zoneKey } from '../stage/anchors';
-import type { Bubble } from '../stage/useStage';
 import { reducedMotion } from '../stage/motion';
 
 /** the other players, starting from the current turn and following turn order */
@@ -22,9 +21,9 @@ export function seatOrder(view: PlayerView): PlayerId[] {
   return out;
 }
 
-export function Seats({ view, seats, anchors, hidden, fx, bubbles, hit, onOpen, data, dropOver }: {
+export function Seats({ view, seats, anchors, hidden, fx, hit, onOpen, data, dropOver }: {
   view: PlayerView; seats: SeatInfo[]; anchors: Anchors; hidden: ReadonlySet<InstanceId>; fx: ReadonlyMap<string, 'shake' | 'shield'>;
-  bubbles: Bubble[]; hit: ReadonlySet<PlayerId>; onOpen: (p: PlayerId) => void; data: (id: InstanceId) => CardData;
+  hit: ReadonlySet<PlayerId>; onOpen: (p: PlayerId) => void; data: (id: InstanceId) => CardData;
   /** the seat a lifted card is hovering over, if any */
   dropOver?: PlayerId | null;
 }) {
@@ -59,7 +58,6 @@ export function Seats({ view, seats, anchors, hidden, fx, bubbles, hit, onOpen, 
         const seat = seats[p] ?? { name: pl.name, kind: 'human' as const, connected: true };
         const av = avatarFor(seat, p);
         const active = view.turn.player === p && view.winner === null;
-        const bubble = bubbles.find((b) => b.player === p);
         const backs = Math.min(pl.handCount, 8);
         return (
           <div
@@ -87,7 +85,6 @@ export function Seats({ view, seats, anchors, hidden, fx, bubbles, hit, onOpen, 
                 <CardTile key={c} data={data(c)} anchorRef={anchors.ref(cardKey(c))} hidden={hidden.has(c)} fx={fx.get(cardKey(c))} onClick={() => onOpen(p)} />
               ))}
             </div>
-            {bubble && <div className="bubble" key={bubble.id} role="status">{bubble.text}</div>}
           </div>
         );
       })}

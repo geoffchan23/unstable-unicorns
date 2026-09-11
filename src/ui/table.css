@@ -33,7 +33,7 @@
    unscoped rule here turns that into a clipped horizontal strip. */
 .tbl .seats {
   --seat-w: 104px;
-  display: flex; flex-wrap: nowrap; gap: 6px; justify-content: safe center; align-items: flex-start;
+  display: flex; flex-wrap: nowrap; gap: 16px; justify-content: safe center; align-items: flex-start;
   /* Room for the active avatar's ring: it sits 5px outside the avatar, is 3px thick and pulses to
      1.12, so it reaches ~9px past the edge. overflow-y is hidden, so without this it is shaved off. */
   padding: 11px 11px 6px;
@@ -217,7 +217,8 @@
 }
 .bubble::before { content: ""; position: absolute; left: 50%; top: -9px; transform: translateX(-50%); border: 7px solid transparent; border-top: 0; border-bottom-color: var(--ink); }
 .bubble::after { content: ""; position: absolute; left: 50%; top: -6px; transform: translateX(-50%); border: 6px solid transparent; border-top: 0; border-bottom-color: var(--panel); }
-.tseat .bubble { left: 3px; right: 3px; width: auto; max-width: none; transform: none; font-size: 11.5px; padding: 5px 6px; animation-name: pop-left; }
+.bubble-layer { position: fixed; inset: 0; pointer-events: none; z-index: 8; }
+.seat-bubble { position: fixed; max-width: min(230px, 62vw); font-size: 12px; }
 .mine-bubble { top: auto; bottom: calc(100% + 4px); left: 40px; transform: none; max-width: 260px; text-align: left; }
 .mine-bubble::before { top: auto; bottom: -9px; left: 24px; transform: none; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--ink); }
 .mine-bubble::after { top: auto; bottom: -6px; left: 25px; transform: none; border: 6px solid transparent; border-bottom: 0; border-top-color: var(--panel); }
@@ -258,7 +259,7 @@
 /* ---------- bigger screens ---------- */
 @media (min-width: 720px) {
   .tbl { padding: 0 16px; }
-  .tbl .seats { --seat-w: 150px; height: 218px; }
+  .tbl .seats { --seat-w: 150px; height: 218px; gap: 22px; }
   .tseat-who { font-size: 15px; }
   .tseat-count { font-size: 18px; }
   .avatar-md { width: 66px; height: 66px; font-size: 36px; }

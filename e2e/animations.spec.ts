@@ -12,8 +12,8 @@ test('a draw flies a card from the deck, then the next turn is announced', async
   await expect(page.getByTestId('hand').locator('.fan-slot')).toHaveCount(handBefore + 1);
   await expect(page.locator('.turn-banner')).toBeVisible({ timeout: 5000 });
   await expect(page.locator('.turn-banner')).toContainText(/turn/i);
-  // the bot's turn produces a bubble by its avatar
-  await expect(page.locator('.tseat .bubble').first()).toBeVisible({ timeout: 8000 });
+  // the bot's turn produces a bubble by its avatar, in the layer that draws over the table
+  await expect(page.locator('.bubble-layer .seat-bubble').first()).toBeVisible({ timeout: 8000 });
 });
 
 test('playing a card puts it on the stage before the Neigh window opens', async ({ page }) => {
