@@ -66,7 +66,14 @@ export function Seats({ view, seats, anchors, hidden, fx, hit, onOpen, data, dro
             data-seat={p}
             ref={(el) => { if (el) els.current.set(p, el); else els.current.delete(p); }}
           >
-            <button type="button" className="tseat-btn" onClick={() => onOpen(p)} aria-label={`${pl.name}: ${view.unicornCounts[p]} unicorns, ${pl.handCount} cards in hand. Open stable`}>
+            <button
+              type="button"
+              className="tseat-btn"
+              onClick={() => onOpen(p)}
+              aria-label={pl.handOpen
+                ? `${pl.name}: ${view.unicornCounts[p]} unicorns. Their hand is face up: open to see their ${pl.handCount} cards`
+                : `${pl.name}: ${view.unicornCounts[p]} unicorns, ${pl.handCount} cards in hand. Open stable`}
+            >
               <Avatar avatar={av} active={active} hit={hit.has(p)} offline={seat.kind === 'human' && seat.connected === false} anchorRef={anchors.ref(`avatar:${p}`)} />
               <span className="tseat-name">
                 <span className="tseat-who">{pl.name}</span>
@@ -74,10 +81,15 @@ export function Seats({ view, seats, anchors, hidden, fx, hit, onOpen, data, dro
                 {seat.kind === 'human' && seat.connected === false ? <span className="ts-tag off">offline</span> : null}
               </span>
               <span className="tseat-hand" aria-hidden="true">
-                <span className="tseat-backs" ref={anchors.ref(zoneKey({ zone: 'hand', player: p }))}>
+                {/* face-up hands drop the fan of backs: the count is no longer the interesting part, the
+                    fact that you may read the cards is, and the row has no width to spare for both */}
+                <span className={`tseat-backs ${pl.handOpen ? 'is-hidden' : ''}`} ref={anchors.ref(zoneKey({ zone: 'hand', player: p }))}>
                   {Array.from({ length: backs }, (_, i) => <i key={i} style={{ '--i': i } as React.CSSProperties} />)}
                 </span>
-                <em>{pl.handCount} card{pl.handCount === 1 ? '' : 's'}</em>
+                <em className={pl.handOpen ? 'open-hand' : ''}>
+                  {pl.handOpen && <i className="eye" aria-hidden="true" />}
+                  {pl.handOpen ? `See ${pl.handCount} card${pl.handCount === 1 ? '' : 's'}` : `${pl.handCount} card${pl.handCount === 1 ? '' : 's'}`}
+                </em>
               </span>
             </button>
             <div className="tseat-stable" ref={anchors.ref(zoneKey({ zone: 'stable', player: p }))} style={{ '--n': pl.stable.length } as React.CSSProperties}>

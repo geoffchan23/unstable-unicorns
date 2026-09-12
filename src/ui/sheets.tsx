@@ -10,6 +10,14 @@ import type { NeighWindowText } from './neighText';
 import { groupTurns, tokenizeLine } from './turnLog';
 import { groupByOwner } from './pickGroups';
 
+/**
+ * What a card means for this app, beyond its printed text: where to look, what to tap. Only cards whose
+ * effect is invisible in the interface need one.
+ */
+const APP_HINTS: Record<string, string> = {
+  'nanny-cam': 'Whoever has this in their stable plays with their hand face up. Tap that player at the top of the table to look through it.',
+};
+
 /** The opened-up card: big art, full text, and whatever you can do with it right now. */
 export interface DetailNav { index: number; total: number; go: (index: number) => void }
 
@@ -57,6 +65,7 @@ export function CardDetailSheet({ data, inHand, canPlay, myTurn, blockedBy, play
         <div className="detail-body">
           <span className="detail-type"><span className="type-badge" aria-hidden="true"><TypeGlyph type={data.type} /></span>{TYPE_LABEL[data.type]}</span>
           <p className="detail-text">{data.type === 'basic_unicorn' && !data.text ? 'A unicorn. No special powers, but it counts.' : data.text}</p>
+          {APP_HINTS[data.id] && <p className="detail-hint"><i className="eye" aria-hidden="true" />{APP_HINTS[data.id]}</p>}
         </div>
       </div>
       {inHand && (canPlay ? (
@@ -273,7 +282,8 @@ export function StableSheet({ player, view, onClose, onOpenCard, data, isMe }: {
       </div>
       {!isMe && p.hand && (
         <>
-          <h3>{p.name}'s hand (Nanny Cam)</h3>
+          <h3 className="pick-owner"><b>{p.name}'s hand</b></h3>
+          <p className="hint">Face up to everyone: there is a Nanny Cam in their stable.</p>
           <div className="card-grid">{p.hand.map((c) => <CardView key={c} data={data(c)} onClick={() => onOpenCard(c)} />)}</div>
         </>
       )}

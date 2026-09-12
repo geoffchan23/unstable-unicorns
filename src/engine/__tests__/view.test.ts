@@ -24,3 +24,15 @@ describe('viewFor', () => {
     expect(v.playBlocks[neigh]).toBeUndefined();
   });
 });
+
+describe('an open hand', () => {
+  it('tells every player whose hand is face up, so the table can say where to look', () => {
+    const h = new Harness({ players: 3, stables: [[], ['nanny-cam'], []], hands: [['neigh'], ['neigh', 'neigh'], []] });
+    const open = (me: number) => viewFor(h.state, me).players.map((p) => p.handOpen);
+    expect(open(0)).toEqual([false, true, false]);
+    expect(open(1)).toEqual([false, true, false]);   // including the player it is attached to
+    // and the cards really are readable by everyone else
+    expect(viewFor(h.state, 0).players[1]!.hand).toHaveLength(2);
+    expect(viewFor(h.state, 0).players[2]!.hand).toBeNull();
+  });
+});

@@ -79,6 +79,9 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
 - Engine must stay free of DOM/React imports.
 - Every zone change goes through a Ctx primitive that emits a `move` event; every log line goes through `say()`
   (the sim fails if the events do not explain the zones). The UI never reads the log for animation, only events.
+- A card whose effect is invisible in the interface owes the player a line saying where to look: `APP_HINTS`
+  in `sheets.tsx` (Nanny Cam is the first). Rules the view knows about are projected, not re-derived in the
+  UI from card ids — `players[].handOpen` is how the table knows whose hand it may read.
 - The table stays React + DOM (no game engine); animation is the Web Animations API + CSS, no animation library.
   Decisions wait for the staged playback (`stage.busy`); bots wait for it too.
 - No passphrase: anyone the origin check admits may create a room, and joining needs only the 4-letter code.

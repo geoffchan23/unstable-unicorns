@@ -8,7 +8,13 @@ export interface PlayerView extends Omit<GameState, 'deck' | 'players' | 'rng' |
   unicornCounts: number[];
   /** for cards in my hand: the rule that stops me playing them right now (missing = playable when it is my turn) */
   playBlocks: Record<InstanceId, string>;
-  players: { id: PlayerId; name: string; stable: InstanceId[]; handCount: number; hand: InstanceId[] | null }[];
+  players: {
+    id: PlayerId; name: string; stable: InstanceId[]; handCount: number;
+    /** the cards, when this viewer may see them; null when the hand is hidden from them */
+    hand: InstanceId[] | null;
+    /** this player's hand is face up to the whole table (a Nanny Cam in their stable) */
+    handOpen: boolean;
+  }[];
 }
 
 /** Project the state for one player: other hands hidden (unless Nanny Cam), deck order hidden. */
@@ -30,6 +36,7 @@ export function viewFor(input: GameState, me: PlayerId): PlayerView {
       stable: [...p.stable],
       handCount: p.hand.length,
       hand: canSeeHand(p.id) ? [...p.hand] : null,
+      handOpen: stableHas(state, p.id, 'nanny-cam'),
     })),
     unicornCounts: players.map((p) => unicornCount(state, p.id)),
     playBlocks: Object.fromEntries(players[me]!.hand.flatMap((c) => {

@@ -51,6 +51,11 @@ export function Mine({ view, seats, anchors, hidden, fx, bubbles, hit, myTurn, p
         <span className="hand-cue">
           {lifting ? 'Drop it on the table to play it' : myTurn ? (view.turn.playsRemaining > 1 ? `Your turn: play a card (${view.turn.playsRemaining} left)` : 'Your turn: play a card, or draw') : `${hand.length} in hand`}
         </span>
+        {me.handOpen && (
+          <span className="open-hand mine-open" title="A Nanny Cam in your stable: your hand is face up to everyone">
+            <i className="eye" aria-hidden="true" />Everyone sees your hand
+          </span>
+        )}
         {myTurn && canDraw && <button type="button" className="primary draw-btn" data-testid="draw" onClick={onDraw}>Draw a card</button>}
       </div>
 

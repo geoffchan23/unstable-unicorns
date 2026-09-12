@@ -257,6 +257,13 @@ button.link { background: none; border: 0; color: var(--btn); text-decoration: u
 .detail-type .type-badge svg { width: 18px; height: 18px; }
 .t-downgrade .detail-type { color: #b58a00; }
 .detail-text { margin: 0; font-size: 17px; line-height: 1.4; font-weight: 700; font-style: italic; color: var(--ink); }
+/* what the card means here, as opposed to what it says: where to look, what to tap */
+.detail-hint {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 9px 12px; border-radius: 12px;
+  background: color-mix(in srgb, var(--btn) 12%, var(--panel)); border: 1px solid var(--btn);
+  color: var(--ink); font-size: 14px; font-weight: 700; line-height: 1.35;
+}
+.detail-hint .eye { margin-top: 5px; color: var(--btn); }
 @media (min-width: 720px) { .detail { grid-template-columns: 300px 1fr; align-items: start; } .detail-art { width: 300px; } }
 
 /* ---------- sheet chrome ---------- */
