@@ -216,7 +216,12 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 /* ---------- sheets & overlays ---------- */
 .sheet-wrap { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; z-index: 10; backdrop-filter: blur(2px); }
 .sheet { background: var(--ground); color: var(--ink); width: 100%; max-width: 720px; max-height: 84vh; overflow-y: auto; border-radius: 22px 22px 0 0; padding: 16px 16px calc(22px + env(safe-area-inset-bottom)); display: grid; gap: 12px; box-shadow: var(--lift-2); position: relative; }
-.sheet::before { content: ""; position: sticky; top: -16px; display: block; margin: -16px -16px 4px; height: 5px; background: var(--rb); }
+/* The rainbow edge stays pinned to the top of the sheet while its contents scroll. `z-index` is the whole
+   point: without it the strip paints in document order, so cards and text scrolled up over the top of it. */
+.sheet::before {
+  content: ""; position: sticky; top: -16px; z-index: 3; display: block; margin: -16px -16px 4px; height: 5px;
+  background: var(--rb);
+}
 .sheet .row.center .card:not(.compact) { width: 190px; height: 326px; }
 .sheet .row.center .card .name { font-size: 15px; }
 .sheet .row.center .card .text { font-size: 12px; }

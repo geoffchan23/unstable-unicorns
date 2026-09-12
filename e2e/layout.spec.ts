@@ -102,3 +102,27 @@ test('a full stable scrolls instead of pushing the table off the screen', async 
     expect(out.sideways, `${size.name}: the page scrolls sideways`).toBe(false);
   }
 });
+
+// The rainbow edge at the top of a sheet is a sticky `::before`. `.card` is `position: relative`, so with
+// no z-index on the strip the tiles win on tree order and paint straight over it as the sheet scrolls.
+// Paint order is not observable from the DOM, hence the computed-style assertion rather than a pixel one.
+test('the rainbow edge of a sheet stays above the cards that scroll under it', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto('./?seed=5&motion=off');
+  await page.evaluate(() => localStorage.removeItem('uu.local'));
+  await page.goto('./?seed=5&motion=off');
+  await page.getByRole('button', { name: 'Play on this device' }).click();
+  await page.getByRole('button', { name: 'Start Game' }).click();
+  await expect(page.getByTestId('draw')).toBeVisible();
+
+  await page.getByTestId('stable-toggle').click();
+  await expect(page.getByTestId('expanded')).toBeVisible();
+
+  const strip = await page.evaluate(() => {
+    const s = getComputedStyle(document.querySelector('.sheet')!, '::before');
+    return { position: s.position, top: s.top, z: s.zIndex };
+  });
+  expect(strip.position, 'the strip must stay pinned while the sheet scrolls').toBe('sticky');
+  expect(strip.top, 'pinned flush with the top edge, past the sheet padding').toBe('-16px');
+  expect(Number(strip.z), 'the strip must paint above the card tiles').toBeGreaterThan(0);
+});
