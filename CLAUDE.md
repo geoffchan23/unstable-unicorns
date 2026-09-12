@@ -82,6 +82,10 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
 - A card whose effect is invisible in the interface owes the player a line saying where to look: `APP_HINTS`
   in `sheets.tsx` (Nanny Cam is the first). Rules the view knows about are projected, not re-derived in the
   UI from card ids — `players[].handOpen` is how the table knows whose hand it may read.
+- The bot gets the whole `GameState` (the engine has nothing else to give it) but plans against a re-deal
+  of what it may not see: `determinize()` in `bot.ts` pools the hidden hands and the deck and deals them
+  back at random, so its choice can depend on which cards are unseen but never on where they are.
+  `canSeeHand()` in `view.ts` is the single rule for that, shared with `viewFor`.
 - The table stays React + DOM (no game engine); animation is the Web Animations API + CSS, no animation library.
   Decisions wait for the staged playback (`stage.busy`); bots wait for it too.
 - No passphrase: anyone the origin check admits may create a room, and joining needs only the 4-letter code.
@@ -120,7 +124,7 @@ Done: online multiplayer PWA (spec: `docs/superpowers/specs/2026-09-08-online-pw
 runbook: `docs/DEPLOY.md`. v0.5 (tag + branch) is the text-first UI; main has the animated table
 (spec: `docs/superpowers/specs/2026-09-10-game-table-animations-design.md`).
 
-Known gaps: Unicorn Oracle has no art (placeholder); the bot sees hidden hands; no sound; no dealing animation at
-game start; online seats derive their avatar from the name (no picker).
+Known gaps: Unicorn Oracle has no art (placeholder); no sound; no dealing animation at game start; online
+seats derive their avatar from the name (no picker).
 `viewFor` includes `pending` prompt options and the full `cards` map, so a curious online player can read
 some card ids they should not see.

@@ -17,12 +17,39 @@ export function randomBotAction(state: GameState, player: PlayerId, rand: () => 
 }
 
 // ---------------------------------------------------------------------------
-// Greedy one-ply bot. Sees the full state (including hidden hands); good enough
-// to give a human something to play against while the engine is being tested.
+// Greedy one-ply bot. It searches a *determinized* copy of the game, so it plans
+// with no more knowledge than a player in its seat would have.
 // ---------------------------------------------------------------------------
 
 import { applyAction, previewState } from './game';
 import { typeOf, unicornCount } from './queries';
+import { canSeeHand } from './view';
+
+/**
+ * Re-deal everything the bot is not allowed to know. It legitimately knows its own hand, every public
+ * zone, and therefore the *multiset* of cards it has not seen (84 known cards minus what is on the
+ * table) — but not which of those sits in whose hand, nor the order of the deck. So the unseen cards
+ * are pooled and dealt back at random into the same slots they came from.
+ *
+ * The pool is sorted before the shuffle on purpose: the deal must depend only on which cards are
+ * unseen, never on where they actually are. That is what makes the bot's choice provably independent
+ * of hidden information (`bot-knowledge.test.ts`), and it is why the result is only ever used to
+ * *score* actions — the action itself is always picked from `legalActions` on the real state.
+ */
+function determinize(state: GameState, me: PlayerId, rand: () => number): GameState {
+  const hiddenHands = state.players.filter((p) => !canSeeHand(state, me, p.id));
+  const pool = [...state.deck, ...hiddenHands.flatMap((p) => p.hand)].sort((a, b) => a - b);
+  if (pool.length === 0) return state;
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [pool[i], pool[j]] = [pool[j]!, pool[i]!];
+  }
+  const next = structuredClone(state);
+  let at = 0;
+  next.deck = pool.slice(at, (at += state.deck.length));
+  for (const p of hiddenHands) next.players[p.id]!.hand = pool.slice(at, (at += p.hand.length));
+  return next;
+}
 
 function score(state: GameState, me: PlayerId): number {
   if (state.winner === me) return 1e6;
@@ -79,12 +106,24 @@ function settle(state: GameState, me: PlayerId, action: Action, rand: () => numb
 function bestOf(state: GameState, me: PlayerId, options: Action[], rand: () => number, depth = 0): Action {
   let best = options[0]!;
   let bestV = -Infinity;
+  const neutral = safely(() => score(previewState(state), me), 0);
   for (const a of options) {
-    const s = settle(state, me, a, rand, depth);
-    const v = score(previewState(s), me) + rand() * 0.5;
+    // An option can be impossible in a re-dealt world without being impossible in the real game: an
+    // answer already recorded may name a card that this world has put somewhere else, and replaying
+    // the effect throws. Such an option tells us nothing, so it is worth exactly what doing nothing is.
+    const v = safely(() => score(previewState(settle(state, me, a, rand, depth)), me), neutral) + rand() * 0.5;
     if (v > bestV) { bestV = v; best = a; }
   }
   return best;
+}
+
+function safely(f: () => number, fallback: number): number {
+  try {
+    const v = f();
+    return Number.isFinite(v) ? v : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 /** Drop plays no sane player makes: Upgrades into someone else's stable, Downgrades into your own. */
@@ -100,17 +139,19 @@ function sensiblePlays(state: GameState, me: PlayerId, opts: Action[]): Action[]
 }
 
 export function greedyBotAction(state: GameState, me: PlayerId, rand: () => number): Action | null {
+  // what it may *do* comes from the real game; what it may *know* while weighing those options does not
   const opts = sensiblePlays(state, me, legalActions(state, me));
   if (opts.length === 0) return null;
+  const world = determinize(state, me, rand);
   const pend = state.pending;
   if (pend && pend.kind === 'neighWindow') {
     const pass = opts.find((a) => a.type === 'pass')!;
     const neighs = opts.filter((a) => a.type === 'neigh');
     if (neighs.length === 0) return pass;
-    const vPass = score(settle(state, me, pass, rand), me);
+    const vPass = score(settle(world, me, pass, rand), me);
     // if I Neigh, the card is (most likely) cancelled: compare against the state as it stands
-    const vNeigh = score(state, me) - 2.5;
+    const vNeigh = score(world, me) - 2.5;
     return vNeigh > vPass ? neighs[0]! : pass;
   }
-  return bestOf(state, me, opts, rand);
+  return bestOf(world, me, opts, rand);
 }
