@@ -121,7 +121,8 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
   (`git tag -a v1.1 -m "<what changed>" && git push origin refs/tags/v1.1`), set the same number in
   `package.json`, and cut a GitHub release (`gh release create v1.1 --notes "..."`). Patch bumps (`v1.1.1`)
   are for fixes shipped on their own; typo fixes, tests, refactors and tooling need no bump at all.
-- Releases so far: `v0.5` the text-first UI (branch and tag), `v1.0` the animated table.
+- Releases so far: `v0.5` the text-first UI (branch and tag), `v1.0` the animated table, `v1.1` the bot
+  that plays blind plus the crash screen.
 
 ## Status and next steps
 
