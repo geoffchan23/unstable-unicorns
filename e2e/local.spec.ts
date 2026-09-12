@@ -27,3 +27,15 @@ test('hot-seat handoff appears with two humans', async ({ page }) => {
   await playUntil(page, () => page.getByRole('button', { name: /^I'm / }).isVisible(), 60);
   await expect(page.getByText(/Pass the device to/)).toBeVisible();
 });
+
+// A render error unmounts the whole tree; without the boundary the family gets a white page.
+test('a crash shows a way out instead of a blank screen', async ({ page }) => {
+  await page.goto('./?crash=1');
+  await expect(page.getByTestId('crashed')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Reload' })).toBeVisible();
+
+  // and the way out works: back to the front of the app with the saved game cleared
+  await page.getByTestId('crashed-restart').click();
+  await expect(page.getByRole('button', { name: 'Play on this device' })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('uu.local'))).toBeNull();
+});

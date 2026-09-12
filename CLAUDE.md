@@ -95,6 +95,11 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
   record of that work, not the current behaviour.
 - Rooms live in server memory only — a server restart drops all games; clients get NO_ROOM and clear
   their session back to Home.
+- The page asks search engines not to index it (`<meta name="robots">` in `index.html`). It is on a public
+  path so the family can reach it from anywhere; it is not meant to be found.
+- A React render error is caught by `ErrorBoundary` (wrapped around `<App/>` in `main.tsx`) and offers a
+  reload — the local game is saved after every action, so reloading usually resumes it — or a fresh start
+  that clears the save. `?crash=1` raises one on purpose in dev builds.
 - Card art is published on purpose (into the public `geoffchan23.github.io` site repo), unlike the
   gitignored local `assets/art/`.
 

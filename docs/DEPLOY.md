@@ -141,7 +141,13 @@ Logs:
 ssh -i ~/.ssh/oci_wordle_key ubuntu@140.238.145.208 'pm2 logs unicorns'
 ```
 
-## 6. Smoke test
+## 6. Search engines
+
+`src/ui/index.html` carries `<meta name="robots" content="noindex, nofollow">`, which is the whole of
+it: the site repo is GitHub Pages, so there is no way to send an `X-Robots-Tag` header, and its
+`robots.txt` (if it grows one) belongs to the rest of `geoffreychan.com`, not to this game.
+
+## 7. Smoke test
 
 1. Open `https://geoffreychan.com/unicorns/`.
 2. Tap "Play online" and create a room.

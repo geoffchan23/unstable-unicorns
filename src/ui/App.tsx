@@ -14,6 +14,8 @@ import { loadLocalGame } from './localSave';
 type Mode = 'home' | 'local-setup' | 'local-game' | 'online';
 
 export function App() {
+  // a way to see the crash screen (and to test it) without breaking something for real; dev builds only
+  if (__DEV__ && new URLSearchParams(location.search).has('crash')) throw new Error('?crash=1');
   const { client, snap } = useClient();
   // a saved local game (an accidental reload mid-game) resumes straight away
   const saved = useState(() => loadLocalGame())[0];

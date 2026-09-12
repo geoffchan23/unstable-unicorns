@@ -243,6 +243,8 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--focus); out
 }
 .overlay-box h2 { font-size: 34px; line-height: 1; background: var(--rb); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .overlay-box p { margin: 0; color: var(--ink-2); font-weight: 700; }
+.crashed { justify-items: center; text-align: center; }
+.crash-detail { margin: 0; max-width: 100%; overflow-x: auto; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); color: var(--ink-2); font-size: 12px; font-weight: 700; }
 .toast { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); background: var(--warn); color: #2a1a05; padding: 10px 16px; border-radius: 999px; font-weight: 800; z-index: 30; box-shadow: 0 4px 0 var(--warn-edge); }
 .toast.notice { background: var(--panel); color: var(--ink); border: 2px solid var(--btn); box-shadow: var(--lift-2); max-width: min(92vw, 520px); text-align: center; bottom: calc(1rem + env(safe-area-inset-bottom)); }
 .toast.update { display: flex; align-items: center; gap: 10px; bottom: calc(1rem + env(safe-area-inset-bottom)); }
