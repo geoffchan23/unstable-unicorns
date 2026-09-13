@@ -8,7 +8,7 @@ export interface SimResult {
   seed: number;
   turns: number;
   actions: number;
-  winner: number | null;
+  winner: number | 'draw' | null;
   finalUnicorns: number[];
 }
 
@@ -43,8 +43,11 @@ export function checkInvariants(state: GameState, expectedTotal: number): void {
       // other players may exceed 7 mid-turn from steals etc.; only the active player is checked at end
     }
   }
-  if (state.winner !== null && unicornCount(state, state.winner) < state.unicornsToWin) {
+  if (typeof state.winner === 'number' && unicornCount(state, state.winner) < state.unicornsToWin) {
     throw new Error('winner does not have enough unicorns');
+  }
+  if (state.winner === 'draw' && (state.deck.length > 0 || state.discard.length > 0)) {
+    throw new Error('declared a draw with cards still left to deal');
   }
 }
 

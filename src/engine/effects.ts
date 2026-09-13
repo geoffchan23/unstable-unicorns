@@ -14,9 +14,9 @@ export class NeedInput {
   constructor(public prompt: Prompt) {}
 }
 
-/** Thrown by checkWin: the game ended mid-effect; whatever is left of the effect is moot. */
+/** Thrown by checkWin / resolveDeckExhaustion: the game ended mid-effect; whatever is left of the effect is moot. */
 export class GameWon {
-  constructor(public winner: PlayerId) {}
+  constructor(public winner: PlayerId | 'draw') {}
 }
 
 export type EnterReason = 'play' | 'steal' | 'move' | 'bring';
@@ -246,15 +246,17 @@ export class Ctx {
 
   draw(player: PlayerId, n = 1): InstanceId[] {
     const drawn: InstanceId[] = [];
+    let exhausted = false;
     for (let i = 0; i < n; i++) {
       if (this.state.deck.length === 0) this.reshuffleDiscardIntoDeck();
       const c = this.state.deck.pop();
-      if (c === undefined) break;
+      if (c === undefined) { exhausted = true; break; }
       this.state.players[player]!.hand.push(c);
       drawn.push(c);
     }
     if (drawn.length) this.log(`${this.playerName(player)} draws ${drawn.length} card${drawn.length === 1 ? '' : 's'}.`, undefined, player);
     for (const c of drawn) this.moved(c, { zone: 'deck' }, { zone: 'hand', player }, 'draw', player);
+    if (exhausted) resolveDeckExhaustion(this.state);
     return drawn;
   }
 
@@ -565,6 +567,43 @@ export function checkWin(state: GameState): void {
       throw new GameWon(p);
     }
   }
+}
+
+/** letters (a-z only) in a card's printed name, for the deck-exhaustion tiebreak. */
+function nameLetters(state: GameState, card: InstanceId): number {
+  return nameOf(state, card).replace(/[^a-zA-Z]/g, '').length;
+}
+
+/**
+ * Called when a draw finds the deck and the discard pile both empty (the discard, once shuffled
+ * into the deck, cannot be reshuffled again). Nobody can reach the win condition further, so the
+ * game ends now: the player with the most Unicorns wins; a tie is broken by summing the letters
+ * in the names of each tied player's Unicorn cards; a tie on that too means nobody wins.
+ */
+export function resolveDeckExhaustion(state: GameState): void {
+  if (state.winner !== null) return;
+  let tied = state.players.map((p) => p.id);
+  const byUnicorns = (p: PlayerId) => unicornCount(state, p);
+  const bestUnicorns = Math.max(...tied.map(byUnicorns));
+  tied = tied.filter((p) => byUnicorns(p) === bestUnicorns);
+  if (tied.length > 1) {
+    const byLetters = (p: PlayerId) => state.players[p]!.stable
+      .filter((c) => isUnicornCardInStable(state, c))
+      .reduce((sum, c) => sum + nameLetters(state, c), 0);
+    const bestLetters = Math.max(...tied.map(byLetters));
+    tied = tied.filter((p) => byLetters(p) === bestLetters);
+  }
+  if (tied.length === 1) {
+    const p = tied[0]!;
+    state.winner = p;
+    say(state, { text: `The deck and discard pile are both empty. ${state.players[p]!.name} wins with the most Unicorns!`, actor: p });
+    emit(state, { kind: 'win', player: p });
+  } else {
+    state.winner = 'draw';
+    say(state, { text: 'The deck and discard pile are both empty, and the tiebreak is even too. Nobody wins.' });
+    emit(state, { kind: 'draw' });
+  }
+  throw new GameWon(state.winner);
 }
 
 /** Built-in (non-card) effects that use the same prompt machinery. */
