@@ -15,7 +15,7 @@ import { Centre } from './table/Centre';
 import { Mine, type DropTarget } from './table/Mine';
 import { TurnBanner } from './table/TurnBanner';
 import { BeginSheet, CardDetailSheet, HistorySheet, NeighSheet, PromptSheet, StableSheet } from './sheets';
-import { WinOverlay } from './table/WinOverlay';
+import { DrawOverlay, WinOverlay } from './table/WinOverlay';
 
 export interface GameScreenProps {
   view: PlayerView;
@@ -27,7 +27,7 @@ export interface GameScreenProps {
   onDismissError: () => void;
   youLabel?: string;             // default ' (you)'
   banner?: React.ReactNode;      // rendered under the top bar (reconnecting, offline player)
-  renderWin?: (winner: PlayerId) => React.ReactNode;  // default: "New game" button -> onQuit
+  renderWin?: (winner: PlayerId | 'draw') => React.ReactNode;  // default: "New game" button -> onQuit
   children?: React.ReactNode;    // extra overlays (hot-seat handoff)
   /** the game's seed, shown so a bug report can name it */
   seed?: number;
@@ -198,10 +198,15 @@ export function GameScreen({
 
       {children}
 
-      {winner !== null && (
+      {winner !== null && winner !== 'draw' && (
         <WinOverlay winner={winner} view={live} seats={seats}>
           {renderWin ? renderWin(winner) : <button type="button" className="primary big" onClick={onQuit}>New game</button>}
         </WinOverlay>
+      )}
+      {winner === 'draw' && (
+        <DrawOverlay view={live}>
+          {renderWin ? renderWin(winner) : <button type="button" className="primary big" onClick={onQuit}>New game</button>}
+        </DrawOverlay>
       )}
 
       {error && <div className="toast" role="alert" onClick={onDismissError}>{error}</div>}

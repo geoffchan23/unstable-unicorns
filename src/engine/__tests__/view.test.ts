@@ -25,6 +25,21 @@ describe('viewFor', () => {
   });
 });
 
+describe('searching the deck', () => {
+  it('reveals the card taken to the whole table, unlike a private draw', () => {
+    const h = new Harness({ players: 2, hands: [['shabby-the-narwhal'], []] });
+    h.play(0, 'shabby-the-narwhal');
+    h.answerCard('broken-stable'); // Shabby the Narwhal: take a Downgrade card from the deck
+    const search = h.state.events.find((e) => e.kind === 'move' && e.how === 'search');
+    expect(search).toBeDefined();
+    // undefined `seenBy` means it was public, same as any other Stable/discard move
+    expect((search as { seenBy?: number[] }).seenBy).toBeUndefined();
+    const forOther = viewFor(h.state, 1).events.find((e) => e.kind === 'move' && e.how === 'search');
+    expect(forOther!.kind).toBe('move');
+    expect((forOther as { card: unknown }).card).not.toBeNull();
+  });
+});
+
 describe('an open hand', () => {
   it('tells every player whose hand is face up, so the table can say where to look', () => {
     const h = new Harness({ players: 3, stables: [[], ['nanny-cam'], []], hands: [['neigh'], ['neigh', 'neigh'], []] });

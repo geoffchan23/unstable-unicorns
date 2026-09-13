@@ -46,7 +46,7 @@ describe('ws server', () => {
     b.send({ type: 'start' }); expect((await b.next('error')).message).toMatch(/host/);
     a.send({ type: 'start', seed: 99 });
     const clients = [a, b];
-    let winner: number | null = null;
+    let winner: number | 'draw' | null = null;
     for (let i = 0; i < 2000 && winner === null; i++) {
       for (const c of clients) {
         // Keep acting for this client while it's still their turn (e.g. a played card can
