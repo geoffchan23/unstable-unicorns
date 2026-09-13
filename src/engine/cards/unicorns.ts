@@ -262,7 +262,8 @@ defineCard('unicorn-oracle', {
     if (top.length === 0) return;
     const pick = ctx.chooseCard(me, top, 'Unicorn Oracle: add which of the top 3 cards to your hand?');
     if (pick === null) return;
-    ctx.addToHand(pick, me);
+    // a private peek, not a search: unlike Shabby/Classy/The Great Narwhal, nothing says this is revealed.
+    ctx.addToHand(pick, me, 'draw');
     const rest = top.filter((c) => c !== pick);
     if (rest.length === 2) {
       const first = ctx.chooseCard(me, rest, 'Which card goes on top of the deck?');

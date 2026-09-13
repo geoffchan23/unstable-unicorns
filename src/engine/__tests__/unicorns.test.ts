@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { setup as base, type SetupOptions } from './harness';
 import { unicornCount } from '../queries';
+import { viewFor } from '../view';
 
 /** card tests: give the active player plenty of actions so the turn does not advance. */
 const setup = (o: SetupOptions = {}) => base({ plays: 9, ...o });
@@ -226,10 +227,16 @@ describe('Magical Unicorns', () => {
   });
 
   it('Unicorn Oracle: look at 3, keep 1, order the rest', () => {
-    const h = setup({ hands: [['unicorn-oracle']], deckTop: ['good-deal', 'neigh', 'slowdown'] });
+    const h = setup({ players: 2, hands: [['unicorn-oracle'], []], deckTop: ['good-deal', 'neigh', 'slowdown'] });
     h.play(0, 'unicorn-oracle').answerCard('neigh').answerCard('slowdown');
     expect(h.hand(0)).toEqual(['neigh']);
     expect(h.deckTop(2)).toEqual(['slowdown', 'good-deal']);
+    // a private peek, unlike a search (Shabby the Narwhal etc.): the other player never learns which card it was.
+    const drawsByP0 = h.state.events.filter((e) => e.kind === 'move' && e.how === 'draw' && e.actor === 0);
+    const pickSeq = drawsByP0.at(-1)!.seq; // the last one is Unicorn Oracle's pick (the first is the harness's own setup draw)
+    const forOther = viewFor(h.state, 1).events.find((e) => e.seq === pickSeq);
+    expect(forOther).toBeDefined();
+    expect((forOther as { card: unknown }).card).toBeNull();
   });
 
   it('Necromancer Unicorn: discard 2 unicorns, revive one (may be one just discarded)', () => {
