@@ -130,6 +130,11 @@ scripts/deploy-web.sh
 Both use `UU_HOST` / `UU_KEY` / `SITE_REPO` env vars to override their defaults
 (`ubuntu@140.238.145.208`, `~/.ssh/oci_wordle_key`, `../../geoffchan23.github.io`).
 
+The site repo is a Jekyll site, and Jekyll drops any file whose name begins with an underscore from
+what it publishes — such a file rsyncs and commits without complaint, then 404s in production. That
+is what `_back.webp` (the card back) did on the first deploy. `scripts/build.mjs` now fails the build
+if an underscore-prefixed art file appears, so this cannot happen again quietly.
+
 `scripts/deploy-web.sh` must be run on a machine with `assets/art/` populated
 (`python3 scripts/art.py` — see the main `README`/`CLAUDE.md`); it warns but does not refuse
 to proceed otherwise, so running it from a fresh clone without that step ships placeholder
