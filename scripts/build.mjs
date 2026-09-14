@@ -11,6 +11,10 @@ export async function buildClient({ dev = false, serverUrl, outdir = 'dist/unico
   mkdirSync(outdir, { recursive: true });
   const artDir = 'assets/art';
   const artIds = existsSync(artDir) ? readdirSync(artDir).filter((f) => f.endsWith('.webp')).map((f) => f.slice(0, -5)) : [];
+  // geoffreychan.com is a Jekyll site, and Jekyll drops anything whose name starts with an underscore
+  // from what it publishes. The card back used to be `_back.webp`: it shipped, and 404'd in production.
+  const hidden = artIds.filter((id) => id.startsWith('_'));
+  if (hidden.length) throw new Error(`art files starting with "_" are dropped by Jekyll when published: ${hidden.join(', ')}`);
   if (artIds.length) {
     mkdirSync(join(outdir, 'art'), { recursive: true });
     for (const id of artIds) { const dest = join(outdir, 'art', `${id}.webp`); if (!dev || !existsSync(dest)) cpSync(join(artDir, `${id}.webp`), dest); }

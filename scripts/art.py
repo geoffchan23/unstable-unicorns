@@ -70,8 +70,10 @@ for c in cards:
     im.save(out, 'WEBP', quality=78, method=6)
     total += os.path.getsize(out)
 
+# Not `_back.webp`: the site this is published to is Jekyll, which refuses to publish a file whose
+# name begins with an underscore (scripts/build.mjs fails the build if one turns up again).
 back = Image.open(BACK).convert('RGB')
 back = back.resize((200, int(200 * back.height / back.width)), Image.LANCZOS)
-back.save(f'{OUT}/_back.webp', 'WEBP', quality=78, method=6)
-total += os.path.getsize(f'{OUT}/_back.webp')
+back.save(f'{OUT}/card-back.webp', 'WEBP', quality=78, method=6)
+total += os.path.getsize(f'{OUT}/card-back.webp')
 print(f'{len(cards) - len(missing)} cards, {total/1024:.0f} KB total; missing: {missing}')
