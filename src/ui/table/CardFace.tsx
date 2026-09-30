@@ -8,7 +8,7 @@ export function CardFace({ data }: { data: CardData }) {
 }
 
 export function CardBack({ className = '' }: { className?: string }) {
-  const art = artFor('_back');
+  const art = artFor('card-back');
   return (
     <div className={`card-back ${className}`} aria-hidden="true">
       {art ? <img src={art} alt="" draggable={false} /> : <span className="card-back-mark">UU</span>}

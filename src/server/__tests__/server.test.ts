@@ -32,6 +32,27 @@ describe('ws server', () => {
     const c = new Client(srv.port, 'https://evil.example');
     await expect(c.open()).rejects.toBeTruthy();
   });
+  // The family reaches the dev server on whatever address the laptop has at the time: the house wifi, or
+  // Tailscale when the phones are not on it. Production is unaffected — this branch is dev-only.
+  it.each([
+    'http://10.0.0.179:5173',
+    'http://192.168.1.40:5173',
+    'http://172.16.3.9:5173',
+    'http://100.111.54.6:5173',   // tailscale
+  ])('admits a dev client on %s', async (origin) => {
+    const c = new Client(srv.port, origin);
+    await expect(c.open()).resolves.toBeUndefined();
+    c.ws.close();
+  });
+  it.each([
+    'http://100.63.0.1:5173',     // just below the tailscale range
+    'http://100.128.0.1:5173',    // just above it
+    'http://8.8.8.8:5173',
+  ])('still refuses %s', async (origin) => {
+    const c = new Client(srv.port, origin);
+    await expect(c.open()).rejects.toBeTruthy();
+  });
+
   it('healthz responds', async () => {
     const r = await fetch(`http://127.0.0.1:${srv.port}/healthz`);
     expect(await r.text()).toBe('ok');

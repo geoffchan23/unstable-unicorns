@@ -26,8 +26,11 @@ export interface ServerOptions {
 }
 interface Conn { id: string; ws: WebSocket; room: Room | null; misses: number; tokens: number; lastRefill: number; ip: string }
 
+// Addresses a dev server may legitimately be reached on from another device in the house: loopback, the
+// three private IPv4 ranges, and Tailscale's 100.64.0.0/10, which is how the phones reach the laptop when
+// the two are not on the same wifi. Dev only — production admits the one origin in ALLOWED_ORIGINS.
 const LAN_ORIGIN =
-  /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/;
+  /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d+\.\d+)(:\d+)?$/;
 const CREATE_RATE_MS = 60_000;
 const JOIN_FAILURE_WINDOW_MS = 10 * 60_000;
 const DEFAULT_LIMITS: Limits = { msgPerSec: 20, burst: 40, maxConns: 200, joinFailures: 20 };
