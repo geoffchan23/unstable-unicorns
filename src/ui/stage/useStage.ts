@@ -8,7 +8,7 @@ import type { PlayerView } from '../../engine/view';
 import { Anchors, cardKey, zoneKey, type Rect } from './anchors';
 import type { FlyerSpec } from './Flyer';
 import { stageBusy } from './busy';
-import { BUBBLE_MS, PROTECT_MS, SAY_GAP_MS, SHUFFLE_MS, TURN_BANNER_MS, flightMs, holdMs, nextFrame, reducedMotion, wait, windupMs } from './motion';
+import { BUBBLE_MS, PROTECT_MS, REVEAL_MS, SAY_GAP_MS, SHUFFLE_MS, TURN_BANNER_MS, flightMs, holdMs, nextFrame, reducedMotion, wait, windupMs } from './motion';
 import { applyEvent, faceUpIn, freshEvents } from './playback';
 import { rewind } from './playback';
 
@@ -218,6 +218,22 @@ export function useStage(view: PlayerView): Stage {
     if (!from || !to) { unhide(); return; }
 
     const ms = flightMs(ev.how);
+    // a search is revealed to the table (RULES.md §9), but it lands in a hand this viewer cannot see:
+    // show it face up on the stage first, then send it on face down.
+    const stage = ev.how === 'search' && data !== null && !faceTo ? cardInside(anchors.rectFor({ zone: 'limbo' }, null)) : null;
+    if (stage) {
+      const rid = ids.current++;
+      setFlyers((fs) => [...fs, { id: rid, data, from, to: stage, faceFrom, faceTo: true, how: ev.how, ms }]);
+      await wait(ms + REVEAL_MS);
+      setFlyers((fs) => fs.filter((f) => f.id !== rid));
+      const id = ids.current++;
+      setFlyers((fs) => [...fs, { id, data, from: stage, to, faceFrom: true, faceTo, how: ev.how, ms }]);
+      await wait(ms);
+      setFlyers((fs) => fs.filter((f) => f.id !== id));
+      unhide();
+      await wait(holdMs(ev.how));
+      return;
+    }
     const id = ids.current++;
     setFlyers((fs) => [...fs, { id, data, from, to, faceFrom, faceTo, how: ev.how, ms }]);
     await wait(ms);
@@ -242,6 +258,14 @@ function cardShaped(r: Rect | null): Rect | null {
   if (!r) return r;
   const h = r.w * 288 / 168;
   return { x: r.x, y: r.y + (r.h - h) / 2, w: r.w, h };
+}
+
+/** the largest card that fits inside `r`, centred (the stage is wider than a card) */
+function cardInside(r: Rect | null): Rect | null {
+  if (!r) return r;
+  const w = Math.min(r.w, r.h * 168 / 288);
+  const h = w * 288 / 168;
+  return { x: r.x + (r.w - w) / 2, y: r.y + (r.h - h) / 2, w, h };
 }
 
 /** the zone a card is displayed in, for a view (used by the table to pick anchors) */

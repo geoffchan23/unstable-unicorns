@@ -14,9 +14,9 @@ export class NeedInput {
   constructor(public prompt: Prompt) {}
 }
 
-/** Thrown by checkWin: the game ended mid-effect; whatever is left of the effect is moot. */
+/** Thrown by checkWin / resolveDeckExhaustion: the game ended mid-effect; whatever is left of the effect is moot. */
 export class GameWon {
-  constructor(public winner: PlayerId) {}
+  constructor(public winner: PlayerId | 'draw') {}
 }
 
 export type EnterReason = 'play' | 'steal' | 'move' | 'bring';
@@ -246,15 +246,17 @@ export class Ctx {
 
   draw(player: PlayerId, n = 1): InstanceId[] {
     const drawn: InstanceId[] = [];
+    let exhausted = false;
     for (let i = 0; i < n; i++) {
       if (this.state.deck.length === 0) this.reshuffleDiscardIntoDeck();
       const c = this.state.deck.pop();
-      if (c === undefined) break;
+      if (c === undefined) { exhausted = true; break; }
       this.state.players[player]!.hand.push(c);
       drawn.push(c);
     }
     if (drawn.length) this.log(`${this.playerName(player)} draws ${drawn.length} card${drawn.length === 1 ? '' : 's'}.`, undefined, player);
     for (const c of drawn) this.moved(c, { zone: 'deck' }, { zone: 'hand', player }, 'draw', player);
+    if (exhausted) resolveDeckExhaustion(this.state);
     return drawn;
   }
 
@@ -350,9 +352,10 @@ export class Ctx {
   }
 
   /** search the deck for a card matching pred; player picks one; it goes to hand; deck shuffled. */
-  searchDeck(player: PlayerId, pred: (c: InstanceId) => boolean, message: string): InstanceId | null {
+  /** `what` names the kind of card sought, for the notice when the deck has none ("Downgrade cards"). */
+  searchDeck(player: PlayerId, pred: (c: InstanceId) => boolean, message: string, what: string): InstanceId | null {
     const options = this.state.deck.filter(pred);
-    const pick = this.chooseCard(player, options, message, { optional: true });
+    const pick = this.chooseCard(player, options, message, { optional: true, empty: `no ${what} left in the deck.` });
     if (pick !== null) {
       this.log(`${this.playerName(player)} takes ${this.name(pick)} from the deck.`, undefined, player);
       this.addToHand(pick, player, 'search');
@@ -396,6 +399,8 @@ export class Ctx {
     const def = defOf(this.state, card);
     if (def.onEnter && effectsActive(this.state, card)) {
       this.enqueueCard(card, 'onEnter', player);
+    } else if (def.onEnter) {
+      say(this.state, { text: `Blinding Light: ${this.name(card)}'s effect is ignored.`, notice: true, actor: player });
     }
     this.fireStableChanged(card, player, 'entered');
     checkWin(this.state);
@@ -565,6 +570,43 @@ export function checkWin(state: GameState): void {
       throw new GameWon(p);
     }
   }
+}
+
+/** letters (a-z only) in a card's printed name, for the deck-exhaustion tiebreak. */
+function nameLetters(state: GameState, card: InstanceId): number {
+  return nameOf(state, card).replace(/[^a-zA-Z]/g, '').length;
+}
+
+/**
+ * Called when a draw finds the deck and the discard pile both empty (an empty deck is refilled from
+ * the discard first, so this needs every card to be in a hand or a stable). Nobody can draw again, so
+ * the game ends now: the player with the most Unicorns wins; a tie is broken by summing the letters
+ * in the names of each tied player's Unicorn cards; a tie on that too means nobody wins.
+ */
+export function resolveDeckExhaustion(state: GameState): void {
+  if (state.winner !== null) return;
+  let tied = state.players.map((p) => p.id);
+  const byUnicorns = (p: PlayerId) => unicornCount(state, p);
+  const bestUnicorns = Math.max(...tied.map(byUnicorns));
+  tied = tied.filter((p) => byUnicorns(p) === bestUnicorns);
+  if (tied.length > 1) {
+    const byLetters = (p: PlayerId) => state.players[p]!.stable
+      .filter((c) => isUnicornCardInStable(state, c))
+      .reduce((sum, c) => sum + nameLetters(state, c), 0);
+    const bestLetters = Math.max(...tied.map(byLetters));
+    tied = tied.filter((p) => byLetters(p) === bestLetters);
+  }
+  if (tied.length === 1) {
+    const p = tied[0]!;
+    state.winner = p;
+    say(state, { text: `The deck and discard pile are both empty. ${state.players[p]!.name} wins with the most Unicorns!`, actor: p });
+    emit(state, { kind: 'win', player: p });
+  } else {
+    state.winner = 'draw';
+    say(state, { text: 'The deck and discard pile are both empty, and the tiebreak is even too. Nobody wins.' });
+    emit(state, { kind: 'draw' });
+  }
+  throw new GameWon(state.winner);
 }
 
 /** Built-in (non-card) effects that use the same prompt machinery. */

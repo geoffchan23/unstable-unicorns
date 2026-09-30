@@ -39,3 +39,20 @@ describe('"you may take a card from the discard pile" with nothing to take', () 
     expect(notices(h)).toEqual(["P1's Swift Flying Unicorn: no Neigh cards in the discard pile."]);
   });
 });
+
+describe('an effect that finds nothing, or is switched off, says so', () => {
+  it('The Great Narwhal: no Narwhal cards left in the deck -> no prompt, a notice names what was missing', () => {
+    const h = new Harness({ players: 2, hands: [['the-great-narwhal'], []], plays: 9, twoPlayerVariant: false });
+    h.state.deck = h.state.deck.filter((c) => !/narwhal/.test(h.state.cards[c]!.def));
+    h.play(0, 'the-great-narwhal');
+    expect(h.prompt()).toBeNull();
+    expect(notices(h)).toEqual(["P1's The Great Narwhal: no Narwhal cards left in the deck."]);
+  });
+  it('Blinding Light: an arriving unicorn whose effect is ignored gets a notice', () => {
+    const h = new Harness({ players: 2, stables: [['blinding-light'], []], hands: [['the-great-narwhal'], []], plays: 9, twoPlayerVariant: false });
+    h.play(0, 'the-great-narwhal');
+    expect(h.prompt()).toBeNull();
+    expect(h.hand(0)).toEqual([]);
+    expect(notices(h)).toEqual(["Blinding Light: The Great Narwhal's effect is ignored."]);
+  });
+});

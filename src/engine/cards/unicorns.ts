@@ -203,7 +203,7 @@ defineCard('shark-with-a-horn', {
 
 defineCard('shabby-the-narwhal', {
   onEnter(ctx) {
-    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'downgrade', 'Shabby the Narwhal: take a Downgrade card from the deck?');
+    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'downgrade', 'Shabby the Narwhal: take a Downgrade card from the deck?', 'Downgrade cards');
   },
 });
 
@@ -234,13 +234,13 @@ defineCard('mermaid-unicorn', {
 
 defineCard('classy-narwhal', {
   onEnter(ctx) {
-    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'upgrade', 'Classy Narwhal: take an Upgrade card from the deck?');
+    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'upgrade', 'Classy Narwhal: take an Upgrade card from the deck?', 'Upgrade cards');
   },
 });
 
 defineCard('the-great-narwhal', {
   onEnter(ctx) {
-    ctx.searchDeck(ctx.controller, (c) => ctx.hasNameContaining(c, 'narwhal'), 'The Great Narwhal: take a Narwhal card from the deck?');
+    ctx.searchDeck(ctx.controller, (c) => ctx.hasNameContaining(c, 'narwhal'), 'The Great Narwhal: take a Narwhal card from the deck?', 'Narwhal cards');
   },
 });
 
@@ -262,7 +262,8 @@ defineCard('unicorn-oracle', {
     if (top.length === 0) return;
     const pick = ctx.chooseCard(me, top, 'Unicorn Oracle: add which of the top 3 cards to your hand?');
     if (pick === null) return;
-    ctx.addToHand(pick, me);
+    // a private peek, not a search: unlike Shabby/Classy/The Great Narwhal, nothing says this is revealed.
+    ctx.addToHand(pick, me, 'draw');
     const rest = top.filter((c) => c !== pick);
     if (rest.length === 2) {
       const first = ctx.chooseCard(me, rest, 'Which card goes on top of the deck?');

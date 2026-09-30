@@ -158,7 +158,9 @@ export type GameEventBody =
   | { kind: 'turn'; player: PlayerId; number: number }
   | { kind: 'say'; text: string; actor?: PlayerId; affects?: PlayerId[]; notice?: boolean }
   | { kind: 'protected'; card: InstanceId; by: InstanceId | null }
-  | { kind: 'win'; player: PlayerId };
+  | { kind: 'win'; player: PlayerId }
+  /** the deck and discard both ran dry and the tiebreak (most Unicorns, then letters in their names) still ties: nobody wins. */
+  | { kind: 'draw' };
 export type GameEvent = { seq: number } & GameEventBody;
 
 export interface GameState {
@@ -180,7 +182,8 @@ export interface GameState {
   log: LogEntry[];
   /** everything that happened, for the UI to animate; see GameEvent */
   events: GameEvent[];
-  winner: PlayerId | null;
+  /** 'draw' is the deck-exhaustion tie described in resolveDeckExhaustion (effects.ts): nobody wins. */
+  winner: PlayerId | 'draw' | null;
   twoPlayerVariant: boolean;
 }
 

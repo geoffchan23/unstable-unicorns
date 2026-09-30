@@ -25,3 +25,16 @@ export function WinOverlay({ winner, view, seats, children }: { winner: PlayerId
     </div>
   );
 }
+
+/** The deck and discard both ran dry and even the letters-in-Unicorn-names tiebreak came up even: nobody wins. */
+export function DrawOverlay({ view, children }: { view: PlayerView; children: React.ReactNode }) {
+  return (
+    <div className="overlay win-overlay">
+      <div className="overlay-box" data-testid="win">
+        <h2>Nobody wins</h2>
+        <p>The deck ran out and every player tied, even on the tiebreak, after {view.turn.number} turns.</p>
+        {children}
+      </div>
+    </div>
+  );
+}

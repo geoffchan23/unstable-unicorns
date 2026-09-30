@@ -126,7 +126,12 @@ export function run(state: GameState): GameState {
         return state;
       }
       case 'draw': {
-        systemCtx(state, t.player).draw(t.player, 1);
+        try {
+          systemCtx(state, t.player).draw(t.player, 1);
+        } catch (e) {
+          if (!(e instanceof GameWon)) throw e;
+          break;
+        }
         t.phase = 'action';
         break;
       }
@@ -370,7 +375,11 @@ export function applyAction(input: GameState, action: Action): GameState {
     }
     case 'draw': {
       requireActionPhase(state, action.player);
-      systemCtx(state, action.player).draw(action.player, 1);
+      try {
+        systemCtx(state, action.player).draw(action.player, 1);
+      } catch (e) {
+        if (!(e instanceof GameWon)) throw e;
+      }
       state.turn.playsRemaining = 0;
       break;
     }

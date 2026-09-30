@@ -154,8 +154,22 @@ Notes that matter for implementation:
 ## 9. Other rules
 
 - **Deck runs out:** shuffle the discard pile to form a new draw pile. Baby Unicorns are
-  never in the discard pile, so they are never shuffled back in.
+  never in the discard pile, so they are never shuffled back in. This is the rulebook's
+  optional variant, not its rule: "If you're a stickler, the game ends when you run out of
+  cards. If you're a rule-breaker, you can reshuffle the discard pile back into the deck [...]
+  The rules say not to." We play the rule-breaker way, so the scored ending below is rare.
+- **Deck *and* discard both run out (exhaustion):** nobody can draw again, so the game ends
+  immediately, mid-effect if need be, exactly like a normal win. The player with the most
+  Unicorns wins. A tie is broken by summing the letters (a–z only) in the names of each tied
+  player's Unicorn cards; the most letters wins. A tie on that too means nobody wins. In
+  practice this needs every card to be in a hand or a stable at once, so it almost never happens
+  (none in 1,500 simulated games), but it is a real ending, not a stall: the implementation
+  resolves it (`resolveDeckExhaustion` in `src/engine/effects.ts`) rather than leaving the
+  engine drawing nothing forever.
 - **Nursery runs out:** effects that would bring in a Baby Unicorn simply do nothing.
+- **Searching the deck:** a card taken by a search effect (e.g. Shabby the Narwhal) is revealed
+  to the whole table before it joins the searching player's hand — unlike an ordinary draw,
+  which stays private.
 - **Optional vs mandatory:** *"you may"* is optional; everything else is mandatory if it can
   be done at all. If a mandatory effect cannot be carried out, skip the part that is
   impossible.
@@ -239,8 +253,10 @@ fetched directly. What was used instead:
   Kittencorn, Majestic/Swift Flying Unicorn, Glitter Tornado, Double Dutch, Blinding Light,
   Tiny Stable, Pandamonium). Per-card rulings and interpretations are recorded in the
   `notes` field of the JSON.
-- **Rules** — search-result extracts from the
-  [Unstable Games Wiki 2nd Edition rules](https://www.unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_Second_Edition_Rules),
+- **Rules** — the full [Unstable Games Wiki 2nd Edition rules](https://www.unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_Second_Edition_Rules)
+  page (fetched directly, not a search extract; this is where the deck-exhaustion ending in §9
+  and the search-reveal rule came from — both were previously missing from this document and
+  unimplemented), plus the
   [Unstable Games Wiki general player rules](https://www.unstablegameswiki.com/index.php?title=Unstable_Unicorns_-_General_Player_Rules),
   [officialgamerules.org](https://officialgamerules.org/game-rules/unstable-unicorns/), and
   [UltraBoardGames](https://www.ultraboardgames.com/unstable-unicorns/game-rules.php),

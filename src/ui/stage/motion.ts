@@ -45,6 +45,8 @@ export const TURN_BANNER_MS = 950;
 export const BUBBLE_MS = 2800;
 export const SHUFFLE_MS = 520;
 export const PROTECT_MS = 560;
+/** how long a searched card sits face up on the stage before it goes into a hand the viewer cannot see */
+export const REVEAL_MS = 1100;
 export const SAY_GAP_MS = 90;
 
 export const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));

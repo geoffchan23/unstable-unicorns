@@ -21,9 +21,12 @@ export function say(state: GameState, entry: Omit<LogEntry, 'turn'>): void {
 /**
  * Who may know which card this was. A public zone (a stable, the discard pile, the nursery, a card
  * resolving) shows the card to the table, and returns undefined: everyone. The deck shows it to nobody;
- * a hand shows it to its owner, or to everyone while a Nanny Cam sits in that owner's stable.
+ * a hand shows it to its owner, or to everyone while a Nanny Cam sits in that owner's stable. A search
+ * of the deck is always shown to the table, however it lands: the rules require the found card to be
+ * revealed before it joins the hand.
  */
-function seenBy(state: GameState, from: Zone, to: Zone): PlayerId[] | undefined {
+function seenBy(state: GameState, from: Zone, to: Zone, how: MoveHow): PlayerId[] | undefined {
+  if (how === 'search') return undefined;
   const seers = new Set<PlayerId>();
   for (const z of [from, to]) {
     if (z.zone === 'deck') continue;
@@ -35,7 +38,7 @@ function seenBy(state: GameState, from: Zone, to: Zone): PlayerId[] | undefined 
 }
 
 export function moved(state: GameState, card: InstanceId, from: Zone, to: Zone, how: MoveHow, actor?: PlayerId): void {
-  const seers = seenBy(state, from, to);
+  const seers = seenBy(state, from, to, how);
   emit(state, { kind: 'move', card, from, to, how, ...(actor !== undefined ? { actor } : {}), ...(seers ? { seenBy: seers } : {}) });
 }
 

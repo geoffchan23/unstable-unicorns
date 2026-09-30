@@ -72,6 +72,12 @@ action if the report no longer matches the engine. Themes: light, dark, barf (to
   but the hand-limit discard still applies; Mystical Vortex is not shuffled into the deck; Necromancer and
   Dark Angel may revive the card just discarded/sacrificed; Tiny Stable resolves before other triggers.
 - A win mid-effect commits the snapshot and aborts the rest of the effect (wins are immediate).
+- `GameState.winner` is `PlayerId | 'draw' | null`. `'draw'` means the deck and discard both ran
+  out and the most-Unicorns-then-letters tiebreak (RULES.md §9) still ties: nobody wins. It is
+  set by `resolveDeckExhaustion` (`src/engine/effects.ts`), which throws the same `GameWon`
+  signal `checkWin` does, so it aborts mid-effect the same way a normal win does. Anything that
+  narrows `winner` to a `PlayerId` (unicorn counts, avatars, `WinOverlay`) must handle `'draw'`
+  first; `!== null` / `=== null` checks for "game over" already do, since `'draw'` isn't `null`.
 - Beginning-of-turn effects resolve in stable order, Tiny Stable first (owner-chosen order is a TODO).
 - Card effects are imperative code using `ctx.choose*()`; the engine replays them with recorded answers.
   Never store closures in state. Effects that need to run "instead of" a removal use the
