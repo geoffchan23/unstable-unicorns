@@ -203,7 +203,7 @@ defineCard('shark-with-a-horn', {
 
 defineCard('shabby-the-narwhal', {
   onEnter(ctx) {
-    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'downgrade', 'Shabby the Narwhal: take a Downgrade card from the deck?');
+    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'downgrade', 'Shabby the Narwhal: take a Downgrade card from the deck?', 'Downgrade cards');
   },
 });
 
@@ -234,13 +234,13 @@ defineCard('mermaid-unicorn', {
 
 defineCard('classy-narwhal', {
   onEnter(ctx) {
-    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'upgrade', 'Classy Narwhal: take an Upgrade card from the deck?');
+    ctx.searchDeck(ctx.controller, (c) => ctx.type(c) === 'upgrade', 'Classy Narwhal: take an Upgrade card from the deck?', 'Upgrade cards');
   },
 });
 
 defineCard('the-great-narwhal', {
   onEnter(ctx) {
-    ctx.searchDeck(ctx.controller, (c) => ctx.hasNameContaining(c, 'narwhal'), 'The Great Narwhal: take a Narwhal card from the deck?');
+    ctx.searchDeck(ctx.controller, (c) => ctx.hasNameContaining(c, 'narwhal'), 'The Great Narwhal: take a Narwhal card from the deck?', 'Narwhal cards');
   },
 });
 

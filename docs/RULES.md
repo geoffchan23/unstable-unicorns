@@ -154,13 +154,16 @@ Notes that matter for implementation:
 ## 9. Other rules
 
 - **Deck runs out:** shuffle the discard pile to form a new draw pile. Baby Unicorns are
-  never in the discard pile, so they are never shuffled back in.
+  never in the discard pile, so they are never shuffled back in. This is the rulebook's
+  optional variant, not its rule: "If you're a stickler, the game ends when you run out of
+  cards. If you're a rule-breaker, you can reshuffle the discard pile back into the deck [...]
+  The rules say not to." We play the rule-breaker way, so the scored ending below is rare.
 - **Deck *and* discard both run out (exhaustion):** nobody can draw again, so the game ends
   immediately, mid-effect if need be, exactly like a normal win. The player with the most
   Unicorns wins. A tie is broken by summing the letters (a–z only) in the names of each tied
   player's Unicorn cards; the most letters wins. A tie on that too means nobody wins. In
-  practice this needs the 82–114 card deck (95 for 2-player) to cycle through twice with no one
-  reaching the target, so it is rare, but it is a real ending, not a stall: the implementation
+  practice this needs every card to be in a hand or a stable at once, so it almost never happens
+  (none in 1,500 simulated games), but it is a real ending, not a stall: the implementation
   resolves it (`resolveDeckExhaustion` in `src/engine/effects.ts`) rather than leaving the
   engine drawing nothing forever.
 - **Nursery runs out:** effects that would bring in a Baby Unicorn simply do nothing.

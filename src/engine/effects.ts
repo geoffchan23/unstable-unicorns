@@ -352,9 +352,10 @@ export class Ctx {
   }
 
   /** search the deck for a card matching pred; player picks one; it goes to hand; deck shuffled. */
-  searchDeck(player: PlayerId, pred: (c: InstanceId) => boolean, message: string): InstanceId | null {
+  /** `what` names the kind of card sought, for the notice when the deck has none ("Downgrade cards"). */
+  searchDeck(player: PlayerId, pred: (c: InstanceId) => boolean, message: string, what: string): InstanceId | null {
     const options = this.state.deck.filter(pred);
-    const pick = this.chooseCard(player, options, message, { optional: true });
+    const pick = this.chooseCard(player, options, message, { optional: true, empty: `no ${what} left in the deck.` });
     if (pick !== null) {
       this.log(`${this.playerName(player)} takes ${this.name(pick)} from the deck.`, undefined, player);
       this.addToHand(pick, player, 'search');
@@ -398,6 +399,8 @@ export class Ctx {
     const def = defOf(this.state, card);
     if (def.onEnter && effectsActive(this.state, card)) {
       this.enqueueCard(card, 'onEnter', player);
+    } else if (def.onEnter) {
+      say(this.state, { text: `Blinding Light: ${this.name(card)}'s effect is ignored.`, notice: true, actor: player });
     }
     this.fireStableChanged(card, player, 'entered');
     checkWin(this.state);
@@ -575,9 +578,9 @@ function nameLetters(state: GameState, card: InstanceId): number {
 }
 
 /**
- * Called when a draw finds the deck and the discard pile both empty (the discard, once shuffled
- * into the deck, cannot be reshuffled again). Nobody can reach the win condition further, so the
- * game ends now: the player with the most Unicorns wins; a tie is broken by summing the letters
+ * Called when a draw finds the deck and the discard pile both empty (an empty deck is refilled from
+ * the discard first, so this needs every card to be in a hand or a stable). Nobody can draw again, so
+ * the game ends now: the player with the most Unicorns wins; a tie is broken by summing the letters
  * in the names of each tied player's Unicorn cards; a tie on that too means nobody wins.
  */
 export function resolveDeckExhaustion(state: GameState): void {
