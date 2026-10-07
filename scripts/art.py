@@ -3,6 +3,7 @@
 Sources are shallow-cloned into .cache/ on first run:
   kedarv/unstable                 full card scans (cropped to the art box)
   geniegeist/unstable-unicorns    square illustrations and the card back
+  web.archive.org                 the one card neither has (Unicorn Oracle): the rules wiki's card scan
 
 Usage:  pip install pillow && python3 scripts/art.py
 The artwork is copyright Unstable Games; assets/art is gitignored and for private testing only.
@@ -20,6 +21,13 @@ for name, url in REPOS.items():
         os.makedirs(CACHE, exist_ok=True)
         print(f'cloning {url} ...')
         subprocess.run(['git', 'clone', '--depth', '1', '-q', url, f'{CACHE}/{name}'], check=True)
+
+# Cards neither repo has: a card image from the Wayback Machine's copy of the rules wiki (the live wiki
+# refuses scripts), and the (left, top, right, bottom) of its art box. Only a 200px scan was archived.
+ARCHIVED = {
+    'unicorn-oracle': ('https://web.archive.org/web/20240809120608im_/http://unstablegameswiki.com/images/thumb/7/7a/UU-Base-086-SE.png/200px-UU-Base-086-SE.png',
+                       (28, 47, 172, 191)),
+}
 
 SCANS = f'{CACHE}/kedarv_unstable/public/card_images'
 SQUARE = f'{CACHE}/geniegeist_unstable-unicorns/src/assets/card/square'
@@ -53,6 +61,13 @@ def load(c):
     p = f'{SQUARE}/{cid.replace("-", "_") if cid not in ("re-target", "two-for-one") else cid}.png'
     if os.path.exists(p):
         return Image.open(p).convert('RGB')
+    if cid in ARCHIVED:
+        url, box = ARCHIVED[cid]
+        p = f'{CACHE}/archived/{cid}.png'
+        if not os.path.exists(p):
+            os.makedirs(f'{CACHE}/archived', exist_ok=True)
+            subprocess.run(['curl', '-fsSL', '-A', 'Mozilla/5.0', '-o', p, url], check=True)
+        return Image.open(p).convert('RGB').crop(box)
     return None
 
 os.makedirs(OUT, exist_ok=True)
