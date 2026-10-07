@@ -34,7 +34,7 @@ scripts/build-server.mjs esbuild -> dist/server/unicorns-server.mjs (single-file
 scripts/dev.mjs         client watch+serve on :5173 plus the game server on :8787, NODE_ENV=development
 scripts/deploy-server.sh builds and ships the server bundle to the VM, restarts it under pm2
 scripts/deploy-web.sh   builds the client and rsyncs it into the geoffchan23.github.io site repo
-scripts/art.py          regenerates assets/art/*.webp from two GitHub fan repos (needs pillow)
+scripts/art.py          regenerates assets/art/*.webp from two GitHub fan repos + one archived scan (needs pillow)
 deploy/                 ecosystem.config.cjs (pm2) and Caddyfile, both copied to the VM; ingress.json is a
                         local input to the OCI CLI (`oci network security-list update`), never copied there
 ```
@@ -136,7 +136,7 @@ Done: online multiplayer PWA (spec: `docs/superpowers/specs/2026-09-08-online-pw
 runbook: `docs/DEPLOY.md`. v0.5 (tag + branch) is the text-first UI; main has the animated table
 (spec: `docs/superpowers/specs/2026-09-10-game-table-animations-design.md`).
 
-Known gaps: Unicorn Oracle has no art (placeholder); no sound; no dealing animation at game start; online
+Known gaps: no sound; no dealing animation at game start; online
 seats derive their avatar from the name (no picker).
 `viewFor` includes `pending` prompt options and the full `cards` map, so a curious online player can read
 some card ids they should not see.

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-SITE=${SITE_REPO:-../../geoffchan23.github.io}
+SITE=${SITE_REPO:-../geoffchan23.github.io}
 test -d "$SITE/.git" || { echo "site repo not found at $SITE (set SITE_REPO)"; exit 1; }
 test -d assets/art || echo "warning: assets/art missing, building with placeholders"
+# a bot commits usage stats to the site repo, so start from its latest or the push is rejected
+( cd "$SITE" && git pull -q --ff-only )
 npm run build
 SHA=$(git rev-parse --short HEAD)
 rsync -a --delete dist/unicorns/ "$SITE/unicorns/"

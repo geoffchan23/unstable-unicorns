@@ -17,7 +17,7 @@ export function serverUrl(): string {
   } catch {
     /* ignore */
   }
-  return __SERVER_URL__;
+  return __SERVER_URL__.replace('{host}', location.hostname || 'localhost');
 }
 
 let singleton: GameClient | null = null;

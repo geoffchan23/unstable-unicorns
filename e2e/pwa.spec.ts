@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test';
 // shell work, so it runs Chromium (pixel project) only.
 test.skip(({ browserName }) => browserName !== 'chromium', 'offline reload flow is flaky outside Chromium');
 
-const base = 'http://localhost:5174/unicorns/';
+const base = `http://localhost:${process.env.UNICORNS_PROD_PORT ?? '5174'}/unicorns/`;
 
 test('manifest, service worker, offline shell', async ({ page, context }) => {
   await page.goto(base);

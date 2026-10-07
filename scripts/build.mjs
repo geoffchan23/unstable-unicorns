@@ -26,7 +26,9 @@ export async function buildClient({ dev = false, serverUrl, outdir = 'dist/unico
     define: {
       'process.env.NODE_ENV': dev ? '"development"' : '"production"',
       __ART_IDS__: JSON.stringify(artIds),
-      __SERVER_URL__: JSON.stringify(serverUrl ?? (dev ? 'ws://localhost:8787' : 'wss://play.geoffreychan.com')),
+      // `{host}` is filled in by the page with the host it was served from (see serverUrl in useClient.ts),
+      // so a phone on the LAN that opens the dev build reaches the laptop's game server, not its own.
+      __SERVER_URL__: JSON.stringify(serverUrl ?? (dev ? 'ws://{host}:8787' : 'wss://play.geoffreychan.com')),
       __DEV__: String(dev),
     },
   });

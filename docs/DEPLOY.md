@@ -4,6 +4,10 @@ One-time VM/DNS/firewall setup for `play.geoffreychan.com` (the game server) and
 `geoffreychan.com/unicorns/` (the static PWA, published into the `geoffchan23.github.io`
 site repo). Steps 1–4 are done once, together, in a session; step 5 is the normal deploy.
 
+**Status:** steps 1–4 were completed on 2026-10-07 and v1.2 went live then. The VM runs only this game
+(the Wordle bot it used to host was removed). Everything a deploy needs lives on Geoff's current Mac:
+the SSH key `~/.ssh/oci_wordle_key` and the OCI CLI (`brew install oci-cli`).
+
 ## 1. DNS
 
 GoDaddy DNS for `geoffreychan.com`:
@@ -27,17 +31,24 @@ Open TCP 80 and 443 on the OCI security list, then mirror that in the VM's own i
 Console: VCN → the VM's subnet → security list → Ingress Rules → Add Ingress Rules, twice
 (source `0.0.0.0/0`, TCP, destination port 80; then TCP, destination port 443).
 
-Or via the OCI CLI, after `oci session authenticate`:
+Or via the OCI CLI. Sign in first (opens a browser; "Tenancy" there is your Oracle Cloud
+account name, and the session lasts about a day):
 
 ```bash
+oci session authenticate --region ca-toronto-1 --profile-name DEFAULT
+export OCI_CLI_AUTH=security_token
+# always look before replacing: `update` overwrites the whole rule list
+oci network security-list get --security-list-id <ocid> --query 'data."ingress-security-rules"'
 oci network security-list update \
   --security-list-id <ocid> \
   --ingress-security-rules file://deploy/ingress.json
 ```
 
-`deploy/ingress.json` includes the existing SSH rule (TCP 22) plus TCP 80 and 443, all from
-`0.0.0.0/0` — `update` replaces the whole rule list, so it must carry every rule that should
-still exist.
+The security list is `ocid1.securitylist.oc1.ca-toronto-1.aaaaaaaanrqrnokos7qjcc2xdrljww2dkgqzxp2pwozpirqws3t7hzkzgdzq`
+(the VM's subnet's only one). `deploy/ingress.json` is the full rule list as it stands: SSH (TCP 22),
+Oracle's two default ICMP rules (type 3 code 4 from anywhere, type 3 from the VCN's `10.0.0.0/16`, which
+path-MTU discovery and in-VCN errors need), and TCP 80 and 443. `update` replaces the whole list, so
+any rule left out of the file is deleted — compare it with the `get` above first.
 
 On the VM:
 
@@ -83,7 +94,8 @@ curl -I https://play.geoffreychan.com/healthz
 ```
 
 Expect `HTTP/2 200`. Caddy fetches and renews the TLS certificate automatically on first
-request to the domain.
+request to the domain. If it tried before the DNS record existed it backs off between retries
+(a TLS "internal error" from curl); `sudo systemctl restart caddy` on the VM makes it try again now.
 
 ## 4. Server env
 
@@ -101,10 +113,11 @@ minute per address, 50 rooms, 200 connections, and rooms that reap themselves wh
 Optional: `HOST` overrides the bind address (defaults to `127.0.0.1` in production, since
 Caddy proxies to localhost — the default is right for this deployment; leave it unset). The
 dev server (`scripts/dev.mjs`) always binds `0.0.0.0` regardless of `HOST` so phones on the
-LAN can reach it during development.
+LAN can reach it during development; it prints the `lan:` address to open, and the dev build
+finds the game server on whichever host served the page.
 
 `scripts/deploy-server.sh` refuses to proceed if this file is missing. `pm2 startup` is
-already configured on this VM (from the Wordle bot), so pm2-managed processes survive a
+already configured on this VM (`pm2-ubuntu.service`), so pm2-managed processes survive a
 reboot; `pm2 save` (run automatically by the deploy script) persists the process list.
 
 pm2's environment for the `unicorns` process comes from `deploy-server.sh` sourcing
@@ -128,7 +141,9 @@ scripts/deploy-web.sh
 ```
 
 Both use `UU_HOST` / `UU_KEY` / `SITE_REPO` env vars to override their defaults
-(`ubuntu@140.238.145.208`, `~/.ssh/oci_wordle_key`, `../../geoffchan23.github.io`).
+(`ubuntu@140.238.145.208`, `~/.ssh/oci_wordle_key`, `../geoffchan23.github.io`, i.e. the site
+repo cloned next to this one). `deploy-web.sh` pulls the site repo before committing to it: a bot
+commits usage stats there, so a stale clone would have its push rejected.
 
 The site repo is a Jekyll site, and Jekyll drops any file whose name begins with an underscore from
 what it publishes — such a file rsyncs and commits without complaint, then 404s in production. That
